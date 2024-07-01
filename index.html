@@ -8,11 +8,9 @@
 	<link rel="stylesheet" href="/assets/style.css">
 	<title>Empire Defense</title>
 	<script type="module">
+		import "/src/utils/Options.js"
 		import {mainMenu} from "/src/View/Menu.js"
-		import * as Translator from "./src/utils/Translator.js";
 		screen.orientation.lock('landscape').catch(() => {});
-		await Translator.loadTranslation()
-		Translator.translateDocument()
 		mainMenu()
 	</script>
 </head>
@@ -33,10 +31,10 @@
 		<canvas id="mapCanvas" height="900" width="1600"></canvas>
 		<canvas id="entityCanvas" height="900" width="1600"></canvas>
 		<div id="gui">
-			<div id="money"><img src="assets/images/devpack/icons/money.png" alt="money"><span id="moneyLabel">0</span></div>
-			<div id="life"><img src="assets/images/devpack/icons/life.png" alt="life"><span id="lifeLabel">0</span></div>
-			<div id="crystal"><img src="assets/images/devpack/icons/crystal.png" alt="crystal"><span id="crystalLabel">0</span></div>
-			<div id="wave"><img src="assets/images/devpack/icons/wave.png" alt="wave"><span id="waveLabel">0</span></div>
+			<div id="money"><img data-texture="icons/money" src="" alt="money"><span id="moneyLabel">0</span></div>
+			<div id="life"><img data-texture="icons/life" src="" alt="life"><span id="lifeLabel">0</span></div>
+			<div id="crystal"><img data-texture="icons/crystal" src="" alt="crystal"><span id="crystalLabel">0</span></div>
+			<div id="wave"><img data-texture="icons/wave" src="" alt="wave"><span id="waveLabel">0</span></div>
 			<div id="menu">
 				<div>option</div>
 				<div>speed</div>
@@ -57,13 +55,15 @@
 			<button id="quitButton" data-translation="generic.quit">Quit</button>
 		</div>
 	</div>
-	<div id="imageSources" class="hidden"></div>
 	<div id="debugOverlay" class="hidden">
 		<p>time: <span id="debugTime"></span> (frames: <span id="frameCount"></span>)</p>
 		<p>fps: <span id="debugFps"></span> (avg: <span id="debugFpsAvg"></span>)</p>
 		<p>entities: <span id="entityCount"></span></p>
 	</div>
+	<div id="textures" class="hidden"></div>
 	<canvas id="utilsCanvas" class="hidden"><!-- this canvas is used by scripts, it should never be shown --></canvas>
+
+	<!-- for debug purpose, should be removed before sending to people -->
 	<button style="position: absolute; top: 0; left: 0" onclick="window.location.reload()">reload</button>
 </body>
 </html>

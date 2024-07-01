@@ -1,5 +1,5 @@
 import Entity from "./Entity.js";
-import Missile from "./Missile.js";
+import Projectile from "./Projectile.js";
 import {default as MovementCapability, MovementType} from "../MovementCapability.js";
 import Unit from "./Unit.js";
 import Position from "../Position.js";
@@ -25,7 +25,7 @@ export default class Building extends Entity {
                 this.#attackCooldown = ATTACK_DELAY
 
                 targets.forEach(entity => {
-                    const missile = new Missile(
+                    const missile = new Projectile(
                         Entity.factory
                             .setName("missile")
                             .setPosition(new Position(this.position.x, this.position.y - 1))
@@ -37,4 +37,6 @@ export default class Building extends Entity {
             }
         }
     }
+
+    get texture() { return globalThis.options.texturePack.getTexture(`entities/buildings/${this.name}`) }
 }

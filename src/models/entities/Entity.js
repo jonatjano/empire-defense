@@ -119,4 +119,7 @@ export default class Entity {
     get position() { return this.#position }
     /** @return {MovementCapability} */
     get movements() { return this.#movements }
+
+    /** @return {Promise<Texture>} */
+    get texture() { throw new Error("AbstractEntity initialised") }
 }

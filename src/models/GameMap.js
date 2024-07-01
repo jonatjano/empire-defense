@@ -10,46 +10,17 @@ class Tile {
         this.#canWalk = canWalk
         this.#canFly = canFly
         this.#canBuild = canBuild
-        Tile.registerImage(name)
     }
 
     get name() { return this.#name }
     get canWalk() { return this.#canWalk }
     get canFly() { return this.#canFly }
     get canBuild() { return this.#canBuild }
-
-    static registerImage(name) {
-        const imageContainer = document.getElementById("imageSources")
-        const image = document.createElement("img")
-        image.src = `/assets/images/devpack/tiles/${name}.png`
-        imageContainer.appendChild(image)
-        globalThis.tileImages[name] = image
-    }
-
-    static {
-        /**
-         * @type {{}}
-         */
-        globalThis.tileImages = {}
-        /**
-         * @type {{
-         *     [entityName: string]: {
-         *         base?: HTMLImageElement,
-         *         0: HTMLImageElement,
-         *         90: HTMLImageElement,
-         *         180: HTMLImageElement,
-         *         270: HTMLImageElement,
-         *         360: HTMLImageElement
-         *     }
-         * }}
-         */
-        globalThis.entityImages = {}
-    }
 }
 
 const tiles = Object.freeze({
-    air: new Tile("air", {canWalk: false, canBuild: false}),
-    spawn: new Tile("spawn", {canBuild: false}),
+    air: new Tile("grass", {canWalk: false, canBuild: false}),
+    spawn: new Tile("grass", {canBuild: false}),
     target: new Tile("target", {canBuild: false}),
     grass: new Tile("grass"),
 })

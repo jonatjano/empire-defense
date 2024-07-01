@@ -4,8 +4,8 @@ import options from "./Options.js";
 export const FALLBACK_LANGUAGE = "en"
 /** @type {string[]} */
 export const KNOWN_LANGUAGES = ["en", "fr"]
-globalThis.translations = null
-globalThis.fallbackTranslations = null
+let globalTranslations = null
+let globalFallbackTranslations = null
 
 /**
  * set the text of every element with the data-translation attribute to the translation key
@@ -25,13 +25,13 @@ export function loadTranslation() {
     return Promise.all([
         fetch(`/assets/translations/${options.language}.json`)
             .then(result => result.text())
-            .then(data => globalThis.translations = Object.freeze(JSON.parse(data))),
+            .then(data => globalTranslations = Object.freeze(JSON.parse(data))),
 
-        globalThis.fallbackTranslations !== null ?
+        globalFallbackTranslations !== null ?
             true :
-            fetch(`/assets/translations/${FALLBACK_LANGUAGE}.json`)
+            fetch(`/assets/translations/${options.fallbackLanguage}.json`)
                 .then(result => result.text())
-                .then(data => globalThis.fallbackTranslations = Object.freeze(JSON.parse(data))),
+                .then(data => globalFallbackTranslations = Object.freeze(JSON.parse(data))),
     ])
 }
 
@@ -41,8 +41,8 @@ export function loadTranslation() {
  * @return {string}
  */
 export function translate(key) {
-    let translations = globalThis.translations
-    let fallbackTranslations = globalThis.fallbackTranslations
+    let translations = globalTranslations
+    let fallbackTranslations = globalFallbackTranslations
     const split = key.split(".")
     while (split.length !== 0) {
         const part = split.shift()
@@ -51,6 +51,6 @@ export function translate(key) {
     }
     return translations ??
         fallbackTranslations ?
-            (console.error(`missing translation in ${globalThis.translations.language.name} (${globalThis.translations.language.code}) for ${key}`), fallbackTranslations) :
+            (console.error(`missing translation in ${globalTranslations.language.name} (${globalTranslations.language.code}) for ${key}`), fallbackTranslations) :
             (console.error(`missing translation for ${key}`), key)
 }

@@ -1,0 +1,16 @@
+{
+	"texturePacks":{
+		"default":"devpack",
+		"list":[
+			"devpack"
+			,"devpack2"
+		]
+	},
+	"languages":{
+		"default":"en",
+		"list":[
+			"en"
+			,"fr"
+		]
+	}
+}

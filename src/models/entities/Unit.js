@@ -35,4 +35,6 @@ export default class Unit extends Entity {
             }
         }
     }
+
+    get texture() { return globalThis.options.texturePack.getTexture(`entities/units/${this.name}`) }
 }

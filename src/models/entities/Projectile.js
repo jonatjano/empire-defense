@@ -2,7 +2,7 @@ import Entity from "./Entity.js";
 import Position from "../Position.js";
 import Unit from "./Unit.js";
 
-export default class Missile extends Entity {
+export default class Projectile extends Entity {
 
     constructor(factory) {
         super(factory);
@@ -28,4 +28,6 @@ export default class Missile extends Entity {
             globalThis.game.deleteEntity(this)
         }
     }
+
+    get texture() { return globalThis.options.texturePack.getTexture(`entities/projectiles/${this.name}`) }
 }

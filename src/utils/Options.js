@@ -1,18 +1,53 @@
 import * as Translator from "./Translator.js";
-import * as AngleUtils from "./AngleUtils.js";
+import TexturePack from "./TexturePack.js";
 
 class Options {
     /** @type {boolean} */
     #debug
-    /** @type {typeof Translator.KNOWN_LANGUAGES} */
+
+    /** @type {string[]} */
+    #knownLanguages
+    /** @type {string} */
     #language
     /** @type {string} */
+    #fallbackLanguage
+
+    /** @type {TexturePack[]} */
+    #knownTexturePacks
+    /** @type {TexturePack} */
     #texturePack
+
     // todo stuff with local storage and proxy and stuff
     constructor() {
-        this.debug = false
-        this.#language = window.navigator.languages.find(language => Translator.KNOWN_LANGUAGES.includes(language)) ?? Translator.FALLBACK_LANGUAGE
-        setTimeout(() => this.texturePack = "devpack")
+        this.loadMeta()
+    }
+
+    loadMeta() {
+        return fetch("/assets/meta.json")
+            .then(res => res.json())
+            .then(
+                /** @param {{
+                 *  languages: {default: string, list: string[]},
+                 *  texturePacks: {default: string, list: string[]},
+                 *  debug: ?boolean,
+                 *  showStats: ?boolean
+                 * }} meta */
+                meta => {
+                /* debug */
+                this.debug = meta.debug ?? false
+                this.showStats = meta.showStats ?? this.debug
+
+                /* languages */
+                this.#knownLanguages = meta.languages.list
+                this.#fallbackLanguage = meta.languages.default
+                this.language = window.navigator.languages.find(language => this.#knownLanguages.includes(language)) ?? this.#fallbackLanguage
+
+                /* texture pack */
+                this.#knownTexturePacks = meta.texturePacks.list.map(name => new TexturePack(name))
+                console.log(this.#knownTexturePacks, meta.texturePacks.default, this.#knownTexturePacks.find(pack => pack.name === meta.texturePacks.default))
+                this.texturePack = this.#knownTexturePacks.find(pack => pack.name === meta.texturePacks.default) ?? this.#knownTexturePacks[0]
+            })
+            .then(_ => console.log(this))
     }
 
     get zoom() { return 75 }
@@ -28,26 +63,38 @@ class Options {
     get debug() { return this.#debug }
 
     /**
-     * @param {typeof Translator.KNOWN_LANGUAGES} value
+     * @param {boolean} value
+     */
+    set showStats(value) {
+        document.getElementById("debugOverlay").classList.toggle("hidden", ! value)
+    }
+
+    /**
+     * @param {string} value
      */
     set language(value) {
         if (this.language === value) { return }
         if (! Translator.KNOWN_LANGUAGES.includes(value)) {
-            console.warn(`Language "${value}" is not supported, defaulting to ${Translator.FALLBACK_LANGUAGE}`)
-            value = Translator.FALLBACK_LANGUAGE
+            console.warn(`Language "${value}" is not supported, defaulting to ${this.#fallbackLanguage}`)
+            value = this.#fallbackLanguage
         }
         this.#language = value
         Translator.loadTranslation()
             .then(Translator.translateDocument)
     }
     get language() { return this.#language }
+    get fallbackLanguage() { return this.#fallbackLanguage }
 
     set texturePack(value) {
         if (this.texturePack === value) { return }
-        this.#texturePack = value
-        registerEntityImages("enemy")
-        registerEntityImages("tower")
-        registerEntityImages("missile", [0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180])
+        let texturePack = value
+        if (typeof value === "string") {
+            texturePack = this.#knownTexturePacks.find(pack => pack.name === value)
+        }
+        if (texturePack) {
+            this.#texturePack = texturePack
+            this.#texturePack.changeDocumentTextures()
+        }
     }
 
     get texturePack() { return this.#texturePack }
@@ -56,68 +103,4 @@ class Options {
 const options = new Options()
 globalThis.options = options
 export default options
-
-
-/**
- * @typedef {{
- *     hasBase: boolean,
- *     width: number,
- *     height: number,
- *     angleBetweenImages: number,
- *     animationSpeed: number
- * }} EntityImageMetaData
- */
-
-/**
- * @param {string} name
- * @param {number[]} [angles=[0, 90, 180]]
- */
-function registerEntityImages(name, angles = [0, 90, 180]) {
-    const imageContainer = document.getElementById("imageSources")
-
-    const camelCaseName = name.replace(/(?:^\w|[A-Z]|\b\w)/g, function(word, index) {
-        return index === 0 ? word.toLowerCase() : word.toUpperCase();
-    }).replace(/\s+/g, '');
-
-    const finalAngles = new Set()
-
-    globalThis.entityImages[name] = {
-        hasBase: false
-    }
-    for (const angle of angles) {
-        const image = document.createElement("img")
-        image.src = `/assets/images/${globalThis.options.texturePack}/units/${camelCaseName}/${angle}.png`
-        imageContainer.appendChild(image)
-        const correctedAngle = AngleUtils.clampAngleDeg(angle - 90)
-        finalAngles.add(correctedAngle)
-        globalThis.entityImages[name][correctedAngle] = image
-
-        // if angle is 0, add 360 too to avoid having to do math later
-        if (correctedAngle === 0) {
-            finalAngles.add(360)
-            globalThis.entityImages[name][360] = image
-        }
-
-        // unless top and bottom or already mirrored, add the mirrored image
-        if (angle !== 0 && angle < 180) {
-            finalAngles.add(AngleUtils.clampAngleDeg(270 - angle))
-            image.onload = () => {
-                const canvas = document.getElementById("utilsCanvas")
-                canvas.width = image.width
-                canvas.height = image.height
-                const context = canvas.getContext("2d")
-                context.clearRect(0, 0, canvas.width, canvas.height);
-                context.scale(-1, 1)
-                context.drawImage(image, -canvas.width, 0)
-
-                const rotatedImage = document.createElement("img")
-                rotatedImage.src = canvas.toDataURL("image/png")
-                imageContainer.appendChild(rotatedImage)
-                globalThis.entityImages[name][AngleUtils.clampAngleDeg(270 - angle)] = rotatedImage
-            }
-        }
-    }
-    globalThis.entityImages[name].angles = Object.freeze([...finalAngles.values()])
-
-}
 

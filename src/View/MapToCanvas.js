@@ -3,6 +3,7 @@ import Position from "../models/Position.js";
 import {MovementType} from "../models/MovementCapability.js";
 import * as AngleUtils from "../utils/AngleUtils.js";
 import Building from "../models/entities/Building.js";
+import {TextureType} from "../utils/TexturePack.js";
 
 const TILE_MARGIN = -1
 
@@ -43,19 +44,20 @@ export function printMapOnCanvas(canvas, map, clickListener) {
     for (let y = 0; y < map.height; y++) {
         for (let x = 0; x < map.width; x++) {
             const tile = map.getTile(x, y)
-            ctx.drawImage(
-                globalThis.tileImages[tile.name],
-                (leftMargin + x) * options.zoom + TILE_MARGIN,
-                (topMargin + y) * options.zoom + TILE_MARGIN,
-                options.zoom - 2 * TILE_MARGIN,
-                options.zoom - 2 * TILE_MARGIN
-            )
-            if (globalThis.options.debug) {
-                ctx.fillText(`x: ${x}, y: ${y}`,
-                    (leftMargin + x + 0.5) * options.zoom + TILE_MARGIN,
-                    (topMargin + y + 0.2) * options.zoom + TILE_MARGIN,
+            globalThis.options.texturePack.getTexture(`tiles/${tile.name}`).then(texture => {
+                ctx.drawImage(texture.getBase(),
+                    (leftMargin + x) * options.zoom + TILE_MARGIN,
+                    (topMargin + y) * options.zoom + TILE_MARGIN,
+                    options.zoom - 2 * TILE_MARGIN,
+                    options.zoom - 2 * TILE_MARGIN
                 )
-            }
+                if (globalThis.options.debug) {
+                    ctx.fillText(`x: ${x}, y: ${y}`,
+                        (leftMargin + x + 0.5) * options.zoom + TILE_MARGIN,
+                        (topMargin + y + 0.2) * options.zoom + TILE_MARGIN,
+                    )
+                }
+            })
         }
     }
 
@@ -123,62 +125,51 @@ export function drawEntities(canvas, ctx, game, frameTiming) {
 
 
     for (const entity of entities) {
-        const entityImages = globalThis.entityImages[entity.name]
+        entity.texture.then(entityTexture => {
+            const heightFactor = entity instanceof Building ? 2 : 1
 
-        const heightFactor = entity instanceof Building ? 2 : 1
+            if (entityTexture.textureType !== TextureType.ROTATION_ONLY) {
+                ctx.drawImage(
+                    entityTexture.getBase(),
+                    (leftMargin + entity.position.x - 0.5) * options.zoom + TILE_MARGIN,
+                    (topMargin + entity.position.y - (heightFactor - 0.5)) * options.zoom + TILE_MARGIN,
+                    options.zoom - 2 * TILE_MARGIN,
+                    options.zoom - 2 * TILE_MARGIN
+                )
+            }
 
-        // TODO move into entityImages to allow change between entities
-        let ANIMATION_FRAME_DURATION = 1000
-        if (entity.name === "missile") {
-            ANIMATION_FRAME_DURATION = 500
-        }
-        let ANIMATION_FRAME_COUNT = 2
-        if (entity.name === "tower") {
-            ANIMATION_FRAME_COUNT = 1
-        }
-        let ANGLE_BETWEEN_ROTATIONS = 90
-        if (entity.name === "missile") {
-            ANGLE_BETWEEN_ROTATIONS = 15
-        }
+            if (entityTexture.textureType !== TextureType.BASE_ONLY) {
+                let angle = AngleUtils.rad2deg(AngleUtils.clampAngleRad(-entity.position.rotation))
+                angle = angle + (entityTexture.angleBetweenRotations / 2)
+                angle = angle - (angle % entityTexture.angleBetweenRotations)
 
-        if (entityImages.base) {
-            ctx.drawImage(
-                entityImages.base,
-                (leftMargin + entity.position.x - 0.5) * options.zoom + TILE_MARGIN,
-                (topMargin + entity.position.y - (heightFactor - 0.5)) * options.zoom + TILE_MARGIN,
-                options.zoom - 2 * TILE_MARGIN,
-                options.zoom - 2 * TILE_MARGIN
-            )
-        }
-
-        let angle = AngleUtils.rad2deg(AngleUtils.clampAngleRad(-entity.position.rotation))
-        angle = angle + (ANGLE_BETWEEN_ROTATIONS / 2)
-        angle = angle - (angle % ANGLE_BETWEEN_ROTATIONS)
-
-        ctx.drawImage(
-            entityImages[angle],
-            0,
-            entityImages[angle].width * heightFactor * (Math.floor(frameTiming / ANIMATION_FRAME_DURATION) % ANIMATION_FRAME_COUNT),
-            entityImages[angle].width,
-            entityImages[angle].width * heightFactor,
-            (leftMargin + entity.position.x - 0.5) * options.zoom + TILE_MARGIN,
-            (topMargin + entity.position.y - (heightFactor - 0.5)) * options.zoom + TILE_MARGIN,
-            options.zoom - 2 * TILE_MARGIN,
-            heightFactor * options.zoom - 2 * TILE_MARGIN
-        )
-        if (globalThis.options.debug) {
-            ctx.fillStyle = `#000000`
-            // position text
-            ctx.fillText(`x: ${(entity.position.x - 0.5).toFixed(1)}\ny: ${(entity.position.y - 0.5).toFixed(1)}\nr: ${(entity.position.rotation / (2 * Math.PI) * 360).toFixed(0)}`,
-                (leftMargin + entity.position.x) * options.zoom + TILE_MARGIN,
-                (topMargin + entity.position.y - (heightFactor - 0.6)) * options.zoom + TILE_MARGIN,
-            )
-            // forward dot
-            ctx.fillRect(
-                (leftMargin + entity.position.x) * options.zoom + TILE_MARGIN + Math.cos(entity.position.rotation) * 1000 * entity.movements.movementSpeed * options.zoom,
-                (topMargin + entity.position.y) * options.zoom + TILE_MARGIN + Math.sin(entity.position.rotation) * 1000 * entity.movements.movementSpeed * options.zoom, 5, 5
-            )
-        }
+                // console.log(angle, entityTexture.getForOrientation(angle))
+                ctx.drawImage(
+                    entityTexture.getForOrientation(angle),
+                    0,
+                    entityTexture.width * heightFactor * (Math.floor(frameTiming / entityTexture.animationFrameDuration) % entityTexture.animationFrameCount),
+                    entityTexture.width,
+                    entityTexture.width * heightFactor,
+                    (leftMargin + entity.position.x - 0.5) * options.zoom + TILE_MARGIN,
+                    (topMargin + entity.position.y - (heightFactor - 0.5)) * options.zoom + TILE_MARGIN,
+                    options.zoom - 2 * TILE_MARGIN,
+                    heightFactor * options.zoom - 2 * TILE_MARGIN
+                )
+            }
+            if (globalThis.options.debug) {
+                ctx.fillStyle = `#000000`
+                // position text
+                ctx.fillText(`x: ${(entity.position.x - 0.5).toFixed(1)}\ny: ${(entity.position.y - 0.5).toFixed(1)}\nr: ${(entity.position.rotation / (2 * Math.PI) * 360).toFixed(0)}`,
+                    (leftMargin + entity.position.x) * options.zoom + TILE_MARGIN,
+                    (topMargin + entity.position.y - (heightFactor - 0.6)) * options.zoom + TILE_MARGIN,
+                )
+                // forward dot
+                ctx.fillRect(
+                    (leftMargin + entity.position.x) * options.zoom + TILE_MARGIN + Math.cos(entity.position.rotation) * 1000 * entity.movements.movementSpeed * options.zoom,
+                    (topMargin + entity.position.y) * options.zoom + TILE_MARGIN + Math.sin(entity.position.rotation) * 1000 * entity.movements.movementSpeed * options.zoom, 5, 5
+                )
+            }
+        })
     }
 
     if (globalThis.options.debug) {
