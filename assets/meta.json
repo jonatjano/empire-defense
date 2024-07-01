@@ -1,17 +1,16 @@
 {
 	"texturePacks":{
-		"default":"devpack",
-		"list":[
+		"default": "devpack",
+		"list": [
 			"devpack"
-			,"devpack2"
 		]
 	},
 	"languages":{
-		"default":"en",
-		"list":[
-			"en"
-			,"fr"
+		"default": "en",
+		"list": [
+			"en",
+			"fr"
 		]
 	},
-	"debug": false
+	"debug": true
 }

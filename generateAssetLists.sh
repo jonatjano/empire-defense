@@ -14,20 +14,19 @@ addFeature() {
 	cd "$path"
 
 	if [[ ! -z $DEBUG ]]; then
-		echo -n "\n\t\"$featureName\":{\n\t\t\"default\":\"$default\",\n\t\t\"list\":["
+		echo -n "\n\t\"$featureName\":{\n\t\t\"default\": \"$default\",\n\t\t\"list\": ["
 	else
 		echo -n "\"$featureName\":{\"default\":\"$default\",\"list\":["
 	fi
 	for file in *; do
 		if [[ ! -z $DEBUG ]]; then
+			if [[ ! -z $i ]]; then
+				echo -n ","
+			fi
 			echo -n "\n\t\t\t"
 		fi
 		file=$(echo "$file" | cut -d'.' -f 1)
-		if [[ -z $i ]]; then
-			echo -n "\"$file\""
-		else
-			echo -n ",\"$file\""
-		fi
+		echo -n "\"$file\""
 		i="$i+"
 	done
 	if [[ ! -z $DEBUG ]]; then
@@ -44,7 +43,7 @@ result="{"
 result="$result$(addFeature "texturePacks" $DEFAULT_TEXTURE_PACK images),"
 result="$result$(addFeature "languages" $DEFAULT_LANGUAGE translations)"
 if [[ ! -z $DEBUG ]]; then
-	result="$result,\n\"debug\":true}"
+	result="$result,\n\t\"debug\": true\n}"
 else
 	result="$result}"
 fi
