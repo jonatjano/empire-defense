@@ -19,10 +19,10 @@ addFeature() {
 		echo -n "\"$featureName\":{\"default\":\"$default\",\"list\":["
 	fi
 	for file in *; do
+		if [[ ! -z $i ]]; then
+			echo -n ","
+		fi
 		if [[ ! -z $DEBUG ]]; then
-			if [[ ! -z $i ]]; then
-				echo -n ","
-			fi
 			echo -n "\n\t\t\t"
 		fi
 		file=$(echo "$file" | cut -d'.' -f 1)
