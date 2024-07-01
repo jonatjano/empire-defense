@@ -123,19 +123,29 @@ export function drawEntities(canvas, ctx, game, frameTiming) {
             (b.position.y + movementTypePriority(b.movements.movementType))
     })
 
+    const packWidth = globalThis.options.texturePack.packMeta.width
+    const packHeight = globalThis.options.texturePack.packMeta.height
 
     for (const entity of entities) {
         entity.texture.then(entityTexture => {
-            const heightFactor = entity instanceof Building ? 2 : 1
+            const textureHorizontalSpan = Math.floor(entityTexture.width / packWidth)
+            const textureLeftMargin = ((textureHorizontalSpan * packWidth) - entityTexture.width) / 2
+
+            const textureVerticalSpan = Math.floor(entityTexture.height / packHeight)
+            const textureTopMargin = ((textureVerticalSpan * packHeight) - entityTexture.height) / 2
+
+            const heightFactor = entityTexture.height / packHeight
+
+            /** @type {[number, number, number, number]} */
+            const drawImageArgs = {
+                dx: (leftMargin + entity.position.x - (textureHorizontalSpan - 0.5)) * options.zoom  + textureLeftMargin+ TILE_MARGIN,
+                dy: (topMargin + entity.position.y - (textureVerticalSpan - 0.5)) * options.zoom + textureTopMargin + TILE_MARGIN,
+                dw: (entityTexture.width / packWidth) * options.zoom - 2 * TILE_MARGIN,
+                dh: (entityTexture.height / packHeight) * options.zoom - 2 * TILE_MARGIN
+            }
 
             if (entityTexture.textureType !== TextureType.ROTATION_ONLY) {
-                ctx.drawImage(
-                    entityTexture.getBase(),
-                    (leftMargin + entity.position.x - 0.5) * options.zoom + TILE_MARGIN,
-                    (topMargin + entity.position.y - (heightFactor - 0.5)) * options.zoom + TILE_MARGIN,
-                    options.zoom - 2 * TILE_MARGIN,
-                    options.zoom - 2 * TILE_MARGIN
-                )
+                ctx.drawImage(entityTexture.getBase(), drawImageArgs.dx, drawImageArgs.dy, drawImageArgs.dw, drawImageArgs.dh)
             }
 
             if (entityTexture.textureType !== TextureType.BASE_ONLY) {
@@ -146,14 +156,9 @@ export function drawEntities(canvas, ctx, game, frameTiming) {
                 // console.log(angle, entityTexture.getForOrientation(angle))
                 ctx.drawImage(
                     entityTexture.getForOrientation(angle),
-                    0,
-                    entityTexture.width * heightFactor * (Math.floor(frameTiming / entityTexture.animationFrameDuration) % entityTexture.animationFrameCount),
-                    entityTexture.width,
-                    entityTexture.width * heightFactor,
-                    (leftMargin + entity.position.x - 0.5) * options.zoom + TILE_MARGIN,
-                    (topMargin + entity.position.y - (heightFactor - 0.5)) * options.zoom + TILE_MARGIN,
-                    options.zoom - 2 * TILE_MARGIN,
-                    heightFactor * options.zoom - 2 * TILE_MARGIN
+                    0, entityTexture.height * (Math.floor(frameTiming / entityTexture.animationFrameDuration) % entityTexture.animationFrameCount),
+                    entityTexture.width, entityTexture.height,
+                    drawImageArgs.dx, drawImageArgs.dy, drawImageArgs.dw, drawImageArgs.dh,
                 )
             }
             if (globalThis.options.debug) {

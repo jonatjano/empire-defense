@@ -87,6 +87,8 @@ export default class TexturePack {
     #textures
     /** @type {Promise} */
     #initPromise
+    /** @type {TextureMeta} */
+    #packMeta
 
     constructor(name) {
         this.#name = name
@@ -95,6 +97,7 @@ export default class TexturePack {
     }
 
     get name() { return this.#name }
+    get packMeta() { return this.#packMeta }
 
     /**
      * @param {string} path
@@ -133,11 +136,13 @@ export default class TexturePack {
                             localDefault = localDefault?.[part]
                             localPackMeta = localPackMeta?.[part]
                         }
+                        const textureMeta = new TextureMeta(localMeta, {...localDefault, ...localPackMeta})
+                        if (localMeta === null) { this.#packMeta  = textureMeta }
                         Object.keys(item).forEach(key => {
                             toGet.push(
                                 [
                                     [...path, key],
-                                    new TextureMeta(localMeta, {...localDefault, ...localPackMeta}),
+                                    textureMeta,
                                     item[key]
                                 ]
                             )
@@ -199,8 +204,6 @@ class Texture {
     get textureType() { return this.#meta.textureType }
     get width() { return this.#meta.width }
     get height() { return this.#meta.height; }
-
-
 
 
     static for(path, textureMeta) {
