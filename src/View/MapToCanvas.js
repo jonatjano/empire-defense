@@ -9,12 +9,11 @@ import Game from "../models/Game.js";
 const TILE_MARGIN = -1
 
 const HP_BAR_STYLE = Object.freeze({
-    get WIDTH() { return 0.7 * options.zoom }
+    get WIDTH() { return 0.7 * options.zoom },
+    HEIGHT: 4,
+    BORDER: 1,
+    MARGIN: 8
 })
-const HP_BAR_WIDTH = 0.7 * options.zoom
-const HP_BAR_HEIGHT = 4
-const HP_BAR_BORDER = 1
-const HP_BAR_MARGIN = 8
 
 /**
  * @param {HTMLCanvasElement} canvas
@@ -177,26 +176,26 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                     // black border
                     ctx.fillStyle = "black"
                     ctx.fillRect(
-                        drawImageArgs.dx + (options.zoom - HP_BAR_WIDTH) / 2,
-                        drawImageArgs.dy - (HP_BAR_MARGIN + HP_BAR_HEIGHT + 2 * HP_BAR_BORDER),
-                        HP_BAR_WIDTH + 2 * HP_BAR_BORDER,
-                        HP_BAR_HEIGHT + 2 * HP_BAR_BORDER
+                        drawImageArgs.dx + (options.zoom - HP_BAR_STYLE.WIDTH) / 2,
+                        drawImageArgs.dy - (HP_BAR_STYLE.MARGIN + HP_BAR_STYLE.HEIGHT + 2 * HP_BAR_STYLE.BORDER),
+                        HP_BAR_STYLE.WIDTH + 2 * HP_BAR_STYLE.BORDER,
+                        HP_BAR_STYLE.HEIGHT + 2 * HP_BAR_STYLE.BORDER
                     )
                     // white background
                     ctx.fillStyle = "white"
                     ctx.fillRect(
-                        drawImageArgs.dx + (options.zoom - HP_BAR_WIDTH) / 2 + HP_BAR_BORDER,
-                        drawImageArgs.dy - (HP_BAR_MARGIN + HP_BAR_HEIGHT + HP_BAR_BORDER),
-                        HP_BAR_WIDTH,
-                        HP_BAR_HEIGHT
+                        drawImageArgs.dx + (options.zoom - HP_BAR_STYLE.WIDTH) / 2 + HP_BAR_STYLE.BORDER,
+                        drawImageArgs.dy - (HP_BAR_STYLE.MARGIN + HP_BAR_STYLE.HEIGHT + HP_BAR_STYLE.BORDER),
+                        HP_BAR_STYLE.WIDTH,
+                        HP_BAR_STYLE.HEIGHT
                     )
                     // content
                     ctx.fillStyle = "red"
                     ctx.fillRect(
-                        drawImageArgs.dx + (options.zoom - HP_BAR_WIDTH) / 2 + HP_BAR_BORDER,
-                        drawImageArgs.dy - (HP_BAR_MARGIN + HP_BAR_HEIGHT + HP_BAR_BORDER),
-                        HP_BAR_WIDTH * entity.hp / entity.maxHp,
-                        HP_BAR_HEIGHT
+                        drawImageArgs.dx + (options.zoom - HP_BAR_STYLE.WIDTH) / 2 + HP_BAR_STYLE.BORDER,
+                        drawImageArgs.dy - (HP_BAR_STYLE.MARGIN + HP_BAR_STYLE.HEIGHT + HP_BAR_STYLE.BORDER),
+                        HP_BAR_STYLE.WIDTH * entity.hp / entity.maxHp,
+                        HP_BAR_STYLE.HEIGHT
                     )
                     ctx.fillStyle = "black"
                 }

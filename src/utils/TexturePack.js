@@ -12,12 +12,12 @@ const DEFAULTS = {
     angleBetweenRotations: 90,
     isSymmetric: true,
     textureType: TextureType.IMAGE,
-    size: 128,
+    size: 1,
     entities: {
         textureType: TextureType.ROTATION_ONLY,
         buildings: {
             textureType: TextureType.ROTATION_AND_BASE,
-            height: 256,
+            height: 2,
             tower: { textureType: TextureType.BASE_ONLY }
         },
         projectiles: {
