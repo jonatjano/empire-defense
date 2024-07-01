@@ -153,4 +153,8 @@ export default class Position {
         }
         return {position: result, remainingTime: duration}
     }
+
+    static getTileCenterPosition(position) {
+        return new Position(Math.floor(position.x) + 0.5, Math.floor(position.y) + 0.5, position.rotation)
+    }
 }

@@ -116,7 +116,7 @@ export function drawEntities(canvas, ctx, game, frameTiming) {
     /**
      * @type {Entity[]}
      */
-    const entities = [...game.entities].sort((a, b) => {
+    const entities = [...game.getEntities()].sort((a, b) => {
         return (a.position.y + movementTypePriority(a.movements.movementType)) -
             (b.position.y + movementTypePriority(b.movements.movementType))
     })
@@ -128,9 +128,18 @@ export function drawEntities(canvas, ctx, game, frameTiming) {
         const heightFactor = entity instanceof Building ? 2 : 1
 
         // TODO move into entityImages to allow change between entities
-        const ANIMATION_FRAME_DURATION = 1000
-        const ANIMATION_FRAME_COUNT = 1
-        const ANGLE_BETWEEN_ROTATIONS = 90
+        let ANIMATION_FRAME_DURATION = 1000
+        if (entity.name === "missile") {
+            ANIMATION_FRAME_DURATION = 500
+        }
+        let ANIMATION_FRAME_COUNT = 2
+        if (entity.name === "tower") {
+            ANIMATION_FRAME_COUNT = 1
+        }
+        let ANGLE_BETWEEN_ROTATIONS = 90
+        if (entity.name === "missile") {
+            ANGLE_BETWEEN_ROTATIONS = 15
+        }
 
         if (entityImages.base) {
             ctx.drawImage(

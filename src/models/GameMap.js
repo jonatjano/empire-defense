@@ -21,7 +21,7 @@ class Tile {
     static registerImage(name) {
         const imageContainer = document.getElementById("imageSources")
         const image = document.createElement("img")
-        image.src = `/assets/images/tiles/${name}.png`
+        image.src = `/assets/images/devpack/tiles/${name}.png`
         imageContainer.appendChild(image)
         globalThis.tileImages[name] = image
     }

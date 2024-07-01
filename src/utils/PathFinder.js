@@ -17,7 +17,6 @@ export default class PathFinder {
 
     constructor(map) {
         this.#map = map
-        this.recalculateAll()
     }
 
     recalculateAll() {
@@ -50,7 +49,7 @@ export default class PathFinder {
                 if (movementType === MovementType.Walking && ! this.#map.getTile(doing.position.x, doing.position.y).canWalk) { continue }
                 if (movementType === MovementType.Flying && ! this.#map.getTile(doing.position.x, doing.position.y).canFly) { continue }
 
-                if (movementType === MovementType.Walking && globalThis.game?.entities?.find(entity =>
+                if (movementType === MovementType.Walking && globalThis.game.getEntities(Building).find(entity =>
                     entity instanceof Building && entity.position.equals(doing.position.x + 0.5, doing.position.y + 0.5)
                 ) !== undefined) { continue }
 
@@ -96,6 +95,10 @@ export default class PathFinder {
      */
     getNextTarget(currentPosition, movementType) {
         let cache = this.#cache[movementType]
+        if (cache === undefined) {
+            this.recalculateAll()
+            cache = this.#cache[movementType]
+        }
         const key = Math.round(currentPosition.y - 0.5) * this.#map.width + Math.round(currentPosition.x - 0.5)
         // console.log(currentPosition.x, currentPosition.y, key, cache.get(key))
         return cache.get(key) ?? this.#cache[MovementType.Unobstructed].get(key)

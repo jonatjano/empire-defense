@@ -2,6 +2,7 @@ import Entity from "./entities/Entity.js";
 import Position from "./Position.js";
 import Building from "./entities/Building.js";
 import MovementCapability, {MovementType} from "./MovementCapability.js"
+import Unit from "./entities/Unit.js";
 
 let lastFrameTiming
 let debugTime = document.getElementById("debugTime")
@@ -33,7 +34,7 @@ export default class Game {
         this.#eventListener = eventListener
         this.#pathFinder = pathFinder
         map.spawns.forEach(spawn => {
-            this.addEntity(new Entity(
+            this.addEntity(new Unit(
                 Entity.factory
                     .setName("enemy")
                     .setPosition(new Position(spawn))
@@ -55,15 +56,28 @@ export default class Game {
         this.#entities.push(entity)
     }
 
-    get map() { return this.#map }
-    get entities() { return this.#entities }
-    get buildings() { return this.entities.filter(entity => entity instanceof Building) }
-    /** @return {PathFinder} */
-    get pathFinder() { return this.#pathFinder }
-
     deleteEntity(entity) {
         this.#entities = this.#entities.filter(ent => ent !== entity)
     }
+
+    /**
+     * @param {typeof Entity} [type=Entity]
+     * @return {Entity[]}
+     */
+    getEntities(type = Entity) { return type === Entity ? this.#entities : this.#entities.filter(entity => entity instanceof type) }
+
+    /**
+     * @param {(Entity) => boolean} condition
+     * @param {typeof Entity} [type=Entity]
+     * @return {Entity[]}
+     */
+    getEntitiesWithCondition(condition, type = Entity) { return this.#entities.filter(entity => entity instanceof type && condition(entity)) }
+    getEntitiesCloseTo(position, range, type = Entity) { return this.#entities.filter(entity => entity instanceof type && entity.position.distanceFrom(position) < range) }
+
+    get map() { return this.#map }
+
+    /** @return {PathFinder} */
+    get pathFinder() { return this.#pathFinder }
 
     pause() {
         this.#isPaused = true
@@ -121,8 +135,8 @@ export default class Game {
         const towerPosition = new Position(Math.floor(x), Math.floor(y), 0)
         console.log(towerPosition)
 
-        if (this.buildings.some(building => building.position.equals(towerPosition))) {
-            console.log("Position is already taken", this.buildings)
+        if (this.getEntities(Building).some(building => building.position.equals(towerPosition))) {
+            console.log("Position is already taken", this.getEntities(Building))
             return
         }
         if (! this.#map.positionIsValid(towerPosition) || ! this.#map.getTile(towerPosition.x, towerPosition.y).canBuild) {
