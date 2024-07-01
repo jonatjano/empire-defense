@@ -1,0 +1,16 @@
+{
+	"language": {
+		"name": "English",
+		"localName": "English",
+		"code": "en"
+	},
+	"generic": {
+		"title": "Empire Defense",
+		"play": "Play"
+	},
+	"map": {
+		"classic": {
+			"name": "Classic"
+		}
+	}
+}

@@ -1,0 +1,16 @@
+{
+	"language": {
+		"name": "French",
+		"localName": "Français",
+		"code": "fr"
+	},
+	"generic": {
+		"title": "Empire Defense",
+		"play": "Jouer"
+	},
+	"map": {
+		"classic": {
+			"name": "Classique"
+		}
+	}
+}
