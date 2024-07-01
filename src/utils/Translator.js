@@ -11,7 +11,7 @@ let globalFallbackTranslations = null
  * set the text of every element with the data-translation attribute to the translation key
  */
 export function translateDocument() {
-    const elements = document.body.querySelectorAll("*[data-translation]")
+    const elements = document.querySelectorAll("*[data-translation]")
     elements.forEach(element => {
         element.textContent = translate(element.dataset.translation)
     })

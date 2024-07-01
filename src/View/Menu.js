@@ -1,5 +1,5 @@
-import {maps} from "../models/GameMap.js";
-import {drawEntities, printMapOnCanvas} from "./MapToCanvas.js";
+import {mapsData} from "../models/GameMap.js";
+import {drawMap, setCanvasEvent} from "./MapToCanvas.js";
 import {translate} from "../utils/Translator.js";
 import Game from "../models/Game.js";
 import PathFinder from "../utils/PathFinder.js";
@@ -24,12 +24,12 @@ function lobby() {
     lobby.classList.remove("hidden")
 
     let selectedMapId = 0
-    updateMapPreview(maps[selectedMapId])
+    updateMapPreview(mapsData[selectedMapId].map)
 
     function updateMapPreview(map) {
         document.getElementById("mapName").textContent = translate(`map.${map.name}.name`)
         const canvas = document.getElementById("mapPreview")
-        printMapOnCanvas(canvas, map)
+        drawMap(canvas, canvas.getContext("2d"), map, 0)
     }
 
     if (! lobby.classList.contains("ready")) {
@@ -38,21 +38,21 @@ function lobby() {
         const prevMapButton = document.getElementById("lobbyPrevMapButton")
         prevMapButton.addEventListener("click", () => {
             selectedMapId -= 1
-            if (selectedMapId === -1) { selectedMapId = maps.length - 1 }
-            updateMapPreview(maps[selectedMapId])
+            if (selectedMapId === -1) { selectedMapId = mapsData.length - 1 }
+            updateMapPreview(mapsData[selectedMapId].map)
         })
 
         const nextMapButton = document.getElementById("lobbyNextMapButton")
         nextMapButton.addEventListener("click", () => {
             selectedMapId += 1
-            if (selectedMapId === maps.length) { selectedMapId = 0 }
-            updateMapPreview(maps[selectedMapId])
+            if (selectedMapId === mapsData.length) { selectedMapId = 0 }
+            updateMapPreview(mapsData[selectedMapId].map)
         })
 
         const startGameButton = document.getElementById("lobbyStartButton")
         startGameButton.addEventListener("click", () => {
             lobby.classList.add("hidden")
-            game(maps[selectedMapId])
+            game(mapsData[selectedMapId])
         })
     }
 }
@@ -61,18 +61,17 @@ function game(map) {
     const game = document.getElementById("game")
     game.classList.remove("hidden")
 
-    const mapCanvas = document.getElementById("mapCanvas")
-    const entitiesCanvas = document.getElementById("entityCanvas")
+    const entitiesCanvas = document.getElementById("gameCanvas")
     const entitiesCtx = entitiesCanvas.getContext("2d")
 
-    const gameController = new Game(map, eventReceiver, new PathFinder(map))
+    const gameController = new Game(map, eventReceiver, new PathFinder(map.map))
     globalThis.game = gameController
-    printMapOnCanvas(mapCanvas, gameController.map, gameController.click.bind(gameController))
+    setCanvasEvent(entitiesCanvas, gameController.click.bind(gameController))
     gameController.resume()
     eventReceiver(0)
 
     function eventReceiver(frameTiming) {
-        drawEntities(entitiesCanvas, entitiesCtx, gameController, frameTiming)
+        drawMap(entitiesCanvas, entitiesCtx, gameController, frameTiming)
         document.getElementById("pauseMenu").classList.toggle("hidden", ! gameController.isPaused)
     }
 }

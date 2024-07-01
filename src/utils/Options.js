@@ -19,6 +19,9 @@ class Options {
 
     // todo stuff with local storage and proxy and stuff
     constructor() {
+        // document.body.classList.add("hidden")
+        // document.querySelector("#mapPreview").classList.add("hidden")
+        // document.querySelectorAll("#game > *").forEach(element => element.classList.add("hidden"))
         this.loadMeta()
     }
 
@@ -44,13 +47,12 @@ class Options {
 
                 /* texture pack */
                 this.#knownTexturePacks = meta.texturePacks.list.map(name => new TexturePack(name))
-                console.log(this.#knownTexturePacks, meta.texturePacks.default, this.#knownTexturePacks.find(pack => pack.name === meta.texturePacks.default))
                 this.texturePack = this.#knownTexturePacks.find(pack => pack.name === meta.texturePacks.default) ?? this.#knownTexturePacks[0]
             })
             .then(_ => console.log(this))
     }
 
-    get zoom() { return 75 }
+    get zoom() { return 60 }
 
     /**
      * @param {boolean} value

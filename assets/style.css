@@ -82,10 +82,10 @@ html, body {
 
     }
 
-    #money, #life, #menu, #crystal {
+    #money, #life, #menu, #crystal, #wave {
         display: flex;
         align-items: center;
-        & > img { height: 2em }
+        & > img { height: 1.5em }
     }
 }
 

@@ -3,6 +3,7 @@ import Position from "./Position.js";
 import Building from "./entities/Building.js";
 import MovementCapability, {MovementType} from "./MovementCapability.js"
 import Unit from "./entities/Unit.js";
+import {TileOption} from "./GameMap.js";
 
 let lastFrameTiming
 let debugTime = document.getElementById("debugTime")
@@ -25,15 +26,15 @@ export default class Game {
     #pathFinder
 
     /**
-     * @param {GameMap} map
+     * @param {{map: GameMap, waves: any[]}} map
      * @param {((number) => void)} eventListener
      * @param {PathFinder} pathFinder
      */
     constructor(map, eventListener, pathFinder) {
-        this.#map = map
+        this.#map = map.map
         this.#eventListener = eventListener
         this.#pathFinder = pathFinder
-        map.spawns.forEach(spawn => {
+        this.#map.spawns.forEach(spawn => {
             this.addEntity(new Unit(
                 Entity.factory
                     .setName("enemy")
@@ -74,6 +75,9 @@ export default class Game {
     getEntitiesWithCondition(condition, type = Entity) { return this.#entities.filter(entity => entity instanceof type && condition(entity)) }
     getEntitiesCloseTo(position, range, type = Entity) { return this.#entities.filter(entity => entity instanceof type && entity.position.distanceFrom(position) < range) }
 
+    /**
+     * @return {GameMap}
+     */
     get map() { return this.#map }
 
     /** @return {PathFinder} */
@@ -139,7 +143,7 @@ export default class Game {
             console.log("Position is already taken", this.getEntities(Building))
             return
         }
-        if (! this.#map.positionIsValid(towerPosition) || ! this.#map.getTile(towerPosition.x, towerPosition.y).canBuild) {
+        if (! this.#map.positionIsValid(towerPosition) || ! TileOption.is(this.#map.getTileOption(towerPosition.x, towerPosition.y), TileOption.buildable)) {
             console.log("Tile is not buildable")
             return
         }

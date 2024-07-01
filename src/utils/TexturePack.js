@@ -74,6 +74,12 @@ const textureList = {
         crystal: textureListLeaf,
         wave: textureListLeaf
     },
+    maps: {
+        classic: {
+            // additions: textureListLeaf,
+            base: textureListLeaf
+        }
+    },
     tiles: {
         air: textureListLeaf,
         grass: textureListLeaf
@@ -193,7 +199,14 @@ class Texture {
     }
 
 
+    /**
+     * @param {number} orientation
+     * @return {HTMLImageElement}
+     */
     getForOrientation(orientation) { return this.#imageElements.get(orientation) }
+    /**
+     * @return {HTMLImageElement}
+     */
     getBase() { return this.getForOrientation(Texture.#baseMarker) }
 
     get animationFrameDuration() { return this.#meta.animationFrameDuration }

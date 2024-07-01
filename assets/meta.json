@@ -12,5 +12,6 @@
 			"en"
 			,"fr"
 		]
-	}
+	},
+	"debug": false
 }
