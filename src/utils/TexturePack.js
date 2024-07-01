@@ -261,7 +261,6 @@ class Texture {
                         rotatedImage.src = canvas.toDataURL("image/png")
                         texturesDiv.appendChild(rotatedImage)
                         // result.#imageElements.set(270 - angle, rotatedImage)
-                        console.log(360 - hoistedAngle, rotatedImage)
                         result.#imageElements.set(AngleUtils.clampAngleDeg(270 - hoistedAngle), rotatedImage)
                     }
                 }

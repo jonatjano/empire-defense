@@ -19,9 +19,9 @@ class Tile {
 }
 
 const tiles = Object.freeze({
-    air: new Tile("grass", {canWalk: false, canBuild: false}),
+    air: new Tile("air", {canWalk: false, canBuild: false}),
     spawn: new Tile("grass", {canBuild: false}),
-    target: new Tile("target", {canBuild: false}),
+    target: new Tile("grass", {canBuild: false}),
     grass: new Tile("grass"),
 })
 
