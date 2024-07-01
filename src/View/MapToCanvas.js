@@ -8,6 +8,14 @@ import Game from "../models/Game.js";
 
 const TILE_MARGIN = -1
 
+const HP_BAR_STYLE = Object.freeze({
+    get WIDTH() { return 0.7 * options.zoom }
+})
+const HP_BAR_WIDTH = 0.7 * options.zoom
+const HP_BAR_HEIGHT = 4
+const HP_BAR_BORDER = 1
+const HP_BAR_MARGIN = 8
+
 /**
  * @param {HTMLCanvasElement} canvas
  * @param {(x: number, y: number) => undefined} clickListener
@@ -127,56 +135,88 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
     const packWidth = globalThis.options.texturePack.packMeta.width
     const packHeight = globalThis.options.texturePack.packMeta.height
 
-    for (const entity of entities) {
-        entity.texture.then(entityTexture => {
-            const textureHorizontalSpan = Math.floor(entityTexture.width / packWidth)
-            const textureLeftMargin = ((textureHorizontalSpan * packWidth) - entityTexture.width) / 2
+    await Promise.all(
+        entities.map(entity =>
+            entity.texture.then(entityTexture => {
+                const textureHorizontalSpan = Math.floor(entityTexture.width / packWidth)
+                const textureLeftMargin = ((textureHorizontalSpan * packWidth) - entityTexture.width) / 2
 
-            const textureVerticalSpan = Math.floor(entityTexture.height / packHeight)
-            const textureTopMargin = ((textureVerticalSpan * packHeight) - entityTexture.height) / 2
+                const textureVerticalSpan = Math.floor(entityTexture.height / packHeight)
+                const textureTopMargin = ((textureVerticalSpan * packHeight) - entityTexture.height) / 2
 
-            const heightFactor = entityTexture.height / packHeight
+                const heightFactor = entityTexture.height / packHeight
 
-            /** @type {[number, number, number, number]} */
-            const drawImageArgs = {
-                dx: (leftMargin + entity.position.x - (textureHorizontalSpan - 0.5)) * options.zoom  + textureLeftMargin + TILE_MARGIN,
-                dy: (topMargin + entity.position.y - (textureVerticalSpan - 0.5)) * options.zoom + textureTopMargin + TILE_MARGIN,
-                dw: (entityTexture.width / packWidth) * options.zoom - 2 * TILE_MARGIN,
-                dh: (entityTexture.height / packHeight) * options.zoom - 2 * TILE_MARGIN
-            }
+                /** @type {[number, number, number, number]} */
+                const drawImageArgs = {
+                    dx: (leftMargin + entity.position.x - (textureHorizontalSpan - 0.5)) * options.zoom  + textureLeftMargin + TILE_MARGIN,
+                    dy: (topMargin + entity.position.y - (textureVerticalSpan - 0.5)) * options.zoom + textureTopMargin + TILE_MARGIN,
+                    dw: (entityTexture.width / packWidth) * options.zoom - 2 * TILE_MARGIN,
+                    dh: (entityTexture.height / packHeight) * options.zoom - 2 * TILE_MARGIN
+                }
 
-            if (entityTexture.textureType !== TextureType.ROTATION_ONLY) {
-                ctx.drawImage(entityTexture.getBase(), drawImageArgs.dx, drawImageArgs.dy, drawImageArgs.dw, drawImageArgs.dh)
-            }
+                if (entityTexture.textureType !== TextureType.ROTATION_ONLY) {
+                    ctx.drawImage(entityTexture.getBase(), drawImageArgs.dx, drawImageArgs.dy, drawImageArgs.dw, drawImageArgs.dh)
+                }
 
-            if (entityTexture.textureType !== TextureType.BASE_ONLY) {
-                let angle = AngleUtils.rad2deg(AngleUtils.clampAngleRad(-entity.position.rotation))
-                angle = angle + (entityTexture.angleBetweenRotations / 2)
-                angle = angle - (angle % entityTexture.angleBetweenRotations)
+                if (entityTexture.textureType !== TextureType.BASE_ONLY) {
+                    let angle = AngleUtils.rad2deg(AngleUtils.clampAngleRad(-entity.position.rotation))
+                    angle = angle + (entityTexture.angleBetweenRotations / 2)
+                    angle = angle - (angle % entityTexture.angleBetweenRotations)
 
-                // console.log(angle, entityTexture.getForOrientation(angle))
-                ctx.drawImage(
-                    entityTexture.getForOrientation(angle),
-                    0, entityTexture.height * (Math.floor(frameTiming / entityTexture.animationFrameDuration) % entityTexture.animationFrameCount),
-                    entityTexture.width, entityTexture.height,
-                    drawImageArgs.dx, drawImageArgs.dy, drawImageArgs.dw, drawImageArgs.dh,
-                )
-            }
-            if (globalThis.options.debug) {
-                ctx.fillStyle = `#000000`
-                // position text
-                ctx.fillText(`x: ${(entity.position.x - 0.5).toFixed(1)}\ny: ${(entity.position.y - 0.5).toFixed(1)}\nr: ${(entity.position.rotation / (2 * Math.PI) * 360).toFixed(0)}`,
-                    (leftMargin + entity.position.x) * options.zoom + TILE_MARGIN,
-                    (topMargin + entity.position.y - (heightFactor - 0.6)) * options.zoom + TILE_MARGIN,
-                )
-                // forward dot
-                ctx.fillRect(
-                    (leftMargin + entity.position.x) * options.zoom + TILE_MARGIN + Math.cos(entity.position.rotation) * 1000 * entity.movements.movementSpeed * options.zoom,
-                    (topMargin + entity.position.y) * options.zoom + TILE_MARGIN + Math.sin(entity.position.rotation) * 1000 * entity.movements.movementSpeed * options.zoom, 5, 5
-                )
-            }
-        })
-    }
+                    // console.log(angle, entityTexture.getForOrientation(angle))
+                    ctx.drawImage(
+                        entityTexture.getForOrientation(angle),
+                        0, entityTexture.height * (Math.floor(frameTiming / entityTexture.animationFrameDuration) % entityTexture.animationFrameCount),
+                        entityTexture.width, entityTexture.height,
+                        drawImageArgs.dx, drawImageArgs.dy, drawImageArgs.dw, drawImageArgs.dh,
+                    )
+                }
+
+                if (entity.hp !== entity.maxHp) {
+                    // HP bar
+                    // black border
+                    ctx.fillStyle = "black"
+                    ctx.fillRect(
+                        drawImageArgs.dx + (options.zoom - HP_BAR_WIDTH) / 2,
+                        drawImageArgs.dy - (HP_BAR_MARGIN + HP_BAR_HEIGHT + 2 * HP_BAR_BORDER),
+                        HP_BAR_WIDTH + 2 * HP_BAR_BORDER,
+                        HP_BAR_HEIGHT + 2 * HP_BAR_BORDER
+                    )
+                    // white background
+                    ctx.fillStyle = "white"
+                    ctx.fillRect(
+                        drawImageArgs.dx + (options.zoom - HP_BAR_WIDTH) / 2 + HP_BAR_BORDER,
+                        drawImageArgs.dy - (HP_BAR_MARGIN + HP_BAR_HEIGHT + HP_BAR_BORDER),
+                        HP_BAR_WIDTH,
+                        HP_BAR_HEIGHT
+                    )
+                    // content
+                    ctx.fillStyle = "red"
+                    ctx.fillRect(
+                        drawImageArgs.dx + (options.zoom - HP_BAR_WIDTH) / 2 + HP_BAR_BORDER,
+                        drawImageArgs.dy - (HP_BAR_MARGIN + HP_BAR_HEIGHT + HP_BAR_BORDER),
+                        HP_BAR_WIDTH * entity.hp / entity.maxHp,
+                        HP_BAR_HEIGHT
+                    )
+                    ctx.fillStyle = "black"
+                }
+
+                if (globalThis.options.debug) {
+                    ctx.fillStyle = `#000000`
+                    // position text
+                    ctx.fillText(`x: ${(entity.position.x - 0.5).toFixed(1)}\ny: ${(entity.position.y - 0.5).toFixed(1)}\nr: ${(entity.position.rotation / (2 * Math.PI) * 360).toFixed(0)}`,
+                        (leftMargin + entity.position.x) * options.zoom + TILE_MARGIN,
+                        (topMargin + entity.position.y - (heightFactor - 0.6)) * options.zoom + TILE_MARGIN,
+                    )
+                    // forward dot
+                    ctx.fillRect(
+                        (leftMargin + entity.position.x) * options.zoom + TILE_MARGIN + Math.cos(entity.position.rotation) * 1000 * entity.movements.movementSpeed * options.zoom,
+                        (topMargin + entity.position.y) * options.zoom + TILE_MARGIN + Math.sin(entity.position.rotation) * 1000 * entity.movements.movementSpeed * options.zoom, 5, 5
+                    )
+                }
+            })
+        )
+    )
 
     if (globalThis.options.debug) {
         // print pathfinding infos

@@ -8,8 +8,7 @@
  * }} EntityConfiguration
  */
 import Position from "../Position.js";
-import {default as MovementCapability, DISTANCE_EPSILON, MovementType} from "../MovementCapability.js";
-import * as AngleUtils from "../../utils/AngleUtils.js";
+import {default as MovementCapability, MovementType} from "../MovementCapability.js";
 
 export class EntityFactory {
     /** @type {string} */
@@ -119,6 +118,9 @@ export default class Entity {
     get position() { return this.#position }
     /** @return {MovementCapability} */
     get movements() { return this.#movements }
+
+    get hp() { return this.#hp }
+    get maxHp() { return this.#maxHp }
 
     /** @return {Promise<Texture>} */
     get texture() { throw new Error("AbstractEntity initialised") }
