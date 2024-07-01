@@ -2,7 +2,6 @@ import options from "../utils/Options.js";
 import Position from "../models/Position.js";
 import {MovementType} from "../models/MovementCapability.js";
 import * as AngleUtils from "../utils/AngleUtils.js";
-import Building from "../models/entities/Building.js";
 import {TextureType} from "../utils/TexturePack.js";
 
 const TILE_MARGIN = -1

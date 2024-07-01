@@ -29,7 +29,7 @@ export default class Building extends Entity {
                         Entity.factory
                             .setName("missile")
                             .setPosition(new Position(this.position.x, this.position.y - 1))
-                            .setMovements(new MovementCapability(2, 360000, 5, MovementType.Unobstructed))
+                            .setMovements(new MovementCapability(10, 360000, 5, MovementType.Unobstructed))
                     );
                     missile.target = entity
                     globalThis.game.addEntity(missile)

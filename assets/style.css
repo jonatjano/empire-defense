@@ -57,6 +57,7 @@ html, body {
         height: 100%;
         top: 0;
         left: 0;
+        font-size: max(20px,5vh);
 
         display: grid;
         grid-template:
@@ -79,6 +80,12 @@ html, body {
         & > #money, & > #life, & > #crystal, & > #wave { align-self: start }
         & > #menu, & > #entityActions { align-self: end }
 
+    }
+
+    #money, #life, #menu, #crystal {
+        display: flex;
+        align-items: center;
+        & > img { height: 2em }
     }
 }
 
