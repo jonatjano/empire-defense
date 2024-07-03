@@ -90,6 +90,14 @@ export default class Position {
     }
 
     /**
+     * @param {Position} position
+     * @return {number}
+     */
+    angleTo(position) {
+        return AngleUtils.clampAngleRad(Math.atan2(position.y - this.y, position.x - this.x));
+    }
+
+    /**
      * @param {Position} from
      * @param {Position} to
      * @param {MovementCapability} movements

@@ -131,27 +131,23 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
             (b.position.y + movementTypeDrawPriority(b.movements.movementType))
     })
 
-    const packWidth = globalThis.options.texturePack.packMeta.width
-    const packHeight = globalThis.options.texturePack.packMeta.height
-
     await Promise.all(
         entities.map(entity =>
             entity.texture.then(entityTexture => {
-                const textureHorizontalSpan = Math.floor(entityTexture.width / packWidth)
-                const textureLeftMargin = ((textureHorizontalSpan * packWidth) - entityTexture.width) / 2
+                const textureHorizontalSpan = entityTexture.worldWidth
+                const textureLeftMargin = -textureHorizontalSpan / 2
 
-                const textureVerticalSpan = Math.floor(entityTexture.height / packHeight)
-                const textureTopMargin = ((textureVerticalSpan * packHeight) - entityTexture.height) / 2
-
-                const heightFactor = entityTexture.height / packHeight
+                const textureVerticalSpan = entityTexture.worldHeight
+                const textureTopMargin = -textureVerticalSpan + 0.5
 
                 /** @type {[number, number, number, number]} */
                 const drawImageArgs = {
-                    dx: (leftMargin + entity.position.x - (textureHorizontalSpan - 0.5)) * options.zoom  + textureLeftMargin + TILE_MARGIN,
-                    dy: (topMargin + entity.position.y - (textureVerticalSpan - 0.5)) * options.zoom + textureTopMargin + TILE_MARGIN,
-                    dw: (entityTexture.width / packWidth) * options.zoom - 2 * TILE_MARGIN,
-                    dh: (entityTexture.height / packHeight) * options.zoom - 2 * TILE_MARGIN
+                    dx: (leftMargin + entity.position.x + textureLeftMargin) * options.zoom,
+                    dy: (topMargin + entity.position.y + textureTopMargin) * options.zoom,
+                    dw: entityTexture.worldWidth * options.zoom,
+                    dh: entityTexture.worldHeight * options.zoom
                 }
+
 
                 if (entityTexture.textureType !== TextureType.ROTATION_ONLY) {
                     ctx.drawImage(entityTexture.getBase(), drawImageArgs.dx, drawImageArgs.dy, drawImageArgs.dw, drawImageArgs.dh)
@@ -162,11 +158,10 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                     angle = angle + (entityTexture.angleBetweenRotations / 2)
                     angle = angle - (angle % entityTexture.angleBetweenRotations)
 
-                    // console.log(angle, entityTexture.getForOrientation(angle))
                     ctx.drawImage(
                         entityTexture.getForOrientation(angle),
-                        0, entityTexture.height * (Math.floor(frameTiming / entityTexture.animationFrameDuration) % entityTexture.animationFrameCount),
-                        entityTexture.width, entityTexture.height,
+                        0, entityTexture.pixelHeight * (Math.floor(frameTiming / entityTexture.animationFrameDuration) % entityTexture.animationFrameCount),
+                        entityTexture.pixelWidth, entityTexture.pixelHeight,
                         drawImageArgs.dx, drawImageArgs.dy, drawImageArgs.dw, drawImageArgs.dh,
                     )
                 }
@@ -178,7 +173,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                     ctx.fillRect(
                         drawImageArgs.dx + (options.zoom - HP_BAR_STYLE.WIDTH) / 2,
                         drawImageArgs.dy - (HP_BAR_STYLE.MARGIN + HP_BAR_STYLE.HEIGHT + 2 * HP_BAR_STYLE.BORDER),
-                        HP_BAR_STYLE.WIDTH + 2 * HP_BAR_STYLE.BORDER,
+                        HP_BAR_STYLE.WIDTH + (entityTexture.worldWidth - 1) * options.zoom + 2 * HP_BAR_STYLE.BORDER,
                         HP_BAR_STYLE.HEIGHT + 2 * HP_BAR_STYLE.BORDER
                     )
                     // white background
@@ -186,7 +181,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                     ctx.fillRect(
                         drawImageArgs.dx + (options.zoom - HP_BAR_STYLE.WIDTH) / 2 + HP_BAR_STYLE.BORDER,
                         drawImageArgs.dy - (HP_BAR_STYLE.MARGIN + HP_BAR_STYLE.HEIGHT + HP_BAR_STYLE.BORDER),
-                        HP_BAR_STYLE.WIDTH,
+                        HP_BAR_STYLE.WIDTH + (entityTexture.worldWidth - 1) * options.zoom,
                         HP_BAR_STYLE.HEIGHT
                     )
                     // content
@@ -194,7 +189,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                     ctx.fillRect(
                         drawImageArgs.dx + (options.zoom - HP_BAR_STYLE.WIDTH) / 2 + HP_BAR_STYLE.BORDER,
                         drawImageArgs.dy - (HP_BAR_STYLE.MARGIN + HP_BAR_STYLE.HEIGHT + HP_BAR_STYLE.BORDER),
-                        HP_BAR_STYLE.WIDTH * entity.hp / entity.maxHp,
+                        (HP_BAR_STYLE.WIDTH + (entityTexture.worldWidth - 1) * options.zoom) * entity.hp / entity.maxHp,
                         HP_BAR_STYLE.HEIGHT
                     )
                     ctx.fillStyle = "black"
@@ -205,7 +200,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                     // position text
                     ctx.fillText(`x: ${(entity.position.x - 0.5).toFixed(1)}\ny: ${(entity.position.y - 0.5).toFixed(1)}\nr: ${(entity.position.rotation / (2 * Math.PI) * 360).toFixed(0)}`,
                         (leftMargin + entity.position.x) * options.zoom + TILE_MARGIN,
-                        (topMargin + entity.position.y - (heightFactor - 0.6)) * options.zoom + TILE_MARGIN,
+                        (topMargin + entity.position.y - (entityTexture.worldHeight - 0.6)) * options.zoom + TILE_MARGIN,
                     )
                     // forward dot
                     ctx.fillRect(

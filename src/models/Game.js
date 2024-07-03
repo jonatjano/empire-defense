@@ -39,7 +39,7 @@ export default class Game {
                 Entity.factory
                     .setName("enemy")
                     .setPosition(new Position(spawn))
-                    .setMovements(new MovementCapability(0.5, 3600, 360, MovementType.Walking))
+                    .setMovements(new MovementCapability(2, 3600, 360, MovementType.Walking))
                     .setMaxHp(100)
             ))
 

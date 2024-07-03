@@ -8,17 +8,20 @@ export const TextureType = {
 }
 
 const DEFAULTS = {
+    extension: "png",
     animationFrameDuration: 1000,
     angleBetweenRotations: 90,
     isSymmetric: true,
     textureType: TextureType.IMAGE,
-    size: 1,
+    pixelSize: 128,
+    worldSize: 1,
     entities: {
         textureType: TextureType.ROTATION_ONLY,
         buildings: {
             textureType: TextureType.ROTATION_AND_BASE,
-            height: 2,
-            tower: { textureType: TextureType.BASE_ONLY }
+            pixelHeight: 256,
+            worldHeight: 2,
+            // tower: { textureType: TextureType.BASE_ONLY }
         },
         projectiles: {
             angleBetweenRotations: 15,
@@ -28,31 +31,42 @@ const DEFAULTS = {
 }
 
 class TextureMeta {
+    /** @type {TextureMeta | null} */
     #parent
+    #extension
     #animationFrameDuration
     #angleBetweenRotations
     #isSymmetric
     #textureType
-    #width
-    #height
+    #pixelWidth
+    #pixelHeight
+    #worldWidth
+    #worldHeight
 
-    constructor(parent, {animationFrameDuration, angleBetweenRotations, isSymmetric, textureType, width, height, size}) {
+    constructor(parent, {extension, animationFrameDuration, angleBetweenRotations, isSymmetric, textureType, pixelWidth, pixelHeight, pixelSize, worldWidth, worldHeight, worldSize}) {
         this.#parent = parent
 
+        this.#extension = extension
         this.#animationFrameDuration = animationFrameDuration
         this.#angleBetweenRotations = angleBetweenRotations
         this.#isSymmetric = isSymmetric
         this.#textureType = textureType
-        this.#width = width ?? size
-        this.#height = height ?? size
+        this.#pixelWidth = pixelWidth ?? pixelSize
+        this.#pixelHeight = pixelHeight ?? pixelSize
+        this.#worldWidth = worldWidth ?? worldSize
+        this.#worldHeight = worldHeight ?? worldSize
     }
 
+    get extension() { return this.#extension ?? this.#parent.extension }
     get animationFrameDuration() { return this.#animationFrameDuration ?? this.#parent.animationFrameDuration }
     get angleBetweenRotations() { return this.#angleBetweenRotations ?? this.#parent.angleBetweenRotations }
+    /** @return {TextureType} */
     get textureType() { return this.#textureType ?? this.#parent.textureType }
     get isSymmetric() { return this.#isSymmetric ?? this.#parent.isSymmetric }
-    get width() { return this.#width ?? this.#parent.width }
-    get height() { return this.#height ?? this.#parent.height }
+    get pixelWidth() { return this.#pixelWidth ?? this.#parent.pixelWidth }
+    get pixelHeight() { return this.#pixelHeight ?? this.#parent.pixelHeight }
+    get worldWidth() { return this.#worldWidth ?? this.#parent.worldWidth }
+    get worldHeight() { return this.#worldHeight ?? this.#parent.worldHeight }
 }
 
 const textureListLeaf = Symbol()
@@ -79,10 +93,6 @@ const textureList = {
             // additions: textureListLeaf,
             base: textureListLeaf
         }
-    },
-    tiles: {
-        air: textureListLeaf,
-        grass: textureListLeaf
     }
 }
 
@@ -210,17 +220,18 @@ class Texture {
     getBase() { return this.getForOrientation(Texture.#baseMarker) }
 
     get animationFrameDuration() { return this.#meta.animationFrameDuration }
-    get animationFrameCount() { return this.getForOrientation(0).height / this.height }
-    get animationFrameCountForBase() { return this.getForOrientation(Texture.#baseMarker).height / this.height }
+    get animationFrameCount() { return this.getForOrientation(0).height / this.pixelHeight }
+    get animationFrameCountForBase() { return this.getForOrientation(Texture.#baseMarker).height / this.pixelHeight }
     get angleBetweenRotations() { return this.#meta.angleBetweenRotations }
     /** @return {TextureType} */
     get textureType() { return this.#meta.textureType }
-    get width() { return this.#meta.width }
-    get height() { return this.#meta.height; }
+    get pixelWidth() { return this.#meta.pixelWidth }
+    get pixelHeight() { return this.#meta.pixelHeight; }
+    get worldWidth() { return this.#meta.worldWidth }
+    get worldHeight() { return this.#meta.worldHeight; }
 
 
     static for(path, textureMeta) {
-        console.log(path, textureMeta)
         const result = new Texture(textureMeta)
         const texturesDiv = document.getElementById("textures")
 
@@ -239,7 +250,7 @@ class Texture {
 
         if (textureMeta.textureType !== TextureType.ROTATION_ONLY) {
             const image = document.createElement("img")
-            image.src = `/assets/images/${globalThis.options.texturePack.name}/${path.join("/")}/base.png`
+            image.src = `/assets/images/${globalThis.options.texturePack.name}/${path.join("/")}/base.${textureMeta.extension}`
             texturesDiv.appendChild(image)
             result.#imageElements.set(Texture.#baseMarker, image)
         }
@@ -247,16 +258,15 @@ class Texture {
         if (textureMeta.textureType === TextureType.BASE_ONLY) {
             return result
         }
-        console.log("rotate")
+
         let angle = 0
         while (angle < 360) {
             const image = document.createElement("img")
             if (angle <= 180 || (angle > 180 && ! textureMeta.isSymmetric)) {
-                image.src = `/assets/images/${globalThis.options.texturePack.name}/${path.join("/")}/${angle}.png`
+                image.src = `/assets/images/${globalThis.options.texturePack.name}/${path.join("/")}/${angle}.${textureMeta.extension}`
                 texturesDiv.appendChild(image)
                 result.#imageElements.set(AngleUtils.clampAngleDeg(angle - 90), image)
             }
-            console.log(angle, image.src)
 
             if (textureMeta.isSymmetric) {
                 if (angle !== 0 && angle !== 180) {
@@ -276,7 +286,6 @@ class Texture {
                         const rotatedImage = document.createElement("img")
                         rotatedImage.src = canvas.toDataURL("image/png")
                         texturesDiv.appendChild(rotatedImage)
-                        // result.#imageElements.set(270 - angle, rotatedImage)
                         result.#imageElements.set(AngleUtils.clampAngleDeg(270 - hoistedAngle), rotatedImage)
                     }
                 }

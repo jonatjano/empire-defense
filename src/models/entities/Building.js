@@ -33,6 +33,7 @@ export default class Building extends Entity {
                     );
                     missile.target = entity
                     globalThis.game.addEntity(missile)
+                    this.position.rotation = this.position.angleTo(entity.position)
                 })
             }
         }
