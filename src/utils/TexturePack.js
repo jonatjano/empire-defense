@@ -1,4 +1,8 @@
 import * as AngleUtils from "./AngleUtils.js";
+import entities from "../models/entities/entities.js";
+import AbstractBuilding from "../models/entities/AbstractBuilding.js";
+import AbstractProjectile from "../models/entities/AbstractProjectile.js";
+import AbstractUnit from "../models/entities/AbstractUnit.js";
 
 export const TextureType = {
     IMAGE: Symbol("IMAGE"),
@@ -21,7 +25,7 @@ const DEFAULTS = {
             textureType: TextureType.ROTATION_AND_BASE,
             pixelHeight: 256,
             worldHeight: 2,
-            // tower: { textureType: TextureType.BASE_ONLY }
+            // archer: { textureType: TextureType.BASE_ONLY }
         },
         projectiles: {
             angleBetweenRotations: 15,
@@ -71,17 +75,28 @@ class TextureMeta {
 
 const textureListLeaf = Symbol()
 const textureList = {
-    entities: {
-        buildings: {
-            tower: textureListLeaf
+    // {buildings: {archer: textureListLeaf, ...}, ...}
+    entities: Object.values(entities).reduce(
+        (acc, klass) => {
+            console.log(klass)
+            switch (klass.__proto__) {
+                case AbstractBuilding: {
+                    acc.buildings[klass.name.toLowerCase()] = textureListLeaf
+                    break
+                }
+                case AbstractProjectile: {
+                    acc.projectiles[klass.name.toLowerCase()] = textureListLeaf
+                    break
+                }
+                case AbstractUnit: {
+                    acc.units[klass.name.toLowerCase()] = textureListLeaf
+                    break
+                }
+            }
+            return acc
         },
-        projectiles: {
-            missile: textureListLeaf
-        },
-        units: {
-            enemy: textureListLeaf
-        }
-    },
+        {buildings: {}, projectiles: {}, units: {}}
+    ),
     icons: {
         money: textureListLeaf,
         life: textureListLeaf,

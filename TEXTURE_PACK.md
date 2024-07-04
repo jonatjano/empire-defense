@@ -86,7 +86,7 @@ These are the values used when you do not define them in your `pack.json`, defin
             "textureType": "ROTATION_AND_BASE",
             "pixelHeight": 256,
             "worldHeight": 2,
-            "tower": { 
+            "archer": { 
                 "textureType": "BASE_ONLY"
             }
         },

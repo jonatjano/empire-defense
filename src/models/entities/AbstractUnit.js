@@ -1,7 +1,7 @@
-import Entity from "./Entity.js";
+import AbstractEntity from "./AbstractEntity.js";
 import Position from "../Position.js";
 
-export default class Unit extends Entity {
+export default class AbstractUnit extends AbstractEntity {
 
     constructor(factory) {
         super(factory);

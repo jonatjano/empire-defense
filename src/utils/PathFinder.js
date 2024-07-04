@@ -1,6 +1,6 @@
 import Position from "../models/Position.js";
 import {MovementType} from "../models/MovementCapability.js";
-import Building from "../models/entities/Building.js";
+import AbstractBuilding from "../models/entities/AbstractBuilding.js";
 import {TileOption} from "../models/GameMap.js";
 
 /**
@@ -50,8 +50,8 @@ export default class PathFinder {
                 if (movementType === MovementType.Walking && ! TileOption.is(this.#map.getTileOption(doing.position.x, doing.position.y), TileOption.walkable)) { continue }
                 if (movementType === MovementType.Flying && ! TileOption.is(this.#map.getTileOption(doing.position.x, doing.position.y), TileOption.flyable)) { continue }
 
-                if (movementType === MovementType.Walking && globalThis.game.getEntities(Building).find(entity =>
-                    entity instanceof Building && entity.position.equals(doing.position.x + 0.5, doing.position.y + 0.5)
+                if (movementType === MovementType.Walking && globalThis.game.getEntities(AbstractBuilding).find(entity =>
+                    entity instanceof AbstractBuilding && entity.position.equals(doing.position.x + 0.5, doing.position.y + 0.5)
                 ) !== undefined) { continue }
 
                 paths.set(key, {target: doing.from, value: doing.value, times: (paths.get(key)?.times ?? 0) + 1})

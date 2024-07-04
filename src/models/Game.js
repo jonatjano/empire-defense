@@ -1,9 +1,8 @@
-import Entity from "./entities/Entity.js";
+import AbstractEntity from "./entities/AbstractEntity.js";
 import Position from "./Position.js";
-import Building from "./entities/Building.js";
-import MovementCapability, {MovementType} from "./MovementCapability.js"
-import Unit from "./entities/Unit.js";
+import AbstractBuilding from "./entities/AbstractBuilding.js";
 import {TileOption} from "./GameMap.js";
+import Entities from "./entities/entities.js";
 
 let lastFrameTiming
 let debugTime = document.getElementById("debugTime")
@@ -20,7 +19,7 @@ export default class Game {
     #eventListener
     /** @type {boolean} */
     #isPaused = true
-    /** @type {Entity[]} */
+    /** @type {AbstractEntity[]} */
     #entities = []
     /** @type {PathFinder} */
     #pathFinder
@@ -35,21 +34,9 @@ export default class Game {
         this.#eventListener = eventListener
         this.#pathFinder = pathFinder
         this.#map.spawns.forEach(spawn => {
-            this.addEntity(new Unit(
-                Entity.factory
-                    .setName("enemy")
-                    .setPosition(new Position(spawn))
-                    .setMovements(new MovementCapability(2, 3600, 360, MovementType.Walking))
-                    .setMaxHp(100)
-            ))
+            this.addEntity(new Entities.Footman(spawn))
 
-            // this.addEntity(new Entity({
-            //     name: "enemy",
-            //     movements: new MovementCapability(3, 3600, 360, MovementType.Flying),
-            //     position: new Position(spawn),
-            //     selectionRange: 10,
-            //     baseHp: 1
-            // }))
+            // this.addEntity(new Entities.Bird(spawn))
         })
     }
 
@@ -62,18 +49,18 @@ export default class Game {
     }
 
     /**
-     * @param {typeof Entity} [type=Entity]
-     * @return {Entity[]}
+     * @param {typeof AbstractEntity} [type=Entity]
+     * @return {AbstractEntity[]}
      */
-    getEntities(type = Entity) { return type === Entity ? this.#entities : this.#entities.filter(entity => entity instanceof type) }
+    getEntities(type = AbstractEntity) { return type === AbstractEntity ? this.#entities : this.#entities.filter(entity => entity instanceof type) }
 
     /**
-     * @param {(Entity) => boolean} condition
-     * @param {typeof Entity} [type=Entity]
-     * @return {Entity[]}
+     * @param {(AbstractEntity) => boolean} condition
+     * @param {typeof AbstractEntity} [type=Entity]
+     * @return {AbstractEntity[]}
      */
-    getEntitiesWithCondition(condition, type = Entity) { return this.#entities.filter(entity => entity instanceof type && condition(entity)) }
-    getEntitiesCloseTo(position, range, type = Entity) { return this.#entities.filter(entity => entity instanceof type && entity.position.distanceFrom(position) < range) }
+    getEntitiesWithCondition(condition, type = AbstractEntity) { return this.#entities.filter(entity => entity instanceof type && condition(entity)) }
+    getEntitiesCloseTo(position, range, type = AbstractEntity) { return this.#entities.filter(entity => entity instanceof type && entity.position.distanceFrom(position) < range) }
 
     /**
      * @return {GameMap}
@@ -140,8 +127,8 @@ export default class Game {
         const towerPosition = new Position(Math.floor(x), Math.floor(y), 0)
         console.log(towerPosition)
 
-        if (this.getEntities(Building).some(building => building.position.equals(towerPosition))) {
-            console.log("Position is already taken", this.getEntities(Building))
+        if (this.getEntities(AbstractBuilding).some(building => building.position.equals(towerPosition))) {
+            console.log("Position is already taken", this.getEntities(AbstractBuilding))
             return
         }
         if (! this.#map.positionIsValid(towerPosition) || ! TileOption.is(this.#map.getTileOption(towerPosition.x, towerPosition.y), TileOption.buildable)) {
@@ -150,11 +137,7 @@ export default class Game {
         }
 
         console.log("building tower")
-        const tower = new Building(
-            Building.factory
-                .setName("tower")
-                .setPosition(towerPosition)
-        )
+        const tower = new Entities.Archer(towerPosition)
         console.log(tower)
         this.addEntity(tower)
         if (! this.#pathFinder.recalculateAll()) {
