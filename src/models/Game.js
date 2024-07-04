@@ -134,6 +134,7 @@ export default class Game {
      * @param {number} y
      */
     click(x, y) {
+        console.groupCollapsed("click")
         console.log(`clicked on cell ${x}, ${y}`)
 
         const towerPosition = new Position(Math.floor(x), Math.floor(y), 0)
@@ -162,5 +163,6 @@ export default class Game {
             this.#pathFinder.recalculateAll()
         }
         console.log("end")
+        console.groupEnd()
     }
 }

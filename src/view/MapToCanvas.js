@@ -58,6 +58,10 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
     const leftMargin = (canvas.width / options.zoom - map.width) / 2;
     const topMargin = (canvas.height / options.zoom - map.height) / 2;
 
+    if (game instanceof GameMap) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+    }
+
     // print map base
     await globalThis.options.texturePack.getTexture(`maps/${map.name}/base`).then(mapTexture => {
         ctx.drawImage(mapTexture.getBase(),

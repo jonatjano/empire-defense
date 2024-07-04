@@ -92,6 +92,9 @@ const textureList = {
         classic: {
             // additions: textureListLeaf,
             base: textureListLeaf
+        },
+        test: {
+            base: textureListLeaf
         }
     }
 }

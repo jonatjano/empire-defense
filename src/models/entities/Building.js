@@ -17,11 +17,11 @@ export default class Building extends Entity {
 
         this.#attackCooldown = this.#attackCooldown - frameDuration
 
-        if (this.#attackCooldown <= 0) {
+        const targets = globalThis.game.getEntitiesCloseTo(this.position, ATTACK_RANGE, Unit)
+        if (targets.length !== 0) {
+            this.position.rotation = this.position.angleTo(targets[0].position)
 
-            const targets = globalThis.game.getEntitiesCloseTo(this.position, ATTACK_RANGE, Unit)
-            if (targets.length !== 0) {
-                console.log("attak")
+            if (this.#attackCooldown <= 0) {
                 this.#attackCooldown = ATTACK_DELAY
 
                 targets.forEach(entity => {
@@ -33,10 +33,11 @@ export default class Building extends Entity {
                     );
                     missile.target = entity
                     globalThis.game.addEntity(missile)
-                    this.position.rotation = this.position.angleTo(entity.position)
                 })
             }
         }
+
+
     }
 
     get texture() { return globalThis.options.texturePack.getTexture(`entities/buildings/${this.name}`) }
