@@ -24,43 +24,43 @@ export class EntityFactory {
     constructor() {
         this.name = ""
         this.maxHp = 1
-        this.selectionRange = 0.6
+        this.selectionRange = 0
         this.movements = new MovementCapability(0, 0, 0, MovementType.Walking)
         this.position = new Position(0, 0, 0)
     }
 
     /**
      * @param {string} value
-     * @return {EntityFactory}
+     * @return {this}
      */
     setName(value) { this.name = value; return this }
 
     /**
      * @param {number} value
-     * @return {EntityFactory}
+     * @return {this}
      */
     setMaxHp(value) { this.maxHp = value; return this }
 
     /**
      * @param {number} value
-     * @return {EntityFactory}
+     * @return {this}
      */
     setSelectionRange(value) { this.selectionRange = value; return this }
 
     /**
      * @param {MovementCapability} value
-     * @return {EntityFactory}
+     * @return {this}
      */
     setMovements(value) { this.movements = value; return this }
 
     /**
      * @param {Position} value
-     * @return {EntityFactory}
+     * @return {this}
      */
     setPosition(value) { this.position = value; return this }
 }
 
-export default class Entity {
+export default class AbstractEntity {
     #name
     #hp
     #maxHp
@@ -69,7 +69,7 @@ export default class Entity {
     #movements
     /** @type {Position} */
     #position
-    /** @type {Position | Entity} */
+    /** @type {Position | AbstractEntity} */
     #target
     /** @type {number} */
     #id
@@ -84,7 +84,7 @@ export default class Entity {
      * @param {EntityFactory} factory
      */
     constructor(factory) {
-        this.#id = Entity.#idGenerator++
+        this.#id = AbstractEntity.#idGenerator++
         this.#name = factory.name
         this.#position = Position.getTileCenterPosition(factory.position)
         this.#movements = factory.movements
@@ -111,7 +111,7 @@ export default class Entity {
     }
 
     get name() { return this.#name }
-    /** @return {Position | Entity} */
+    /** @return {Position | AbstractEntity} */
     get target() { return this.#target }
     set target(value) { this.#target = value }
     /** @return {Position} */
