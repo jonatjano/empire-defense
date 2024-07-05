@@ -14,6 +14,7 @@ export function mainMenu() {
         const playButton = document.getElementById("mainMenuPlayButton")
         playButton.addEventListener("click", () => {
             menu.classList.add("hidden")
+            document.querySelector("#textures").classList.add("hidden")
             lobby()
         })
     }

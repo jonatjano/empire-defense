@@ -33,6 +33,7 @@ class Options {
                  *  languages: {default: string, list: string[]},
                  *  texturePacks: {default: string, list: string[]},
                  *  debug: ?boolean,
+                 *  debugTextures: ?boolean,
                  *  showStats: ?boolean
                  * }} meta */
                 meta => {
@@ -48,6 +49,19 @@ class Options {
                 /* texture pack */
                 this.#knownTexturePacks = meta.texturePacks.list.map(name => new TexturePack(name))
                 this.texturePack = this.#knownTexturePacks.find(pack => pack.name === meta.texturePacks.default) ?? this.#knownTexturePacks[0]
+
+                const texturePackSelect = document.querySelector("#texturePackSelect")
+                this.#knownTexturePacks.forEach(pack => {
+                    const option = document.createElement("option")
+                    option.value = pack.name
+                    option.textContent = pack.name
+                    texturePackSelect.append(option)
+                })
+                texturePackSelect.onchange = () => { this.texturePack = texturePackSelect.value }
+
+                if (meta.debugTextures) {
+                    document.querySelector("#textures").classList.remove("hidden")
+                }
             })
             .then(_ => console.log(this))
     }
@@ -96,11 +110,39 @@ class Options {
         if (texturePack) {
             this.#texturePack = texturePack
             this.#texturePack.changeDocumentTextures()
+            console.log(texturePack)
         }
     }
 
     get texturePack() { return this.#texturePack }
+
+    uploadTexturePack() {
+        const files = document.querySelector("#texturePackInput").files
+        const file = files[0]
+
+        const texturePackName = file.webkitRelativePath.split('/')[0]
+
+        // TODO if the name is already taken, override the existing pack
+
+        // TODO ensure structure looks good
+
+        const texturePack = new TexturePack(texturePackName)
+
+        texturePack.initForWebkitDirectory([...files])
+            .then(_ => {
+                this.#knownTexturePacks.push(texturePack)
+                this.texturePack = texturePack
+
+                const texturePackSelect = document.querySelector("#texturePackSelect")
+                const option = document.createElement("option")
+                option.value = texturePack.name
+                option.textContent = texturePack.name
+                option.selected = true
+                texturePackSelect.append(option)
+            })
+    }
 }
+
 
 const options = new Options()
 globalThis.options = options

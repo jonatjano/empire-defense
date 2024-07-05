@@ -59,12 +59,16 @@
 		<p>fps: <span id="debugFps"></span> (avg: <span id="debugFpsAvg"></span>)</p>
 		<p>entities: <span id="entityCount"></span></p>
 	</div>
-	<div id="textures" class="hidden"></div>
+	<div id="textures" class="hidden">
+		<h1>Textures</h1>
+	</div>
 
 	<!-- this canvas is used by background scripts, it should never be shown -->
 	<canvas id="utilsCanvas" class="hidden"></canvas>
 
 	<!-- for debug purpose, should be removed before release -->
 	<button style="position: absolute; top: 0; left: 0" onclick="window.location.reload()">reload</button>
+	<input id="texturePackInput" style="position: absolute; top: 0; left: 200px" type="file" webkitdirectory onchange="options.uploadTexturePack()"/>
+	<select id="texturePackSelect"  style="position: absolute; top: 0; left: 100px; width: 100px"></select>
 </body>
 </html>

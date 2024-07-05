@@ -143,11 +143,13 @@ export default class TexturePack {
         return this.#textures.get(path)
     }
 
+    /**
+     * @return {Promise}
+     */
     #init() {
         return fetch(`/assets/images/${this.#name}/pack.json`)
             .then(res => res.json())
-            .then(packMeta => {
-
+            .then(async packMeta => {
                 /** @type {[string[], TextureMeta, (Object<string, Object | symbol> | symbol)][]}  */
                 const toGet = [[[], null, textureList]]
                 /** @type {{[key: string]: Texture}} */
@@ -162,7 +164,7 @@ export default class TexturePack {
                             localDefault = localDefault?.[part]
                             localPackMeta = localPackMeta?.[part]
                         }
-                        textures[path.join("/")] = Texture.for(path, new TextureMeta(localMeta, {...localDefault, ...localPackMeta}))
+                        textures[path.join("/")] = await Texture.for(path, this.#name, new TextureMeta(localMeta, {...localDefault, ...localPackMeta}))
                     } else {
                         let localDefault = DEFAULTS
                         let localPackMeta = packMeta
@@ -186,6 +188,58 @@ export default class TexturePack {
                 this.#textures = new Map()
                 ;[...Object.entries(textures)].forEach(([key, item]) => this.#textures.set(key, item))
             })
+    }
+
+    /**
+     * @param {File[]} files
+     * @return {Promise}
+     */
+    initForWebkitDirectory(files) {
+        const packJson = files.find(({webkitRelativePath}) => webkitRelativePath === this.#name + "/pack.json")
+        this.#initPromise = packJson.text()
+            .then(async content => {
+                const packMeta = JSON.parse(content)
+
+                /** @type {[string[], TextureMeta, (Object<string, Object | symbol> | symbol)][]}  */
+                const toGet = [[[], null, textureList]]
+                /** @type {{[key: string]: Texture}} */
+                const textures = {}
+
+                while(toGet.length !== 0) {
+                    const [path, localMeta, item] = toGet.shift()
+                    if (item === textureListLeaf) {
+                        let localDefault = DEFAULTS
+                        let localPackMeta = packMeta
+                        for (const part of path) {
+                            localDefault = localDefault?.[part]
+                            localPackMeta = localPackMeta?.[part]
+                        }
+                        textures[path.join("/")] = await Texture.forWebkitDirectory(files, path, this.#name, new TextureMeta(localMeta, {...localDefault, ...localPackMeta}))
+                    } else {
+                        let localDefault = DEFAULTS
+                        let localPackMeta = packMeta
+                        for (const part of path) {
+                            localDefault = localDefault?.[part]
+                            localPackMeta = localPackMeta?.[part]
+                        }
+                        const textureMeta = new TextureMeta(localMeta, {...localDefault, ...localPackMeta})
+                        if (localMeta === null) { this.#packMeta  = textureMeta }
+                        Object.keys(item).forEach(key => {
+                            toGet.push(
+                                [
+                                    [...path, key],
+                                    textureMeta,
+                                    item[key]
+                                ]
+                            )
+                        })
+                    }
+                }
+                this.#textures = new Map()
+                ;[...Object.entries(textures)].forEach(([key, item]) => this.#textures.set(key, item))
+            })
+
+        return this.#initPromise
     }
 
     changeDocumentTextures() {
@@ -226,7 +280,6 @@ class Texture {
         this.#meta = meta
     }
 
-
     /**
      * @param {number} orientation
      * @return {HTMLImageElement}
@@ -248,17 +301,42 @@ class Texture {
     get worldWidth() { return this.#meta.worldWidth }
     get worldHeight() { return this.#meta.worldHeight; }
 
-
-    static for(path, textureMeta) {
+    /**
+     * @param {string[]} path
+     * @param {string} texturePackName
+     * @param {TextureMeta} textureMeta
+     * @return {Promise<Texture>}
+     */
+    static for(path, texturePackName, textureMeta) {
         const result = new Texture(textureMeta)
-        const texturesDiv = document.getElementById("textures")
+        let texturesDiv = document.getElementById("textures")
+        let texturePackDetails = texturesDiv.querySelector(`#${texturePackName}`)
+        if (texturePackDetails === null) {
+            texturesDiv.querySelectorAll("details").forEach(detail => detail.open = false)
+
+            texturePackDetails = document.createElement("details")
+            texturePackDetails.id = texturePackName
+            texturePackDetails.open = true
+
+            const texturePackSummary = document.createElement("summary")
+            texturePackSummary.textContent = texturePackName
+            texturePackDetails.append(texturePackSummary)
+
+            texturesDiv.appendChild(texturePackDetails)
+        }
+        texturesDiv = texturePackDetails
+        /** @type {Promise[]} */
+        const promises = []
 
         if (textureMeta.textureType === TextureType.IMAGE) {
             const image = document.createElement("img")
-            image.src = `/assets/images/${globalThis.options.texturePack.name}/${path.join("/")}.png`
+            image.src = `/assets/images/${texturePackName}/${path.join("/")}.${textureMeta.extension}`
             texturesDiv.appendChild(image)
             result.#imageElements.set(Texture.#baseMarker, image)
-            return result
+            return new Promise((res, err) => {
+                image.onload = () => { res(result) }
+                image.onerror = error => { err(error) }
+            })
         }
 
         if (textureMeta.textureType !== TextureType.BASE_ONLY && (360 % textureMeta.angleBetweenRotations) !== 0) {
@@ -268,50 +346,176 @@ class Texture {
 
         if (textureMeta.textureType !== TextureType.ROTATION_ONLY) {
             const image = document.createElement("img")
-            image.src = `/assets/images/${globalThis.options.texturePack.name}/${path.join("/")}/base.${textureMeta.extension}`
+            image.src = `/assets/images/${texturePackName}/${path.join("/")}/base.${textureMeta.extension}`
             texturesDiv.appendChild(image)
             result.#imageElements.set(Texture.#baseMarker, image)
+            promises.push(new Promise((res, err) => {
+                image.onload = () => { res(Texture.#baseMarker) }
+                image.onerror = error => { err(error) }
+            }))
         }
 
         if (textureMeta.textureType === TextureType.BASE_ONLY) {
-            return result
+            return Promise.all(promises).then(() => result)
         }
 
         let angle = 0
         while (angle < 360) {
-            const image = document.createElement("img")
             if (angle <= 180 || (angle > 180 && ! textureMeta.isSymmetric)) {
-                image.src = `/assets/images/${globalThis.options.texturePack.name}/${path.join("/")}/${angle}.${textureMeta.extension}`
+                const hoistedAngle = angle
+                const image = document.createElement("img")
+                image.src = `/assets/images/${texturePackName}/${path.join("/")}/${angle}.${textureMeta.extension}`
                 texturesDiv.appendChild(image)
-                result.#imageElements.set(AngleUtils.clampAngleDeg(angle - 90), image)
-            }
-
-            if (textureMeta.isSymmetric) {
-                if (angle !== 0 && angle !== 180) {
-                    const hoistedAngle = angle
-                    image.onload = () => {
-                        // create a canvas
-                        const canvas = document.getElementById("utilsCanvas")
-                        canvas.width = image.width
-                        canvas.height = image.height
-                        // paste the image reversed left<->right on it
-                        const context = canvas.getContext("2d")
-                        context.clearRect(0, 0, canvas.width, canvas.height);
-                        context.scale(-1, 1)
-                        context.drawImage(image, -canvas.width, 0)
-
-                        // create a new image element with the rotated image
-                        const rotatedImage = document.createElement("img")
-                        rotatedImage.src = canvas.toDataURL("image/png")
-                        texturesDiv.appendChild(rotatedImage)
-                        result.#imageElements.set(AngleUtils.clampAngleDeg(270 - hoistedAngle), rotatedImage)
-                    }
+                result.#imageElements.set(AngleUtils.clampAngleDeg(hoistedAngle - 90), image)
+                if (hoistedAngle === 0) {
+                    result.#imageElements.set(360, image);
                 }
+
+                promises.push(new Promise((res, err) => {
+                    image.onload = () => {
+                        if (textureMeta.isSymmetric && hoistedAngle !== 0 && hoistedAngle !== 180) {
+                            // get utils canvas
+                            const canvas = document.getElementById("utilsCanvas")
+                            canvas.width = image.width
+                            canvas.height = image.height
+
+                            // paste the image reversed left<->right on it
+                            const context = canvas.getContext("2d")
+                            context.clearRect(0, 0, canvas.width, canvas.height);
+                            context.scale(-1, 1)
+                            context.drawImage(image, -canvas.width, 0)
+
+                            // create a new image element with the rotated image
+                            const rotatedImage = document.createElement("img")
+                            rotatedImage.src = canvas.toDataURL("image/png")
+                            texturesDiv.appendChild(rotatedImage)
+                            result.#imageElements.set(AngleUtils.clampAngleDeg(270 - hoistedAngle), rotatedImage)
+                            promises.push(new Promise((res, err) => {
+                                rotatedImage.onload = () => res(270 - hoistedAngle)
+                                rotatedImage.onerror = error => err(error)
+                            }))
+                        }
+
+                        res(hoistedAngle - 90)
+                    }
+                    image.onerror = error => err(error)
+                }))
             }
 
             angle += textureMeta.angleBetweenRotations
         }
-        result.#imageElements.set(360, result.#imageElements.get(0));
-        return result
+        return Promise.all(promises).then(() => result)
+    }
+
+    /**
+     * @param {File[]} files
+     * @param {string[]} path
+     * @param {string} texturePackName
+     * @param {TextureMeta} textureMeta
+     * @return {Promise<Texture>}
+     */
+    static forWebkitDirectory(files, path, texturePackName, textureMeta) {
+        const result = new Texture(textureMeta)
+        let texturesDiv = document.getElementById("textures")
+        let texturePackDetails = texturesDiv.querySelector(`#${texturePackName}`)
+        if (texturePackDetails === null) {
+            texturesDiv.querySelectorAll("details").forEach(detail => detail.open = false)
+
+            texturePackDetails = document.createElement("details")
+            texturePackDetails.id = texturePackName
+            texturePackDetails.open = true
+
+            const texturePackSummary = document.createElement("summary")
+            texturePackSummary.textContent = texturePackName
+            texturePackDetails.append(texturePackSummary)
+
+            texturesDiv.appendChild(texturePackDetails)
+        }
+        texturesDiv = texturePackDetails
+        /** @type {Promise[]} */
+        const promises = []
+
+        if (textureMeta.textureType === TextureType.IMAGE) {
+            return Texture.#readFileAsDataUrl(files.find(({webkitRelativePath}) => webkitRelativePath === `${texturePackName}/${path.join("/")}.${textureMeta.extension}`))
+                .then(dataUrl => {
+                    const image = document.createElement("img")
+                    image.src = dataUrl
+                    texturesDiv.appendChild(image)
+                    result.#imageElements.set(Texture.#baseMarker, image)
+                })
+                .then(() => result)
+        }
+
+        if (textureMeta.textureType !== TextureType.BASE_ONLY && (360 % textureMeta.angleBetweenRotations) !== 0) {
+            console.error("Given textureMeta angle isn't valid", textureMeta)
+            throw new TypeError("Given textureMeta angle isn't valid")
+        }
+
+        if (textureMeta.textureType !== TextureType.ROTATION_ONLY) {
+            promises.push(Texture.#readFileAsDataUrl(files.find(({webkitRelativePath}) => webkitRelativePath === `${texturePackName}/${path.join("/")}/base.${textureMeta.extension}`))
+                .then(dataUrl => {
+                    const image = document.createElement("img")
+                    image.src = dataUrl
+                    texturesDiv.appendChild(image)
+                    result.#imageElements.set(Texture.#baseMarker, image)
+                }))
+        }
+
+        if (textureMeta.textureType === TextureType.BASE_ONLY) {
+            return Promise.all(promises).then(() => result)
+        }
+
+        let angle = 0
+        while (angle < 360) {
+            if (angle <= 180 || (angle > 180 && ! textureMeta.isSymmetric)) {
+                const hoistedAngle = angle
+                promises.push(Texture.#readFileAsDataUrl(files.find(({webkitRelativePath}) => webkitRelativePath === `${texturePackName}/${path.join("/")}/${hoistedAngle}.${textureMeta.extension}`))
+                    .then(dataUrl => {
+                        const image = document.createElement("img")
+                        image.src = dataUrl
+                        texturesDiv.appendChild(image)
+                        result.#imageElements.set(AngleUtils.clampAngleDeg(hoistedAngle - 90), image)
+
+                        if (textureMeta.isSymmetric && hoistedAngle !== 0 && hoistedAngle !== 180) {
+                            image.onload = () => {
+                                // create a canvas
+                                const canvas = document.getElementById("utilsCanvas")
+                                canvas.width = image.width
+                                canvas.height = image.height
+                                // paste the image reversed left<->right on it
+                                const context = canvas.getContext("2d")
+                                context.clearRect(0, 0, canvas.width, canvas.height);
+                                context.scale(-1, 1)
+                                context.drawImage(image, -canvas.width, 0)
+
+                                // create a new image element with the rotated image
+                                const rotatedImage = document.createElement("img")
+                                rotatedImage.src = canvas.toDataURL("image/png")
+                                texturesDiv.appendChild(rotatedImage)
+                                result.#imageElements.set(AngleUtils.clampAngleDeg(270 - hoistedAngle), rotatedImage)
+                            }
+                        }
+                        if (hoistedAngle - 90 === 0) {
+                            result.#imageElements.set(360, image);
+                        }
+                    }))
+            }
+
+            angle += textureMeta.angleBetweenRotations
+        }
+        return Promise.all(promises).then(() => result)
+    }
+
+    /**
+     * @param {File} file
+     * @return {Promise<string>}
+     */
+    static #readFileAsDataUrl(file) {
+        return new Promise((res, err) => {
+            const fr = new FileReader();
+            fr.onload = () => res(fr.result)
+            fr.onerror = error => err(error)
+            fr.readAsDataURL(file);
+        })
     }
 }
