@@ -125,14 +125,21 @@ export default class Game {
         console.log(`clicked on cell ${x}, ${y}`)
 
         const towerPosition = new Position(Math.floor(x), Math.floor(y), 0)
+        const cellPosition = new Position(towerPosition.x + 0.5, towerPosition.y + 0.5, 0)
         console.log(towerPosition)
 
-        if (this.getEntities(AbstractBuilding).some(building => building.position.equals(towerPosition))) {
-            console.log("Position is already taken", this.getEntities(AbstractBuilding))
-            return
-        }
         if (! this.#map.positionIsValid(towerPosition) || ! TileOption.is(this.#map.getTileOption(towerPosition.x, towerPosition.y), TileOption.buildable)) {
             console.log("Tile is not buildable")
+            console.groupEnd()
+            return
+        }
+        console.log(
+            this.getEntities(AbstractBuilding),
+            this.getEntities(AbstractBuilding).some(building => building.position.equals(cellPosition))
+        )
+        if (this.getEntities(AbstractBuilding).some(building => building.position.equals(cellPosition))) {
+            console.log("Position is already taken", this.getEntities(AbstractBuilding))
+            console.groupEnd()
             return
         }
 
