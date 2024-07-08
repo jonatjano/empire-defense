@@ -43,6 +43,7 @@ export default class AbstractBuilding extends AbstractEntity {
     #projectile
     #attackDelay
     #attackRange
+    static cost
 
     /**
      * @param {BuildingFactory} factory

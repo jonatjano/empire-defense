@@ -1,4 +1,5 @@
 import Position from "./Position.js";
+import entities from "./entities/entities.js";
 
 export const TileOption = {
     walkable: 1 << 0,
@@ -130,7 +131,33 @@ function mapDataFromString(template) {
 }
 
 /**
- * @type {Readonly<{map: GameMap, waves: any[]}[]>}
+ * @param {unprocessedWaveGroupData} waveData
+ * @return {waveGroupData}
+ */
+function developWaveData(waveData) {
+    return waveData.map(wave => wave.map(spawn => spawn.reduce((acc, unit) => {
+        if (Array.isArray(unit)) {
+            for (let i = 0; i < unit[0]; i++) {
+                acc.push(unit[1])
+            }
+        } else {
+            acc.push(unit)
+        }
+        return acc
+    }, [])))
+}
+
+/** @typedef {unprocessedWaveData[]} unprocessedWaveGroupData */
+/** @typedef {unprocessedSpawnData[]} unprocessedWaveData */
+/** @typedef {unprocessedUnitData[]} unprocessedSpawnData */
+/** @typedef {(typeof AbstractEntity) | [number, typeof AbstractEntity]} unprocessedUnitData */
+/** @typedef {waveData[]} waveGroupData */
+/** @typedef {spawnData[]} waveData */
+/** @typedef {unitData[]} spawnData */
+/** @typedef {typeof AbstractEntity} unitData */
+
+/**
+ * @type {Readonly<{map: GameMap, waves: waveGroupData}[]>}
  */
 export const mapsData = Object.freeze([
     {
@@ -155,9 +182,13 @@ export const mapsData = Object.freeze([
             [{x: 18, y: 5}],
             {left: 1, right: 1}
         ),
-        waves: [
-
-        ]
+        waves: developWaveData([
+            [[
+                [2, entities.Footman],
+                entities.Knight,
+                [2, entities.Footman],
+            ]]
+        ])
     },
     {
         map: new GameMap(

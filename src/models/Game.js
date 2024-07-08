@@ -23,6 +23,8 @@ export default class Game {
     #entities = []
     /** @type {PathFinder} */
     #pathFinder
+    /** @type {number} */
+    #money
 
     /**
      * @param {{map: GameMap, waves: any[]}} map
@@ -33,12 +35,22 @@ export default class Game {
         this.#map = map.map
         this.#eventListener = eventListener
         this.#pathFinder = pathFinder
-        this.#map.spawns.forEach(spawn => {
-            this.addEntity(new entities.Footman(spawn))
-            this.addEntity(new entities.Knight(spawn))
+        this.#map.spawns.forEach((spawn, i) => {
+            const intervalDuration = 1 / entities.Footman.movements.movementSpeed
+            const units = map.waves[0][i]
+            let unitIndex = 0
+            const interval = setInterval(() => {
+                this.addEntity(new units[unitIndex++](spawn))
+                if (unitIndex === units.length) {
+                    clearInterval(interval)
+                }
+            }, intervalDuration)
+            // this.addEntity(new entities.Footman(spawn))
+            // this.addEntity(new entities.Knight(spawn))
 
             // this.addEntity(new Entities.Bird(spawn))
         })
+        this.#money = 10
     }
 
     addEntity(entity) {
