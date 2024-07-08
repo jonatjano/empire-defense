@@ -15,11 +15,6 @@ export default class AbstractProjectile extends AbstractEntity {
         const targetIsEntity = this.target instanceof AbstractEntity
         const targetPosition = targetIsEntity ? this.target.position : this.position
 
-        if (targetIsEntity && this.target.hp <= 0) {
-            globalThis.game.deleteEntity(this)
-            return
-        }
-
         const moveResult = Position.move(this.position, targetPosition, this.movements, frameDuration)
         this.position.teleport(moveResult.position)
 

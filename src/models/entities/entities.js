@@ -21,7 +21,7 @@ const entities = Object.freeze({
      *    PROJECTILES    *
      *********************/
     Arrow: class extends AbstractProjectile {
-        static movements = new MovementCapability(5, 3600, 360, MovementType.Walking)
+        static movements = new MovementCapability(6, 3600, 360, MovementType.Walking)
         constructor(position) { super(entities.Arrow.factory.setName("arrow").setPosition(position).setMovements(entities.Arrow.movements)) }
     },
 
