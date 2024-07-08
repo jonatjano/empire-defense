@@ -2,7 +2,7 @@ import AbstractEntity from "./entities/AbstractEntity.js";
 import Position from "./Position.js";
 import AbstractBuilding from "./entities/AbstractBuilding.js";
 import {TileOption} from "./GameMap.js";
-import Entities from "./entities/entities.js";
+import entities from "./entities/entities.js";
 
 let lastFrameTiming
 let debugTime = document.getElementById("debugTime")
@@ -34,7 +34,8 @@ export default class Game {
         this.#eventListener = eventListener
         this.#pathFinder = pathFinder
         this.#map.spawns.forEach(spawn => {
-            this.addEntity(new Entities.Footman(spawn))
+            this.addEntity(new entities.Footman(spawn))
+            this.addEntity(new entities.Knight(spawn))
 
             // this.addEntity(new Entities.Bird(spawn))
         })
@@ -124,27 +125,27 @@ export default class Game {
         console.groupCollapsed("click")
         console.log(`clicked on cell ${x}, ${y}`)
 
-        const towerPosition = new Position(Math.floor(x), Math.floor(y), 0)
-        const cellPosition = new Position(towerPosition.x + 0.5, towerPosition.y + 0.5, 0)
-        console.log(towerPosition)
+        const cellPosition = new Position(Math.floor(x), Math.floor(y), 0)
+        const towerPosition = new Position(cellPosition.x + 0.5, cellPosition.y + 0.5, 0)
+        console.log(cellPosition)
 
-        if (! this.#map.positionIsValid(towerPosition) || ! TileOption.is(this.#map.getTileOption(towerPosition.x, towerPosition.y), TileOption.buildable)) {
+        if (! this.#map.positionIsValid(cellPosition) || ! TileOption.is(this.#map.getTileOption(cellPosition.x, cellPosition.y), TileOption.buildable)) {
             console.log("Tile is not buildable")
             console.groupEnd()
             return
         }
         console.log(
             this.getEntities(AbstractBuilding),
-            this.getEntities(AbstractBuilding).some(building => building.position.equals(cellPosition))
+            this.getEntities(AbstractBuilding).some(building => building.position.equals(towerPosition))
         )
-        if (this.getEntities(AbstractBuilding).some(building => building.position.equals(cellPosition))) {
+        if (this.getEntities(AbstractBuilding).some(building => building.position.equals(towerPosition))) {
             console.log("Position is already taken", this.getEntities(AbstractBuilding))
             console.groupEnd()
             return
         }
 
         console.log("building tower")
-        const tower = new Entities.Archer(towerPosition)
+        const tower = new entities.Archer(cellPosition)
         console.log(tower)
         this.addEntity(tower)
         if (! this.#pathFinder.recalculateAll()) {

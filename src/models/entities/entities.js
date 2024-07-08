@@ -11,10 +11,10 @@ const entities = Object.freeze({
         static movements = new MovementCapability(2, 3600, 360, MovementType.Walking)
         constructor(position) {super(entities.Footman.factory.setName("footman").setMaxHp(100).setPosition(position).setMovements(entities.Footman.movements))}
     },
-    // Knight: class extends AbstractUnit {
-    //     static movements = new MovementCapability(5, 3600, 360, MovementType.Walking)
-    //     constructor(position) {super(Knight.factory.setName("knight").setMaxHp(100).setPosition(position).setMovements(Knight.movements))}
-    // },
+    Knight: class extends AbstractUnit {
+        static movements = new MovementCapability(4, 3600, 360, MovementType.Walking)
+        constructor(position) {super(entities.Knight.factory.setName("knight").setMaxHp(100).setPosition(position).setMovements(entities.Knight.movements))}
+    },
 
 
     /*********************
