@@ -77,7 +77,7 @@ export default class AbstractBuilding extends AbstractEntity {
     constructor(factory) {
         super(factory);
 
-        if (! ((new factory.projectile()) instanceof AbstractProjectile)) {
+        if (! ((new factory.projectile(new Position(0, 0))) instanceof AbstractProjectile)) {
             console.error(factory.projectile)
             throw "Object is not a valid projectile"
         }

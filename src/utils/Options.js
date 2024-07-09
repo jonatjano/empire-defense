@@ -130,7 +130,7 @@ class Options {
 
         const fileArray = [...files]
 
-        texturePack.finalInit(fileArray.find(({webkitRelativePath}) => webkitRelativePath === `${texturePackName}/pack.json`), fileArray)
+        texturePack.init(fileArray.find(({webkitRelativePath}) => webkitRelativePath === `${texturePackName}/pack.json`), fileArray)
             .then(_ => {
                 this.#knownTexturePacks.push(texturePack)
                 this.texturePack = texturePack

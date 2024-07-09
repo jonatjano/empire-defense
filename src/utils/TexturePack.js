@@ -78,7 +78,6 @@ const textureList = {
     // {buildings: {archer: textureListLeaf, ...}, ...}
     entities: Object.values(entities).reduce(
         (acc, klass) => {
-            console.log(klass)
             switch (klass.__proto__) {
                 case AbstractBuilding: {
                     acc.buildings[klass.name.toLowerCase()] = textureListLeaf
@@ -104,13 +103,8 @@ const textureList = {
         wave: textureListLeaf
     },
     maps: {
-        classic: {
-            // additions: textureListLeaf,
-            base: textureListLeaf
-        },
-        test: {
-            base: textureListLeaf
-        }
+        classic: textureListLeaf,
+        test: textureListLeaf
     }
 }
 
@@ -141,7 +135,7 @@ export default class TexturePack {
         if (this.#textures === null && this.#initPromise === null) {
             this.#initPromise = fetch(`/assets/images/${this.#name}/pack.json`)
                 .then(res => res.blob())
-                .then(blob => this.finalInit(blob))
+                .then(blob => this.init(blob))
         }
         await this.#initPromise
         return this.#textures.get(path)
@@ -149,10 +143,10 @@ export default class TexturePack {
 
     /**
      * @param {Blob} packJsonBlob
-     * @param {File[]} [files]
+     * @param {File[]} [files] only used for webkitDirectory
      * @return {Promise}
      */
-    finalInit(packJsonBlob, files) {
+    init(packJsonBlob, files) {
         const isWebkitDirectory = files !== undefined
         this.#initPromise = packJsonBlob.text()
             .then(async content => {
@@ -230,22 +224,6 @@ export default class TexturePack {
         })
     }
 }
-
-
-/**
- * @typedef {{
- *     hasBase: boolean,
- *     width: number,
- *     height: number,
- *     angleBetweenImages: number,
- *     animationSpeed: number
- * }} EntityImageMetaData
- */
-
-/**
- * @param {string} name
- * @param {number[]} [angles=[0, 90, 180]]
- */
 
 
 class Texture {

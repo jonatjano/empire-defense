@@ -63,7 +63,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
     }
 
     // print map base
-    await globalThis.options.texturePack.getTexture(`maps/${map.name}/base`).then(mapTexture => {
+    await globalThis.options.texturePack.getTexture(`maps/${map.name}`).then(mapTexture => {
         ctx.drawImage(mapTexture.getBase(),
             visibleLeftMargin * options.zoom,
             visibleTopMargin * options.zoom,
@@ -92,16 +92,6 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
     }
 
     if (game instanceof GameMap) {
-        globalThis.options.texturePack.getTexture(`maps/${map.name}/additions`).then(mapAdditionTexture => {
-            if (mapAdditionTexture !== undefined) {
-                ctx.drawImage(mapAdditionTexture.getBase(),
-                    visibleLeftMargin * options.zoom,
-                    visibleTopMargin * options.zoom,
-                    options.zoom * mapWidth,
-                    options.zoom * mapHeight
-                )
-            }
-        })
         if (globalThis.options.debug) {
             for (let y = 0; y < map.height; y++) {
                 for (let x = 0; x < map.width; x++) {
@@ -277,15 +267,4 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
         ctx.clearRect(0, (visibleTopMargin + mapHeight) * options.zoom, canvas.width, canvas.height)
         ctx.clearRect((visibleLeftMargin + mapWidth) * options.zoom, 0, canvas.width, canvas.height)
     }
-
-    globalThis.options.texturePack.getTexture(`maps/${game.map.name}/additions`).then(mapAdditionTexture => {
-        if (mapAdditionTexture !== undefined) {
-            ctx.drawImage(mapAdditionTexture.getBase(),
-                visibleLeftMargin * options.zoom,
-                visibleTopMargin * options.zoom,
-                options.zoom * mapWidth,
-                options.zoom * mapHeight
-            )
-        }
-    })
 }
