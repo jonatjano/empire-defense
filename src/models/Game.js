@@ -8,7 +8,7 @@ let lastFrameTiming
 let frameCounter = 0
 
 export default class Game {
-    static get SPAWN_INTERVAL() { return 1 / entities.Footman.movements.movementSpeed }
+    static get SPAWN_INTERVAL() { return 1 / entities.Squire.movements.movementSpeed }
     static get INTER_WAVE_DURATION() { return 10000 }
 
 
@@ -26,6 +26,8 @@ export default class Game {
     /** @type {number} */
     #money
     /** @type {number} */
+    #crystal
+    /** @type {number} */
     #waveNumber
 
     /**
@@ -37,10 +39,9 @@ export default class Game {
         this.#map = map
         this.#eventListener = eventListener
         this.#pathFinder = pathFinder
-        this.#money = 10
+        this.money = 20
+        this.crystal = 0
         this.waveNumber = 0
-        this.#launchNextWave()
-        setTimeout(() => this.#launchNextWave(), 10000)
     }
 
     addEntity(entity) {
@@ -120,6 +121,12 @@ export default class Game {
         document.querySelector("#moneyLabel").textContent = value.toString()
     }
 
+    get crystal() { return this.#crystal }
+    set crystal(value) {
+        this.#crystal = value
+        document.querySelector("#crystalLabel").textContent = value.toString()
+    }
+
     get waveNumber() { return this.#waveNumber }
     set waveNumber(value) {
         this.#waveNumber = value
@@ -131,10 +138,10 @@ export default class Game {
      * @param {number} y
      */
     click(x, y) {
-        console.groupCollapsed("click")
+        console.group("click")
         console.log(`clicked on cell ${x}, ${y}`)
 
-        const towerType = entities.Archer
+        const towerType = entities.Archery1
 
         const cellPosition = new Position(Math.floor(x), Math.floor(y), 0)
         const towerPosition = new Position(cellPosition.x + 0.5, cellPosition.y + 0.5, 0)
@@ -164,8 +171,13 @@ export default class Game {
             console.log("failed to recalculate pathfinding")
             this.deleteEntity(tower)
             this.#pathFinder.recalculateAll()
+            return
         }
-        this.money = this.money - towerType.cost;
+        this.money = this.money - tower.cost;
+        this.crystal = this.crystal + tower.crystalOnBuild
+        if (this.waveNumber === 0) {
+            this.#launchNextWave()
+        }
 
         console.log("end")
         console.groupEnd()
@@ -201,6 +213,7 @@ export default class Game {
 
     #waveDeathCallback(unit) {
         this.money = this.money + unit.killReward
+        this.crystal = this.crystal + unit.killCrystalReward
         // TODO if unit count === 0, this.#launchNextWave()
     }
 }

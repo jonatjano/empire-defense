@@ -191,14 +191,14 @@ export const mapsData = Object.freeze([
         {},
         developWaveData([
             [[ // wave 1
-                [2, entities.Footman],
-                entities.Knight,
-                [2, entities.Footman]
+                [2, entities.Squire],
+                entities.knight,
+                [2, entities.Squire]
             ]],
             [[ // wave 2
-                [2, entities.Knight],
-                entities.Footman,
-                [2, entities.Knight]
+                [2, entities.knight],
+                entities.Squire,
+                [2, entities.knight]
             ]]
         ])
     ),
@@ -216,14 +216,14 @@ export const mapsData = Object.freeze([
         [{x: 3, y: 1}],
         {},
         [[ // wave 1
-            [2, entities.Footman],
-            entities.Knight,
-            [2, entities.Footman]
+            [2, entities.Squire],
+            entities.knight,
+            [2, entities.Squire]
         ]],
         [[ // wave 2
-            [2, entities.Knight],
-            entities.Footman,
-            [2, entities.Knight]
+            [2, entities.knight],
+            entities.Squire,
+            [2, entities.knight]
         ]]
     )
 ])

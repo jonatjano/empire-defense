@@ -4,10 +4,13 @@ import Position from "../Position.js";
 export class UnitFactory extends EntityFactory {
     /** @type {number} */
     killReward
+    /** @type {number} */
+    killCrystalReward
 
     constructor() {
         super()
         this.killReward = 0
+        this.killCrystalReward = 0
     }
 
     /**
@@ -15,20 +18,27 @@ export class UnitFactory extends EntityFactory {
      * @return {this}
      */
     setKillReward(value) { this.killReward = value; return this }
+
+    /**
+     * @param {number} value
+     * @return {this}
+     */
+    setKillCrystalReward(value) { this.killCrystalReward = value; return this }
 }
 
 export default class AbstractUnit extends AbstractEntity {
     /** @type {number} */
     #killReward
+    /** @type {number} */
+    #killCrystalReward
 
     constructor(factory) {
         super(factory)
         this.#killReward = factory.killReward
+        this.#killCrystalReward = factory.killCrystalReward
     }
 
-    /**
-     * @return {UnitFactory}
-     */
+    /** @return {UnitFactory} */
     static get factory() {
         return new UnitFactory()
     }
@@ -64,6 +74,7 @@ export default class AbstractUnit extends AbstractEntity {
     }
 
     get killReward() { return this.#killReward }
+    get killCrystalReward() { return this.#killCrystalReward }
 
     get texture() { return globalThis.options.texturePack.getTexture(`entities/units/${this.name}`) }
 }
