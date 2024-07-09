@@ -1,32 +1,32 @@
-/**
- * @typedef {{
- *     name: string,
- *     baseHp: number,
- *     selectionRange: number,
- *     movements: MovementCapability,
- *     position: Position
- * }} EntityConfiguration
- */
 import Position from "../Position.js";
 import {default as MovementCapability, MovementType} from "../MovementCapability.js";
+
+/**
+ * @callback EntityDeathCallback
+ * @param {AbstractEntity} entity
+ */
 
 export class EntityFactory {
     /** @type {string} */
     name
     /** @type {number} */
-    maxHp
+    baseHp
     /** @type {number} */
     selectionRange
     /** @type {MovementCapability} */
     movements
     /** @type {Position} */
     position
+    /** @type {EntityDeathCallback}*/
+    deathCallback
+
     constructor() {
         this.name = ""
-        this.maxHp = 1
+        this.baseHp = 1
         this.selectionRange = 0
         this.movements = new MovementCapability(0, 0, 0, MovementType.Walking)
         this.position = new Position(0, 0, 0)
+        this.deathCallback = () => {}
     }
 
     /**
@@ -39,7 +39,7 @@ export class EntityFactory {
      * @param {number} value
      * @return {this}
      */
-    setMaxHp(value) { this.maxHp = value; return this }
+    setBaseHp(value) { this.baseHp = value; return this }
 
     /**
      * @param {number} value
@@ -58,6 +58,12 @@ export class EntityFactory {
      * @return {this}
      */
     setPosition(value) { this.position = value; return this }
+
+    /**
+     * @param {(AbstractEntity) => void} value
+     * @return {this}
+     */
+    setDeathCallback(value) { this.deathCallback = value; return this }
 }
 
 export default class AbstractEntity {
@@ -71,6 +77,8 @@ export default class AbstractEntity {
     #position
     /** @type {Position | AbstractEntity} */
     #target
+    /** @type {EntityDeathCallback} */
+    #deathCallback
     /** @type {number} */
     #id
     /** @type {number} */
@@ -88,8 +96,9 @@ export default class AbstractEntity {
         this.#name = factory.name
         this.#position = Position.getTileCenterPosition(factory.position)
         this.#movements = factory.movements
-        this.#maxHp = factory.maxHp
+        this.#maxHp = factory.baseHp
         this.#selectionRange = factory.selectionRange
+        this.#deathCallback = factory.deathCallback
 
         this.#hp = this.#maxHp
     }
@@ -106,7 +115,10 @@ export default class AbstractEntity {
 
     hit(damage) {
         this.#hp -= damage
-        if (this.#hp <= 0) { globalThis.game.deleteEntity(this) }
+        if (this.#hp <= 0) {
+            globalThis.game.deleteEntity(this)
+            this.#deathCallback(this)
+        }
         else if (this.#hp > this.#maxHp) { this.#hp = this.#maxHp }
     }
 

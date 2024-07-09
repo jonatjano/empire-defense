@@ -5,14 +5,13 @@ import {TileOption} from "./GameMap.js";
 import entities from "./entities/entities.js";
 
 let lastFrameTiming
-let debugTime = document.getElementById("debugTime")
-let frameCount = document.getElementById("frameCount")
-let debugFps = document.getElementById("debugFps")
-let debugFpsAvg = document.getElementById('debugFpsAvg')
-let entityCount = document.getElementById('entityCount')
 let frameCounter = 0
 
 export default class Game {
+    static get SPAWN_INTERVAL() { return 1 / entities.Footman.movements.movementSpeed }
+    static get INTER_WAVE_DURATION() { return 10000 }
+
+
     /** @type {GameMap} */
     #map
     /** @type {((number) => void)} */
@@ -23,34 +22,25 @@ export default class Game {
     #entities = []
     /** @type {PathFinder} */
     #pathFinder
+
     /** @type {number} */
     #money
+    /** @type {number} */
+    #waveNumber
 
     /**
-     * @param {{map: GameMap, waves: any[]}} map
+     * @param {GameMap} map
      * @param {((number) => void)} eventListener
      * @param {PathFinder} pathFinder
      */
     constructor(map, eventListener, pathFinder) {
-        this.#map = map.map
+        this.#map = map
         this.#eventListener = eventListener
         this.#pathFinder = pathFinder
-        this.#map.spawns.forEach((spawn, i) => {
-            const intervalDuration = 1 / entities.Footman.movements.movementSpeed
-            const units = map.waves[0][i]
-            let unitIndex = 0
-            const interval = setInterval(() => {
-                this.addEntity(new units[unitIndex++](spawn))
-                if (unitIndex === units.length) {
-                    clearInterval(interval)
-                }
-            }, intervalDuration)
-            // this.addEntity(new entities.Footman(spawn))
-            // this.addEntity(new entities.Knight(spawn))
-
-            // this.addEntity(new Entities.Bird(spawn))
-        })
         this.#money = 10
+        this.waveNumber = 0
+        this.#launchNextWave()
+        setTimeout(() => this.#launchNextWave(), 10000)
     }
 
     addEntity(entity) {
@@ -98,11 +88,11 @@ export default class Game {
         const frameDuration = frameTiming - lastFrameTiming
         lastFrameTiming = frameTiming
 
-        debugTime.textContent = frameTiming
-        frameCount.textContent = (++frameCounter).toFixed(0)
-        debugFps.textContent = (1000 / frameDuration).toFixed(3)
-        debugFpsAvg.textContent = (frameCounter / frameTiming * 1000).toFixed(3)
-        entityCount.textContent = this.#entities.length.toString()
+        document.getElementById("debugTime").textContent = frameTiming
+        document.getElementById("frameCount").textContent = (++frameCounter).toFixed(0)
+        document.getElementById("debugFps").textContent = (1000 / frameDuration).toFixed(3)
+        document.getElementById("debugFpsAvg").textContent = (frameCounter / frameTiming * 1000).toFixed(3)
+        document.getElementById("entityCount").textContent = this.#entities.length.toString()
 
         this.#entities.forEach((entity) => {
             entity.act(frameDuration)
@@ -119,15 +109,22 @@ export default class Game {
     resume() {
         if (! this.#isPaused) { return }
         this.#isPaused = false
-        debugTime = document.getElementById("debugTime");
-        frameCount = document.getElementById("frameCount")
-        debugFps = document.getElementById("debugFps");
-        debugFpsAvg = document.getElementById('debugFpsAvg');
-        entityCount = document.getElementById('entityCount');
         requestAnimationFrame(this.play.bind(this))
     }
 
     get isPaused() { return this.#isPaused }
+
+    get money() { return this.#money }
+    set money(value) {
+        this.#money = value
+        document.querySelector("#moneyLabel").textContent = value.toString()
+    }
+
+    get waveNumber() { return this.#waveNumber }
+    set waveNumber(value) {
+        this.#waveNumber = value
+        document.querySelector("#waveLabel").textContent = value.toString()
+    }
 
     /**
      * @param {number} x
@@ -137,27 +134,30 @@ export default class Game {
         console.groupCollapsed("click")
         console.log(`clicked on cell ${x}, ${y}`)
 
+        const towerType = entities.Archer
+
         const cellPosition = new Position(Math.floor(x), Math.floor(y), 0)
         const towerPosition = new Position(cellPosition.x + 0.5, cellPosition.y + 0.5, 0)
         console.log(cellPosition)
 
-        if (! this.#map.positionIsValid(cellPosition) || ! TileOption.is(this.#map.getTileOption(cellPosition.x, cellPosition.y), TileOption.buildable)) {
+        if (! this.#map.positionIsInBoundaries(cellPosition) || ! TileOption.is(this.#map.getTileOption(cellPosition.x, cellPosition.y), TileOption.buildable)) {
             console.log("Tile is not buildable")
             console.groupEnd()
             return
         }
-        console.log(
-            this.getEntities(AbstractBuilding),
-            this.getEntities(AbstractBuilding).some(building => building.position.equals(towerPosition))
-        )
         if (this.getEntities(AbstractBuilding).some(building => building.position.equals(towerPosition))) {
             console.log("Position is already taken", this.getEntities(AbstractBuilding))
             console.groupEnd()
             return
         }
+        // if (this.#money < towerType.cost) {
+        //     console.log(`Not enough money for this tower, got ${this.#money}, required ${towerType.cost}`)
+        //     console.groupEnd()
+        //     return
+        // }
 
         console.log("building tower")
-        const tower = new entities.Archer(cellPosition)
+        const tower = new towerType(cellPosition)
         console.log(tower)
         this.addEntity(tower)
         if (! this.#pathFinder.recalculateAll()) {
@@ -165,7 +165,42 @@ export default class Game {
             this.deleteEntity(tower)
             this.#pathFinder.recalculateAll()
         }
+        this.money = this.money - towerType.cost;
+
         console.log("end")
         console.groupEnd()
+    }
+
+    #launchNextWave() {
+        console.log("new wave")
+        this.waveNumber = this.waveNumber + 1
+        console.log(this.waveNumber)
+        const callback = this.#waveDeathCallback.bind(this)
+        const spawnData = this.map.waves[this.waveNumber - 1]
+        console.log(spawnData)
+        let unitIndex = 0
+        const interval = setInterval(() => {
+            let spawnCount = 0
+            for (const spawnIndex in spawnData) {
+                const spawnPosition = this.map.spawns[spawnIndex]
+                const unitList = spawnData[spawnIndex]
+                if (unitIndex < unitList.length) {
+                    const unitType = unitList[unitIndex]
+                    console.log("spawning", unitType, spawnPosition)
+                    this.addEntity(new unitType(spawnPosition, callback))
+                    spawnCount++
+                }
+            }
+            console.log(`spawned ${spawnCount} units`)
+            if (spawnCount === 0) {
+                clearInterval(interval)
+            }
+            unitIndex++
+        }, Game.SPAWN_INTERVAL)
+    }
+
+    #waveDeathCallback(unit) {
+        this.money = this.money + unit.killReward
+        // TODO if unit count === 0, this.#launchNextWave()
     }
 }

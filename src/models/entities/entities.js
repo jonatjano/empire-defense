@@ -9,11 +9,25 @@ const entities = Object.freeze({
      *********************/
     Footman: class extends AbstractUnit {
         static movements = new MovementCapability(2, 3600, 360, MovementType.Walking)
-        constructor(position) {super(entities.Footman.factory.setName("footman").setMaxHp(100).setPosition(position).setMovements(entities.Footman.movements))}
+        constructor(position, deathCallback = () => {}) {
+            super(
+                entities.Footman.factory.setPosition(position).setMovements(entities.Footman.movements).setDeathCallback(deathCallback)
+                    .setName("footman")
+                    .setBaseHp(100)
+                    .setKillReward(1)
+            )
+        }
     },
     Knight: class extends AbstractUnit {
         static movements = new MovementCapability(4, 3600, 360, MovementType.Walking)
-        constructor(position) {super(entities.Knight.factory.setName("knight").setMaxHp(100).setPosition(position).setMovements(entities.Knight.movements))}
+        constructor(position, deathCallback = () => {}) {
+            super(
+                entities.Knight.factory.setPosition(position).setMovements(entities.Knight.movements).setDeathCallback(deathCallback)
+                    .setName("knight")
+                    .setBaseHp(100)
+                    .setKillReward(1)
+            )
+        }
     },
 
 
@@ -30,6 +44,7 @@ const entities = Object.freeze({
      *      TOWERS       *
      *********************/
     Archer: class extends AbstractBuilding {
+        static cost = 5
         constructor(position) {super(entities.Archer.factory.setName("archer").setPosition(position).setProjectile(entities.Arrow).setAttackDelay(2000).setAttackRange(10))}
     }
 })

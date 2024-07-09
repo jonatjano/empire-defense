@@ -10,7 +10,7 @@ export default class AbstractProjectile extends AbstractEntity {
 
     act(frameDuration) {
         const ATTACK_RANGE = 2
-        const ATTACK_DAMAGE = 1
+        const ATTACK_DAMAGE = 10
 
         const targetIsEntity = this.target instanceof AbstractEntity
         const targetPosition = targetIsEntity ? this.target.position : this.position
@@ -20,7 +20,9 @@ export default class AbstractProjectile extends AbstractEntity {
 
         if (this.position.equals(targetPosition)) {
             if (targetIsEntity) {
-                this.target.hit(ATTACK_DAMAGE)
+                if (this.target.hp > 0) {
+                    this.target.hit(ATTACK_DAMAGE)
+                }
             } else {
                 globalThis.game.getEntitiesCloseTo(this.position, ATTACK_RANGE, AbstractUnit)
                     .forEach(entity => {entity.hit(ATTACK_DAMAGE)})
