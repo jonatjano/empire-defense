@@ -25,7 +25,7 @@ function lobby() {
     lobby.classList.remove("hidden")
 
     let selectedMapId = 0
-    updateMapPreview(mapsData[selectedMapId].map)
+    updateMapPreview(mapsData[selectedMapId])
 
     function updateMapPreview(map) {
         document.getElementById("mapName").textContent = translate(`map.${map.name}.name`)
@@ -40,14 +40,14 @@ function lobby() {
         prevMapButton.addEventListener("click", () => {
             selectedMapId -= 1
             if (selectedMapId === -1) { selectedMapId = mapsData.length - 1 }
-            updateMapPreview(mapsData[selectedMapId].map)
+            updateMapPreview(mapsData[selectedMapId])
         })
 
         const nextMapButton = document.getElementById("lobbyNextMapButton")
         nextMapButton.addEventListener("click", () => {
             selectedMapId += 1
             if (selectedMapId === mapsData.length) { selectedMapId = 0 }
-            updateMapPreview(mapsData[selectedMapId].map)
+            updateMapPreview(mapsData[selectedMapId])
         })
 
         const startGameButton = document.getElementById("lobbyStartButton")
@@ -58,6 +58,9 @@ function lobby() {
     }
 }
 
+/**
+ * @param {GameMap} map
+ */
 function game(map) {
     const game = document.getElementById("game")
     game.classList.remove("hidden")
@@ -65,7 +68,7 @@ function game(map) {
     const entitiesCanvas = document.getElementById("gameCanvas")
     const entitiesCtx = entitiesCanvas.getContext("2d")
 
-    const gameController = new Game(map, eventReceiver, new PathFinder(map.map))
+    const gameController = new Game(map, eventReceiver, new PathFinder(map))
     globalThis.game = gameController
     setCanvasEvent(entitiesCanvas, gameController.click.bind(gameController))
     gameController.resume()

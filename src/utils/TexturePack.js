@@ -78,7 +78,6 @@ const textureList = {
     // {buildings: {archer: textureListLeaf, ...}, ...}
     entities: Object.values(entities).reduce(
         (acc, klass) => {
-            console.log(klass)
             switch (klass.__proto__) {
                 case AbstractBuilding: {
                     acc.buildings[klass.name.toLowerCase()] = textureListLeaf
@@ -104,13 +103,8 @@ const textureList = {
         wave: textureListLeaf
     },
     maps: {
-        classic: {
-            // additions: textureListLeaf,
-            base: textureListLeaf
-        },
-        test: {
-            base: textureListLeaf
-        }
+        classic: textureListLeaf,
+        test: textureListLeaf
     }
 }
 
@@ -138,65 +132,23 @@ export default class TexturePack {
      * @return {Promise<Texture>}
      */
     async getTexture(path) {
-        if (this.#textures === null && this.#initPromise === null) { this.#initPromise = this.#init() }
+        if (this.#textures === null && this.#initPromise === null) {
+            this.#initPromise = fetch(`/assets/images/${this.#name}/pack.json`)
+                .then(res => res.blob())
+                .then(blob => this.init(blob))
+        }
         await this.#initPromise
         return this.#textures.get(path)
     }
 
     /**
+     * @param {Blob} packJsonBlob
+     * @param {File[]} [files] only used for webkitDirectory
      * @return {Promise}
      */
-    #init() {
-        return fetch(`/assets/images/${this.#name}/pack.json`)
-            .then(res => res.json())
-            .then(async packMeta => {
-                /** @type {[string[], TextureMeta, (Object<string, Object | symbol> | symbol)][]}  */
-                const toGet = [[[], null, textureList]]
-                /** @type {{[key: string]: Texture}} */
-                const textures = {}
-
-                while(toGet.length !== 0) {
-                    const [path, localMeta, item] = toGet.shift()
-                    if (item === textureListLeaf) {
-                        let localDefault = DEFAULTS
-                        let localPackMeta = packMeta
-                        for (const part of path) {
-                            localDefault = localDefault?.[part]
-                            localPackMeta = localPackMeta?.[part]
-                        }
-                        textures[path.join("/")] = await Texture.for(path, this.#name, new TextureMeta(localMeta, {...localDefault, ...localPackMeta}))
-                    } else {
-                        let localDefault = DEFAULTS
-                        let localPackMeta = packMeta
-                        for (const part of path) {
-                            localDefault = localDefault?.[part]
-                            localPackMeta = localPackMeta?.[part]
-                        }
-                        const textureMeta = new TextureMeta(localMeta, {...localDefault, ...localPackMeta})
-                        if (localMeta === null) { this.#packMeta  = textureMeta }
-                        Object.keys(item).forEach(key => {
-                            toGet.push(
-                                [
-                                    [...path, key],
-                                    textureMeta,
-                                    item[key]
-                                ]
-                            )
-                        })
-                    }
-                }
-                this.#textures = new Map()
-                ;[...Object.entries(textures)].forEach(([key, item]) => this.#textures.set(key, item))
-            })
-    }
-
-    /**
-     * @param {File[]} files
-     * @return {Promise}
-     */
-    initForWebkitDirectory(files) {
-        const packJson = files.find(({webkitRelativePath}) => webkitRelativePath === this.#name + "/pack.json")
-        this.#initPromise = packJson.text()
+    init(packJsonBlob, files) {
+        const isWebkitDirectory = files !== undefined
+        this.#initPromise = packJsonBlob.text()
             .then(async content => {
                 const packMeta = JSON.parse(content)
 
@@ -214,7 +166,9 @@ export default class TexturePack {
                             localDefault = localDefault?.[part]
                             localPackMeta = localPackMeta?.[part]
                         }
-                        textures[path.join("/")] = await Texture.forWebkitDirectory(files, path, this.#name, new TextureMeta(localMeta, {...localDefault, ...localPackMeta}))
+                        textures[path.join("/")] = isWebkitDirectory ?
+                            await Texture.forWebkitDirectory(files, path, this.#name, new TextureMeta(localMeta, {...localDefault, ...localPackMeta})) :
+                            await Texture.for(path, this.#name, new TextureMeta(localMeta, {...localDefault, ...localPackMeta}))
                     } else {
                         let localDefault = DEFAULTS
                         let localPackMeta = packMeta
@@ -242,6 +196,27 @@ export default class TexturePack {
         return this.#initPromise
     }
 
+    static getHtmlTextureContainerFor(texturePackName, closeOthers = true) {
+        let texturesDiv = document.getElementById("textures")
+        let texturePackDetails = texturesDiv.querySelector(`#${texturePackName}`)
+        if (texturePackDetails === null) {
+            if (closeOthers) {
+                texturesDiv.querySelectorAll("details").forEach(detail => detail.open = false)
+            }
+
+            texturePackDetails = document.createElement("details")
+            texturePackDetails.id = texturePackName
+            texturePackDetails.open = true
+
+            const texturePackSummary = document.createElement("summary")
+            texturePackSummary.textContent = texturePackName
+            texturePackDetails.append(texturePackSummary)
+
+            texturesDiv.appendChild(texturePackDetails)
+        }
+        return texturePackDetails
+    }
+
     changeDocumentTextures() {
         const elements = document.body.querySelectorAll("*[data-texture]")
         elements.forEach(async element => {
@@ -249,22 +224,6 @@ export default class TexturePack {
         })
     }
 }
-
-
-/**
- * @typedef {{
- *     hasBase: boolean,
- *     width: number,
- *     height: number,
- *     angleBetweenImages: number,
- *     animationSpeed: number
- * }} EntityImageMetaData
- */
-
-/**
- * @param {string} name
- * @param {number[]} [angles=[0, 90, 180]]
- */
 
 
 class Texture {
@@ -309,22 +268,7 @@ class Texture {
      */
     static for(path, texturePackName, textureMeta) {
         const result = new Texture(textureMeta)
-        let texturesDiv = document.getElementById("textures")
-        let texturePackDetails = texturesDiv.querySelector(`#${texturePackName}`)
-        if (texturePackDetails === null) {
-            texturesDiv.querySelectorAll("details").forEach(detail => detail.open = false)
-
-            texturePackDetails = document.createElement("details")
-            texturePackDetails.id = texturePackName
-            texturePackDetails.open = true
-
-            const texturePackSummary = document.createElement("summary")
-            texturePackSummary.textContent = texturePackName
-            texturePackDetails.append(texturePackSummary)
-
-            texturesDiv.appendChild(texturePackDetails)
-        }
-        texturesDiv = texturePackDetails
+        let texturesDiv = TexturePack.getHtmlTextureContainerFor(texturePackName)
         /** @type {Promise[]} */
         const promises = []
 
@@ -416,22 +360,7 @@ class Texture {
      */
     static forWebkitDirectory(files, path, texturePackName, textureMeta) {
         const result = new Texture(textureMeta)
-        let texturesDiv = document.getElementById("textures")
-        let texturePackDetails = texturesDiv.querySelector(`#${texturePackName}`)
-        if (texturePackDetails === null) {
-            texturesDiv.querySelectorAll("details").forEach(detail => detail.open = false)
-
-            texturePackDetails = document.createElement("details")
-            texturePackDetails.id = texturePackName
-            texturePackDetails.open = true
-
-            const texturePackSummary = document.createElement("summary")
-            texturePackSummary.textContent = texturePackName
-            texturePackDetails.append(texturePackSummary)
-
-            texturesDiv.appendChild(texturePackDetails)
-        }
-        texturesDiv = texturePackDetails
+        let texturesDiv = TexturePack.getHtmlTextureContainerFor(texturePackName)
         /** @type {Promise[]} */
         const promises = []
 

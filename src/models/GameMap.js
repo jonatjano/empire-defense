@@ -1,4 +1,5 @@
 import Position from "./Position.js";
+import entities from "./entities/entities.js";
 
 export const TileOption = {
     walkable: 1 << 0,
@@ -28,8 +29,11 @@ export default class GameMap {
     #spawns
     /** @type {Readonly<Position[]>} */
     #targets
+    // TODO remove
     /** @type {{top: number, right: number, bottom: number, left: number}} */
     #borders
+    /** @type {Readonly<waveGroupData>} */
+    #waves
 
     /**
      * @param {string} name
@@ -37,8 +41,9 @@ export default class GameMap {
      * @param {{x: number, y: number}[]} spawns
      * @param {{x: number, y: number}[]} targets
      * @param {{[top]: number, [right]: number, [bottom]: number, [left]: number}} borders
+     * @param {waveGroupData} waves
      */
-    constructor(name, mapData, spawns, targets, borders) {
+    constructor(name, mapData, spawns, targets, borders, waves) {
         this.#borders = {top: 0, right: 0, bottom: 0, left: 0, ...borders}
 
         if (spawns.length === 0 || targets.length === 0) {
@@ -51,6 +56,7 @@ export default class GameMap {
         this.#mapData = mapData
         this.#spawns = Object.freeze(spawns.map(({x, y}) => new Position(x, y)))
         this.#targets = Object.freeze(targets.map(({x, y}) => new Position(x, y)))
+        this.#waves = Object.freeze(waves)
     }
 
     get height() {
@@ -85,6 +91,11 @@ export default class GameMap {
      */
     get targets() { return this.#targets }
 
+    /**
+     * @return {Readonly<waveGroupData>}
+     */
+    get waves() { return this.#waves }
+
     get name() {
         return this.#name
     }
@@ -93,7 +104,7 @@ export default class GameMap {
      * @param {Position} position
      * @return {boolean}
      */
-    positionIsValid(position){
+    positionIsInBoundaries(position){
         return position.x >= 0 && position.y >= 0 && position.x < this.width && position.y < this.height
     }
 }
@@ -130,52 +141,89 @@ function mapDataFromString(template) {
 }
 
 /**
- * @type {Readonly<{map: GameMap, waves: any[]}[]>}
+ * @param {unprocessedWaveGroupData} waveData
+ * @return {waveGroupData}
+ */
+function developWaveData(waveData) {
+    return waveData.map(wave => wave.map(spawn => spawn.reduce((acc, unit) => {
+        if (Array.isArray(unit)) {
+            for (let i = 0; i < unit[0]; i++) {
+                acc.push(unit[1])
+            }
+        } else {
+            acc.push(unit)
+        }
+        return acc
+    }, [])))
+}
+
+/** @typedef {unprocessedWaveData[]} unprocessedWaveGroupData */
+/** @typedef {unprocessedSpawnData[]} unprocessedWaveData */
+/** @typedef {unprocessedUnitData[]} unprocessedSpawnData */
+/** @typedef {(typeof AbstractEntity) | [number, typeof AbstractEntity]} unprocessedUnitData */
+/** @typedef {waveData[]} waveGroupData */
+/** @typedef {spawnData[]} waveData */
+/** @typedef {(typeof AbstractEntity)[]} spawnData */
+
+/**
+ * @type {ReadonlyArray<GameMap>}>}
  */
 export const mapsData = Object.freeze([
-    {
-        map: new GameMap(
-            "classic",
-            mapDataFromString(`
-                0000000000000000000
-                0077777777777777700
-                0077777777777777700
-                0077777777777777700
-                0077777777777777700
-                3337777777777777333
-                0077777777777777700
-                0077777777777777700
-                0077777777777777700
-                0077777777777777700
-                0077777777777777700
-                0000000000000000000
-                0000000000000000000
-            `),
-            [{x: 0, y: 5}],
-            [{x: 18, y: 5}],
-            {left: 1, right: 1}
-        ),
-        waves: [
-
-        ]
-    },
-    {
-        map: new GameMap(
-            "test",
-            mapDataFromString(`
+    new GameMap(
+        "classic",
+        mapDataFromString(`
+            0000000000000000000000
+            0777777777777777777770
+            0777777777777777777770
+            0777777777777777777770
+            0777777777777777777770
+            3377777777777777777733
+            0777777777777777777770
+            0777777777777777777770
+            0777777777777777777770
+            0777777777777777777770
+            0777777777777777777770
+            0000000000000000000000
+            0000000000000000000000
+        `),
+        [{x: 0, y: 5}],
+        [{x: 13, y: 5}],
+        {},
+        developWaveData([
+            [[ // wave 1
+                [2, entities.Squire],
+                entities.knight,
+                [2, entities.Squire]
+            ]],
+            [[ // wave 2
+                [2, entities.knight],
+                entities.Squire,
+                [2, entities.knight]
+            ]]
+        ])
+    ),
+    new GameMap(
+        "test",
+        mapDataFromString(`
             27772
             73737
             77777
             77277
             27772
             `
-            ),
-            [{x: 1, y: 1}],
-            [{x: 3, y: 1}],
-            {}
         ),
-        waves: [
-            
-        ]
-    }
+        [{x: 1, y: 1}],
+        [{x: 3, y: 1}],
+        {},
+        [[ // wave 1
+            [2, entities.Squire],
+            entities.knight,
+            [2, entities.Squire]
+        ]],
+        [[ // wave 2
+            [2, entities.knight],
+            entities.Squire,
+            [2, entities.knight]
+        ]]
+    )
 ])
