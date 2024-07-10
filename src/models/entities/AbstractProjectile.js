@@ -31,5 +31,5 @@ export default class AbstractProjectile extends AbstractEntity {
         }
     }
 
-    get texture() { return globalThis.options.texturePack.getTexture(`entities/projectiles/${this.name}`) }
+    get texture() { return globalThis.options.texturePack.getTexture(`entities/projectiles/${this.__proto__.constructor.name.toLowerCase()}`) }
 }

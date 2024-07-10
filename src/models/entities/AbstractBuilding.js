@@ -125,5 +125,5 @@ export default class AbstractBuilding extends AbstractEntity {
 
     }
 
-    get texture() { return globalThis.options.texturePack.getTexture(`entities/buildings/${this.name}`) }
+    get texture() { return globalThis.options.texturePack.getTexture(`entities/buildings/${this.__proto__.constructor.name.toLowerCase()}`) }
 }

@@ -76,5 +76,5 @@ export default class AbstractUnit extends AbstractEntity {
     get killReward() { return this.#killReward }
     get killCrystalReward() { return this.#killCrystalReward }
 
-    get texture() { return globalThis.options.texturePack.getTexture(`entities/units/${this.name}`) }
+    get texture() { return globalThis.options.texturePack.getTexture(`entities/units/${this.__proto__.constructor.name.toLowerCase()}`) }
 }
