@@ -45,7 +45,7 @@ export default class PathFinder {
             positionsToDo.delete(key)
 
             if (!paths.has(key) || paths.get(key).value > doing.value) {
-                if (! this.#map.positionIsValid(doing.position)) { continue }
+                if (! this.#map.positionIsInBoundaries(doing.position)) { continue }
 
                 if (movementType === MovementType.Walking && ! TileOption.is(this.#map.getTileOption(doing.position.x, doing.position.y), TileOption.walkable)) { continue }
                 if (movementType === MovementType.Flying && ! TileOption.is(this.#map.getTileOption(doing.position.x, doing.position.y), TileOption.flyable)) { continue }

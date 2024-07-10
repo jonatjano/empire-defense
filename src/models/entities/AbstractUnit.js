@@ -1,10 +1,46 @@
-import AbstractEntity from "./AbstractEntity.js";
+import AbstractEntity, {EntityFactory} from "./AbstractEntity.js";
 import Position from "../Position.js";
 
+export class UnitFactory extends EntityFactory {
+    /** @type {number} */
+    killReward
+    /** @type {number} */
+    killCrystalReward
+
+    constructor() {
+        super()
+        this.killReward = 0
+        this.killCrystalReward = 0
+    }
+
+    /**
+     * @param {number} value
+     * @return {this}
+     */
+    setKillReward(value) { this.killReward = value; return this }
+
+    /**
+     * @param {number} value
+     * @return {this}
+     */
+    setKillCrystalReward(value) { this.killCrystalReward = value; return this }
+}
+
 export default class AbstractUnit extends AbstractEntity {
+    /** @type {number} */
+    #killReward
+    /** @type {number} */
+    #killCrystalReward
 
     constructor(factory) {
-        super(factory);
+        super(factory)
+        this.#killReward = factory.killReward
+        this.#killCrystalReward = factory.killCrystalReward
+    }
+
+    /** @return {UnitFactory} */
+    static get factory() {
+        return new UnitFactory()
     }
 
     act(frameDuration) {
@@ -23,7 +59,8 @@ export default class AbstractUnit extends AbstractEntity {
 
             if (this.target.equals(this.position)) {
                 if (globalThis.game.map.targets.find(target => this.position.equals(Position.getTileCenterPosition(target)))) {
-                    // globalThis.game.deleteEntity(this)
+                    // TODO
+                    // this.hit(Infinity)
                     // return
                     this.position.teleport(Position.getTileCenterPosition(globalThis.game.map.spawns[0]))
                 }
@@ -36,5 +73,8 @@ export default class AbstractUnit extends AbstractEntity {
         }
     }
 
-    get texture() { return globalThis.options.texturePack.getTexture(`entities/units/${this.name}`) }
+    get killReward() { return this.#killReward }
+    get killCrystalReward() { return this.#killCrystalReward }
+
+    get texture() { return globalThis.options.texturePack.getTexture(`entities/units/${this.__proto__.constructor.name.toLowerCase()}`) }
 }
