@@ -133,7 +133,7 @@ export default class TexturePack {
      */
     async getTexture(path) {
         if (this.#textures === null && this.#initPromise === null) {
-            this.#initPromise = fetch(`/assets/images/${this.#name}/pack.json`)
+            this.#initPromise = fetch(`/assets/texturePacks/${this.#name}/pack.json`)
                 .then(res => res.blob())
                 .then(blob => this.init(blob))
         }
@@ -274,7 +274,7 @@ class Texture {
 
         if (textureMeta.textureType === TextureType.IMAGE) {
             const image = document.createElement("img")
-            image.src = `/assets/images/${texturePackName}/${path.join("/")}.${textureMeta.extension}`
+            image.src = `/assets/texturePacks/${texturePackName}/${path.join("/")}.${textureMeta.extension}`
             texturesDiv.appendChild(image)
             result.#imageElements.set(Texture.#baseMarker, image)
             return new Promise((res, err) => {
@@ -290,7 +290,7 @@ class Texture {
 
         if (textureMeta.textureType !== TextureType.ROTATION_ONLY) {
             const image = document.createElement("img")
-            image.src = `/assets/images/${texturePackName}/${path.join("/")}/base.${textureMeta.extension}`
+            image.src = `/assets/texturePacks/${texturePackName}/${path.join("/")}/base.${textureMeta.extension}`
             texturesDiv.appendChild(image)
             result.#imageElements.set(Texture.#baseMarker, image)
             promises.push(new Promise((res, err) => {
@@ -308,7 +308,7 @@ class Texture {
             if (angle <= 180 || (angle > 180 && ! textureMeta.isSymmetric)) {
                 const hoistedAngle = angle
                 const image = document.createElement("img")
-                image.src = `/assets/images/${texturePackName}/${path.join("/")}/${angle}.${textureMeta.extension}`
+                image.src = `/assets/texturePacks/${texturePackName}/${path.join("/")}/${angle}.${textureMeta.extension}`
                 texturesDiv.appendChild(image)
                 result.#imageElements.set(AngleUtils.clampAngleDeg(hoistedAngle - 90), image)
                 if (hoistedAngle === 0) {
