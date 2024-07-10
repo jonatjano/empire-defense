@@ -187,7 +187,7 @@ export const mapsData = Object.freeze([
             0000000000000000000000
         `),
         [{x: 0, y: 5}],
-        [{x: 13, y: 5}],
+        [{x: 21, y: 5}],
         {},
         developWaveData([
             [[ // wave 1

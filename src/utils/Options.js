@@ -16,6 +16,8 @@ class Options {
     #knownTexturePacks
     /** @type {TexturePack} */
     #texturePack
+    /** @type {TexturePack} */
+    #defaultTexturePack
 
     // todo stuff with local storage and proxy and stuff
     constructor() {
@@ -49,6 +51,7 @@ class Options {
                 /* texture pack */
                 this.#knownTexturePacks = meta.texturePacks.list.map(name => new TexturePack(name))
                 this.texturePack = this.#knownTexturePacks.find(pack => pack.name === meta.texturePacks.default) ?? this.#knownTexturePacks[0]
+                this.#defaultTexturePack = this.texturePack
 
                 const texturePackSelect = document.querySelector("#texturePackSelect")
                 this.#knownTexturePacks.forEach(pack => {
@@ -115,6 +118,7 @@ class Options {
     }
 
     get texturePack() { return this.#texturePack }
+    get defaultTexturePack() { return this.#defaultTexturePack }
 
     uploadTexturePack() {
         const files = document.querySelector("#texturePackInput").files
