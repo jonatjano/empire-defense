@@ -20,8 +20,9 @@ const HP_BAR_STYLE = Object.freeze({
  * @param {(x: number, y: number) => undefined} clickListener
  */
 export function setCanvasEvent(canvas, clickListener) {
-    const leftMargin = (canvas.width / options.zoom - game.map.width) / 2;
-    const topMargin = (canvas.height / options.zoom - game.map.height) / 2;
+    // TODO issue is probably from the margins
+    const leftMargin = (canvas.width / globalThis.options.zoom - game.map.width) / 2;
+    const topMargin = (canvas.height / globalThis.options.zoom - game.map.height) / 2;
     canvas.ondragend = event => {
         console.log("drop", event)
     }
@@ -32,8 +33,8 @@ export function setCanvasEvent(canvas, clickListener) {
         const yRatio = canvas.height / boundingRect.height
         const canvasX = event.x - boundingRect.left
         const canvasY = event.y - boundingRect.top
-        const mapX = (canvasX * xRatio) / options.zoom - leftMargin
-        const mapY = (canvasY * yRatio) / options.zoom - topMargin
+        const mapX = (canvasX * xRatio) / globalThis.options.zoom - leftMargin
+        const mapY = (canvasY * yRatio) / globalThis.options.zoom - topMargin
         clickListener(mapX, mapY)
     }
 }

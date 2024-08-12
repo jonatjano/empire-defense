@@ -95,8 +95,9 @@ export default class Game {
         document.getElementById("debugFpsAvg").textContent = (frameCounter / frameTiming * 1000).toFixed(3)
         document.getElementById("entityCount").textContent = this.#entities.length.toString()
 
+        const durationToSend = frameDuration * globalThis.options.speed
         this.#entities.forEach((entity) => {
-            entity.act(frameDuration)
+            entity.act(durationToSend)
         })
 
         this.#eventListener(frameTiming)

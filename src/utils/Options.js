@@ -202,12 +202,18 @@ class Options {
         let zoomInterval
         /** @type {HTMLButtonElement} */
         const zoomIn = document.querySelector("#zoomIn")
-        zoomIn.addEventListener("mousedown", () => zoomInterval = setInterval(() => this.augmentZoom(), ZOOM_INTERVAL_TIME))
+        zoomIn.addEventListener("mousedown", () => {
+            this.augmentZoom()
+            zoomInterval = setInterval(() => this.augmentZoom(), ZOOM_INTERVAL_TIME)
+        })
         zoomIn.addEventListener("mouseup", () => clearInterval(zoomInterval))
         zoomIn.addEventListener("mouseleave", () => clearInterval(zoomInterval))
         /** @type {HTMLButtonElement} */
         const zoomOut = document.querySelector("#zoomOut")
-        zoomOut.addEventListener("mousedown", () => zoomInterval = setInterval(() => this.reduceZoom(), ZOOM_INTERVAL_TIME))
+        zoomOut.addEventListener("mousedown", () => {
+            this.reduceZoom()
+            zoomInterval = setInterval(() => this.reduceZoom(), ZOOM_INTERVAL_TIME)
+        })
         zoomOut.addEventListener("mouseup", () => clearInterval(zoomInterval))
         zoomOut.addEventListener("mouseleave", () => clearInterval(zoomInterval))
     }

@@ -51,6 +51,7 @@ html, body {
         top: 0;
         left: 0;
         font-size: max(20px,5vh);
+        pointer-events: none;
 
         display: grid;
         grid-template:
@@ -85,8 +86,8 @@ html, body {
         & button { font-size: 1em }
         & img { height: 1.5lh }
 
-        & > #money, & > #life, & > #crystal, & > #wave {
-            pointer-events: none;
+        & > #menu > *, & > #towers > * {
+            pointer-events: all;
         }
 
         #menu > * {
