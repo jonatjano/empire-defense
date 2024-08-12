@@ -28,6 +28,11 @@ class Options {
     /** @type {number} */
     #maxZoom = 300
 
+    /** @type {number} */
+    #speed = 1
+    /** @type {number[]} */
+    #speeds = Object.freeze([1, 2, 5])
+
     // todo stuff with local storage and proxy and stuff
     constructor() {
         // document.body.classList.add("hidden")
@@ -44,6 +49,7 @@ class Options {
                 /** @param {{
                  *  languages: {default: string, list: string[]},
                  *  texturePacks: {default: string, list: string[]},
+                 *  speeds: number[]
                  *  debug: ?boolean,
                  *  debugTextures: ?boolean,
                  *  showStats: ?boolean
@@ -75,8 +81,8 @@ class Options {
                 if (meta.debugTextures) {
                     document.querySelector("#textures").classList.remove("hidden")
                 }
+                if (this.debug) { console.log(this) }
             })
-            .then(_ => console.log(this))
     }
 
     reduceZoom() {
@@ -96,6 +102,20 @@ class Options {
         }
     }
     get zoom() { return this.#zoom }
+
+
+    changeSpeed() {
+        let newIndex = this.#speeds.indexOf(this.#speed) + 1
+        if (newIndex === this.#speeds.length) { newIndex = 0 }
+        this.#speed = this.#speeds[newIndex]
+        const buttonImage = document.querySelector("#speed img")
+        buttonImage.dataset.texture = `icons/speed${this.#speed}`
+        this.texturePack.changeElementTexture(buttonImage)
+    }
+
+    get speed() { return this.#speed }
+    get speeds() { return this.#speeds }
+
 
     /** @param {boolean} value */
     set debug(value) {
@@ -169,6 +189,12 @@ class Options {
     }
 
     addEventsToDom() {
+        // *********
+        //   speed
+        // *********
+        /** @type {HTMLButtonElement} */
+        const speed = document.querySelector("#speed")
+        speed.addEventListener("click", () => this.changeSpeed())
 
         // ********
         //   zoom

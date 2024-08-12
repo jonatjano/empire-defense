@@ -103,8 +103,10 @@ const textureList = {
         wave: textureListLeaf,
         option: textureListLeaf,
         speed1: textureListLeaf,
+        speed2: textureListLeaf,
+        speed5: textureListLeaf,
         zoomIn: textureListLeaf,
-        zoomOut: textureListLeaf
+        zoomOut: textureListLeaf,
     },
     maps: {
         classic: textureListLeaf,
@@ -223,9 +225,12 @@ export default class TexturePack {
 
     changeDocumentTextures() {
         const elements = document.body.querySelectorAll("*[data-texture]")
-        elements.forEach(async element => {
-            element.setAttribute("src", (await this.getTexture(element.dataset.texture)).getBase().src)
-        })
+        elements.forEach(element => this.changeElementTexture(element))
+    }
+
+    /** @param {HTMLImageElement} element */
+    async changeElementTexture(element) {
+        element.setAttribute("src", (await this.getTexture(element.dataset.texture)).getBase().src)
     }
 }
 
