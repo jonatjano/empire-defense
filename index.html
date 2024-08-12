@@ -30,24 +30,17 @@
 	<div id="game" class="hidden">
 		<canvas id="gameCanvas" height="900" width="1600"></canvas>
 		<div id="gui">
-			<div id="money"><img data-texture="icons/money" src="" alt="money"><span id="moneyLabel">0</span></div>
-			<div id="life"><img data-texture="icons/life" src="" alt="life"><span id="lifeLabel">0</span></div>
-			<div id="crystal"><img data-texture="icons/crystal" src="" alt="crystal"><span id="crystalLabel">0</span></div>
-			<div id="wave"><img data-texture="icons/wave" src="" alt="wave"><span id="waveLabel">0</span></div>
+			<div id="money"><img data-texture="icons/money" src="" alt="Money"><span id="moneyLabel">0</span></div>
+			<div id="life"><img data-texture="icons/life" src="" alt="Life"><span id="lifeLabel">0</span></div>
+			<div id="crystal"><img data-texture="icons/crystal" src="" alt="Crystal"><span id="crystalLabel">0</span></div>
+			<div id="wave"><img data-texture="icons/wave" src="" alt="Wave"><span id="waveLabel">0</span></div>
 			<div id="menu">
-				<div>option</div>
-				<div>speed</div>
-				<div>zoom out</div>
-				<div>zoom in</div>
+				<button id="option"><img data-texture="icons/option" src="" alt="Option"></button>
+				<button id="speed"><img data-texture="icons/speed1" src="" alt="Speed x1"></button>
+				<button id="zoomOut"><img data-texture="icons/zoomOut" src="" alt="Zoom out"></button>
+				<button id="zoomIn"><img data-texture="icons/zoomIn" src="" alt="Zoom in"></button>
 			</div>
-			<div id="entityActions">
-				<div>tower 1</div>
-				<div>tower 2</div>
-				<div>tower 3</div>
-				<div>tower 4</div>
-				<div>tower 5</div>
-				<div>tower 6</div>
-			</div>
+			<div id="towers"></div>
 		</div>
 		<div id="pauseMenu">
 			<button id="resumeButton" data-translation="generic.resume">Resume</button>

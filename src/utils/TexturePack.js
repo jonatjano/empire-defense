@@ -100,7 +100,11 @@ const textureList = {
         money: textureListLeaf,
         life: textureListLeaf,
         crystal: textureListLeaf,
-        wave: textureListLeaf
+        wave: textureListLeaf,
+        option: textureListLeaf,
+        speed1: textureListLeaf,
+        zoomIn: textureListLeaf,
+        zoomOut: textureListLeaf
     },
     maps: {
         classic: textureListLeaf,
