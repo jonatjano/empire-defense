@@ -40,7 +40,7 @@ addFeature() {
 
 
 result="{"
-result="$result$(addFeature "texturePacks" $DEFAULT_TEXTURE_PACK images),"
+result="$result$(addFeature "texturePacks" $DEFAULT_TEXTURE_PACK texturePacks),"
 result="$result$(addFeature "languages" $DEFAULT_LANGUAGE translations)"
 if [[ ! -z $DEBUG ]]; then
 	result="$result,\n\t\"debug\": true\n}"
