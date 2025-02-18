@@ -3,6 +3,7 @@ import Position from "./Position.js";
 import AbstractBuilding from "./entities/AbstractBuilding.js";
 import {TileOption} from "./GameMap.js";
 import entities from "./entities/entities.js";
+import AbstractUnit from "./entities/AbstractUnit.js";
 
 let lastFrameTiming
 let frameCounter = 0
@@ -29,6 +30,8 @@ export default class Game {
     #crystal
     /** @type {number} */
     #waveNumber
+    /** @type {boolean} */
+    #lastEnemySpawned = false
 
     /**
      * @param {GameMap} map
@@ -187,6 +190,7 @@ export default class Game {
     #launchNextWave() {
         console.log("new wave")
         this.waveNumber = this.waveNumber + 1
+        this.#lastEnemySpawned = false
         console.log(this.waveNumber)
         const callback = this.#waveDeathCallback.bind(this)
         const spawnData = this.map.waves[this.waveNumber - 1]
@@ -207,14 +211,22 @@ export default class Game {
             console.log(`spawned ${spawnCount} units`)
             if (spawnCount === 0) {
                 clearInterval(interval)
+                this.#lastEnemySpawned = true
             }
             unitIndex++
         }, Game.SPAWN_INTERVAL)
     }
 
     #waveDeathCallback(unit) {
-        this.money = this.money + unit.killReward
-        this.crystal = this.crystal + unit.killCrystalReward
-        // TODO if unit count === 0, this.#launchNextWave()
+        this.money += unit.killReward
+        this.crystal += unit.killCrystalReward
+
+        if (this.#lastEnemySpawned && this.getEntities(AbstractUnit).length === 0) {
+            if (this.map.waves.length === this.waveNumber) {
+                alert("victory")
+            } else {
+                this.#launchNextWave()
+            }
+        }
     }
 }
