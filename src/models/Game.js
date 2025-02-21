@@ -6,12 +6,13 @@ import entities from "./entities/entities.js";
 import AbstractUnit from "./entities/AbstractUnit.js";
 
 let lastFrameTiming
-let frameCounter = 0
+let firstFrameTiming = undefined;
+let totalFrameCounter = 0
+let frameCounterSinceLastPause = 0
 
 export default class Game {
     static get SPAWN_INTERVAL() { return 1 / entities.Squire.movements.movementSpeed }
     static get INTER_WAVE_DURATION() { return 10000 }
-
 
     /** @type {GameMap} */
     #map
@@ -89,19 +90,22 @@ export default class Game {
     }
 
     step(frameTiming) {
-        if (this.#isPaused) { return }
-        // this.pause()
         if (lastFrameTiming === undefined) {
             lastFrameTiming = frameTiming
+            firstFrameTiming = frameTiming
+            frameCounterSinceLastPause = 0
             return
         }
         const frameDuration = frameTiming - lastFrameTiming
         lastFrameTiming = frameTiming
+        frameCounterSinceLastPause++
+
+        console.log(frameCounterSinceLastPause, lastFrameTiming, firstFrameTiming, frameDuration)
 
         document.getElementById("debugTime").textContent = frameTiming
-        document.getElementById("frameCount").textContent = (++frameCounter).toFixed(0)
+        document.getElementById("frameCount").textContent = (++totalFrameCounter).toFixed(0)
         document.getElementById("debugFps").textContent = (1000 / frameDuration).toFixed(3)
-        document.getElementById("debugFpsAvg").textContent = (frameCounter / frameTiming * 1000).toFixed(3)
+        document.getElementById("debugFpsAvg").textContent = (frameCounterSinceLastPause / (frameTiming - firstFrameTiming) * 1000).toFixed(3)
         document.getElementById("entityCount").textContent = this.#entities.length.toString()
 
         const durationToSend = frameDuration * globalThis.options.speed
@@ -113,8 +117,10 @@ export default class Game {
     }
 
     play(frameTiming) {
-        this.step(frameTiming)
-        requestAnimationFrame(this.play.bind(this))
+        if (! this.#isPaused) {
+            this.step(frameTiming)
+            requestAnimationFrame(this.play.bind(this))
+        }
     }
 
     resume() {

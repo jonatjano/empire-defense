@@ -1,7 +1,7 @@
 import * as Translator from "./Translator.js";
 import TexturePack from "./TexturePack.js";
 
-const ZOOM_INTERVAL_TIME = 100
+const BUTTON_INTERVAL_TIME = 100
 
 class Options {
     /** @type {boolean} */
@@ -214,7 +214,7 @@ class Options {
         const zoomIn = document.querySelector("#zoomIn")
         zoomIn.addEventListener("mousedown", () => {
             this.augmentZoom()
-            zoomInterval = setInterval(() => this.augmentZoom(), ZOOM_INTERVAL_TIME)
+            zoomInterval = setInterval(() => this.augmentZoom(), BUTTON_INTERVAL_TIME)
         })
         zoomIn.addEventListener("mouseup", () => clearInterval(zoomInterval))
         zoomIn.addEventListener("mouseleave", () => clearInterval(zoomInterval))
@@ -222,7 +222,7 @@ class Options {
         const zoomOut = document.querySelector("#zoomOut")
         zoomOut.addEventListener("mousedown", () => {
             this.reduceZoom()
-            zoomInterval = setInterval(() => this.reduceZoom(), ZOOM_INTERVAL_TIME)
+            zoomInterval = setInterval(() => this.reduceZoom(), BUTTON_INTERVAL_TIME)
         })
         zoomOut.addEventListener("mouseup", () => clearInterval(zoomInterval))
         zoomOut.addEventListener("mouseleave", () => clearInterval(zoomInterval))
