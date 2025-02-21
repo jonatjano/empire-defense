@@ -21,10 +21,10 @@ const HP_BAR_STYLE = Object.freeze({
  * @param {(x: number, y: number) => undefined} moveListener
  */
 export function setCanvasEvent(canvas, clickListener, moveListener) {
-    // TODO issue is probably from the margins
-    const leftMargin = (canvas.width / globalThis.options.zoom - game.map.width) / 2;
-    const topMargin = (canvas.height / globalThis.options.zoom - game.map.height) / 2;
-    canvas.onmousemove = event => {
+    const callback = (event, listener) => {
+        const leftMargin = (canvas.width / globalThis.options.zoom - game.map.width) / 2;
+        const topMargin = (canvas.height / globalThis.options.zoom - game.map.height) / 2;
+
         const boundingRect = canvas.getBoundingClientRect()
         const xRatio = canvas.width / boundingRect.width
         const yRatio = canvas.height / boundingRect.height
@@ -32,19 +32,11 @@ export function setCanvasEvent(canvas, clickListener, moveListener) {
         const canvasY = event.y - boundingRect.top
         const mapX = (canvasX * xRatio) / globalThis.options.zoom - leftMargin
         const mapY = (canvasY * yRatio) / globalThis.options.zoom - topMargin
-        moveListener(mapX, mapY)
+        listener(mapX, mapY)
     }
-    canvas.onclick = event => {
-        console.log(event)
-        const boundingRect = canvas.getBoundingClientRect()
-        const xRatio = canvas.width / boundingRect.width
-        const yRatio = canvas.height / boundingRect.height
-        const canvasX = event.x - boundingRect.left
-        const canvasY = event.y - boundingRect.top
-        const mapX = (canvasX * xRatio) / globalThis.options.zoom - leftMargin
-        const mapY = (canvasY * yRatio) / globalThis.options.zoom - topMargin
-        clickListener(mapX, mapY)
-    }
+
+    canvas.onmousemove = event => callback(event, moveListener)
+    canvas.onclick = event => callback(event, clickListener)
 }
 
 /**

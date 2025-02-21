@@ -155,7 +155,6 @@ export default class Game {
 
         const cellPosition = new Position(Math.floor(x), Math.floor(y), 0)
         const towerPosition = new Position(cellPosition.x + 0.5, cellPosition.y + 0.5, 0)
-        console.log(cellPosition)
 
         if (! this.#map.positionIsInBoundaries(cellPosition) || ! TileOption.is(this.#map.getTileOption(cellPosition.x, cellPosition.y), TileOption.buildable)) {
             this.#ghostEntity = undefined
