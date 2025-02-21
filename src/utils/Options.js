@@ -189,6 +189,16 @@ class Options {
     }
 
     addEventsToDom() {
+        // ***********
+        //   options
+        // ***********
+        /** @type {HTMLButtonElement} */
+        const option = document.querySelector("#option")
+        option.addEventListener("click", () => {
+            globalThis.game?.pause()
+            document.querySelector("#pauseMenu").classList.toggle("hidden", false)
+        })
+
         // *********
         //   speed
         // *********
@@ -216,6 +226,17 @@ class Options {
         })
         zoomOut.addEventListener("mouseup", () => clearInterval(zoomInterval))
         zoomOut.addEventListener("mouseleave", () => clearInterval(zoomInterval))
+
+        // **************
+        //   pause menu
+        // **************
+        const resumeButton = document.querySelector("#resumeButton")
+        resumeButton.addEventListener("click", () => {
+            globalThis.game?.resume()
+            document.querySelector("#pauseMenu").classList.toggle("hidden", true)
+        })
+        const quitButton = document.querySelector("#quitButton")
+        quitButton.addEventListener("click", () => window.location.reload())
     }
 }
 

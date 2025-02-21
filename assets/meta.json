@@ -13,5 +13,6 @@
 		]
 	},
 	"debug": false,
-	"debugTextures": true
+	"debugTextures": false,
+	"showStats": true
 }

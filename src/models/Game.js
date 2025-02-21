@@ -142,6 +142,8 @@ export default class Game {
      * @param {number} y
      */
     click(x, y) {
+        if (this.#isPaused) { return }
+
         console.group("click")
         console.log(`clicked on cell ${x}, ${y}`)
 
