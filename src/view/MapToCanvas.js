@@ -147,6 +147,21 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
 
                 ctx.globalAlpha = drawImageArgs.alpha
 
+                if (entity === game.ghostEntity) {
+                    const ellipse = new Path2D()
+                    ellipse.ellipse(
+                        drawImageArgs.dx + (entityTexture.worldWidth - 0.5) * options.zoom,
+                        drawImageArgs.dy + (entityTexture.worldHeight - 0.5) * options.zoom,
+                        options.zoom * entity.attackRange, options.zoom * entity.attackRange,
+                        0, 0, 2 * Math.PI
+                    )
+
+                    const previousStyle = ctx.fillStyle
+                    ctx.fillStyle = "royalBlue";
+                    ctx.fill(ellipse);
+                    ctx.fillStyle = previousStyle
+                }
+
                 if (entityTexture.textureType !== TextureType.ROTATION_ONLY) {
                     ctx.drawImage(entityTexture.getBase(), drawImageArgs.dx, drawImageArgs.dy, drawImageArgs.dw, drawImageArgs.dh)
                 }

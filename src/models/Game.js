@@ -21,7 +21,7 @@ export default class Game {
     #isPaused = true
     /** @type {AbstractEntity[]} */
     #entities = []
-    /** @type {?AbstractEntity} */
+    /** @type {?AbstractBuilding} */
     #ghostEntity = undefined
     /** @type {PathFinder} */
     #pathFinder

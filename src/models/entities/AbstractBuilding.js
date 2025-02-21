@@ -105,6 +105,8 @@ export default class AbstractBuilding extends AbstractEntity {
     /** @return {typeof AbstractBuilding | null} */
     get upgradesTo() { return this.#upgradesTo }
 
+    get attackRange() { return this.#attackRange }
+
     act(frameDuration) {
         this.#attackCooldown = this.#attackCooldown - frameDuration
 
