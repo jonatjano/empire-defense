@@ -121,6 +121,10 @@ export default class AbstractBuilding extends AbstractEntity {
                     globalThis.game.addEntity(missile)
                 })
             }
+        } else {
+            if (this.#attackCooldown < 0) {
+                this.#attackCooldown = 0
+            }
         }
 
     }
