@@ -70,7 +70,7 @@ function game(map) {
 
     const gameController = new Game(map, eventReceiver, new PathFinder(map))
     globalThis.game = gameController
-    setCanvasEvent(entitiesCanvas, gameController.click.bind(gameController))
+    setCanvasEvent(entitiesCanvas, gameController.click.bind(gameController), gameController.moveOver.bind(gameController))
     gameController.resume()
     eventReceiver(0)
 

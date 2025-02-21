@@ -18,13 +18,21 @@ const HP_BAR_STYLE = Object.freeze({
 /**
  * @param {HTMLCanvasElement} canvas
  * @param {(x: number, y: number) => undefined} clickListener
+ * @param {(x: number, y: number) => undefined} moveListener
  */
-export function setCanvasEvent(canvas, clickListener) {
+export function setCanvasEvent(canvas, clickListener, moveListener) {
     // TODO issue is probably from the margins
     const leftMargin = (canvas.width / globalThis.options.zoom - game.map.width) / 2;
     const topMargin = (canvas.height / globalThis.options.zoom - game.map.height) / 2;
-    canvas.ondragend = event => {
-        console.log("drop", event)
+    canvas.onmousemove = event => {
+        const boundingRect = canvas.getBoundingClientRect()
+        const xRatio = canvas.width / boundingRect.width
+        const yRatio = canvas.height / boundingRect.height
+        const canvasX = event.x - boundingRect.left
+        const canvasY = event.y - boundingRect.top
+        const mapX = (canvasX * xRatio) / globalThis.options.zoom - leftMargin
+        const mapY = (canvasY * yRatio) / globalThis.options.zoom - topMargin
+        moveListener(mapX, mapY)
     }
     canvas.onclick = event => {
         console.log(event)
@@ -121,10 +129,12 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
     /**
      * @type {AbstractEntity[]}
      */
-    const entities = [...game.getEntities()].sort((a, b) => {
-        return (a.position.y + movementTypeDrawPriority(a.movements.movementType)) -
-            (b.position.y + movementTypeDrawPriority(b.movements.movementType))
-    })
+    const entities = [...game.getEntities(), ...(game.ghostEntity ? [game.ghostEntity] : [])]
+        .sort((a, b) => {
+            return (a.position.y + movementTypeDrawPriority(a.movements.movementType)) -
+                (b.position.y + movementTypeDrawPriority(b.movements.movementType))
+        }
+    )
 
     await Promise.all(
         entities.map(entity =>
@@ -135,14 +145,15 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                 const textureVerticalSpan = entityTexture.worldHeight
                 const textureTopMargin = -textureVerticalSpan + 0.5
 
-                /** @type {[number, number, number, number]} */
                 const drawImageArgs = {
                     dx: (leftMargin + entity.position.x + textureLeftMargin) * options.zoom,
                     dy: (topMargin + entity.position.y + textureTopMargin) * options.zoom,
                     dw: entityTexture.worldWidth * options.zoom,
-                    dh: entityTexture.worldHeight * options.zoom
+                    dh: entityTexture.worldHeight * options.zoom,
+                    alpha: entity === game.ghostEntity ? 0.5 : 1
                 }
 
+                ctx.globalAlpha = drawImageArgs.alpha
 
                 if (entityTexture.textureType !== TextureType.ROTATION_ONLY) {
                     ctx.drawImage(entityTexture.getBase(), drawImageArgs.dx, drawImageArgs.dy, drawImageArgs.dw, drawImageArgs.dh)

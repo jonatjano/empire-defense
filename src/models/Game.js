@@ -21,6 +21,8 @@ export default class Game {
     #isPaused = true
     /** @type {AbstractEntity[]} */
     #entities = []
+    /** @type {?AbstractEntity} */
+    #ghostEntity = undefined
     /** @type {PathFinder} */
     #pathFinder
 
@@ -68,6 +70,10 @@ export default class Game {
      */
     getEntitiesWithCondition(condition, type = AbstractEntity) { return this.#entities.filter(entity => entity instanceof type && condition(entity)) }
     getEntitiesCloseTo(position, range, type = AbstractEntity) { return this.#entities.filter(entity => entity instanceof type && entity.position.distanceFrom(position) < range) }
+
+    get ghostEntity() {
+        return this.#ghostEntity
+    }
 
     /**
      * @return {GameMap}
@@ -135,6 +141,33 @@ export default class Game {
     set waveNumber(value) {
         this.#waveNumber = value
         document.querySelector("#waveLabel").textContent = value.toString()
+    }
+
+
+    /**
+     * @param {number} x
+     * @param {number} y
+     */
+    moveOver(x, y) {
+        if (this.#isPaused) { return }
+
+        const towerType = entities.Archery1
+
+        const cellPosition = new Position(Math.floor(x), Math.floor(y), 0)
+        const towerPosition = new Position(cellPosition.x + 0.5, cellPosition.y + 0.5, 0)
+        console.log(cellPosition)
+
+        if (! this.#map.positionIsInBoundaries(cellPosition) || ! TileOption.is(this.#map.getTileOption(cellPosition.x, cellPosition.y), TileOption.buildable)) {
+            this.#ghostEntity = undefined
+            return
+        }
+        if (this.getEntities(AbstractBuilding).some(building => building.position.equals(towerPosition))) {
+            this.#ghostEntity = undefined
+            return
+        }
+
+        const tower = new towerType(cellPosition)
+        this.#ghostEntity = tower
     }
 
     /**
