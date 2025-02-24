@@ -19,11 +19,11 @@ const entities = {
             )
         }
     },
-    knight: class extends AbstractUnit {
+    Knight: class extends AbstractUnit {
         static movements = new MovementCapability(2, 3600, 360, MovementType.Walking)
         constructor(position, deathCallback = () => {}) {
             super(
-                entities.knight.factory.setPosition(position).setMovements(entities.knight.movements).setDeathCallback(deathCallback)
+                entities.Knight.factory.setPosition(position).setMovements(entities.Knight.movements).setDeathCallback(deathCallback)
                     .setName("knight")
                     .setBaseHp(100)
                     .setKillReward(2)
