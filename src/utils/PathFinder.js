@@ -39,9 +39,6 @@ export default class PathFinder {
         return this.#precalculate(movementType)
     }
 
-    /**
-     * @param {MovementType} movementType
-     */
     revertAll() {
         return Object.values(MovementType).forEach(type => this.revert(type))
     }
