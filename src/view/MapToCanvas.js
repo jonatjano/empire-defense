@@ -242,22 +242,22 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
             const textOffset = (i + 1) / (array.length + 1)
             for (let y = 0; y < game.map.height; y++) {
                 for (let x = 0; x < game.map.width; x++) {
-                        const path = game.pathFinder.getNextTarget(new Position(x, y), movementType)
-                        if (path) {
-                            ctx.fillText(path.value.toString(),
-                                (leftMargin + x + textOffset) * options.zoom + TILE_MARGIN,
-                                (topMargin + y + 0.55) * options.zoom + TILE_MARGIN
-                            )
-                            ctx.fillText(path.target.x === x ? (path.target.y > y ? 'v' : '^') : (path.target.x > x ? '>' : '<'),
-                                (leftMargin + x + textOffset) * options.zoom + TILE_MARGIN,
-                                (topMargin + y + 0.7) * options.zoom + TILE_MARGIN
-                            )
-                            ctx.fillText((path.target.y * game.map.width + path.target.x).toString(),
-                            // ctx.fillText((path.target.y * game.map.width + path.target.x).toString(),
-                                (leftMargin + x + textOffset) * options.zoom + TILE_MARGIN,
-                                (topMargin + y + 0.85) * options.zoom + TILE_MARGIN
-                            )
-                        }
+                    const path = game.pathFinder.getNextTarget(new Position(x, y), movementType)
+                    if (path) {
+                        ctx.fillText(path.value.toString(),
+                            (leftMargin + x + textOffset) * options.zoom + TILE_MARGIN,
+                            (topMargin + y + 0.55) * options.zoom + TILE_MARGIN
+                        )
+                        ctx.fillText(path.target.x === x ? (path.target.y > y ? 'v' : '^') : (path.target.x > x ? '>' : '<'),
+                            (leftMargin + x + textOffset) * options.zoom + TILE_MARGIN,
+                            (topMargin + y + 0.7) * options.zoom + TILE_MARGIN
+                        )
+                        ctx.fillText((path.target.y * game.map.width + path.target.x).toString(),
+                        // ctx.fillText((path.target.y * game.map.width + path.target.x).toString(),
+                            (leftMargin + x + textOffset) * options.zoom + TILE_MARGIN,
+                            (topMargin + y + 0.85) * options.zoom + TILE_MARGIN
+                        )
+                    }
                 }
             }
         })
