@@ -121,12 +121,14 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
     /**
      * @type {AbstractEntity[]}
      */
-    const entities = [...game.getEntities(), ...(game.ghostEntity ? [game.ghostEntity] : [])]
-        .sort((a, b) => {
-            return (a.position.y + movementTypeDrawPriority(a.movements.movementType)) -
-                (b.position.y + movementTypeDrawPriority(b.movements.movementType))
-        }
-    )
+    const entities = [
+        ...game.getEntities()
+            .sort((a, b) => {
+                return (a.position.y + movementTypeDrawPriority(a.movements.movementType)) -
+                    (b.position.y + movementTypeDrawPriority(b.movements.movementType))
+            }),
+        ...(game.ghostEntity ? [game.ghostEntity] : [])
+    ]
 
     await Promise.all(
         entities.map(entity =>

@@ -100,8 +100,6 @@ export default class Game {
         lastFrameTiming = frameTiming
         frameCounterSinceLastPause++
 
-        console.log(frameCounterSinceLastPause, lastFrameTiming, firstFrameTiming, frameDuration)
-
         document.getElementById("debugTime").textContent = frameTiming
         document.getElementById("frameCount").textContent = (++totalFrameCounter).toFixed(0)
         document.getElementById("debugFps").textContent = (1000 / frameDuration).toFixed(3)
