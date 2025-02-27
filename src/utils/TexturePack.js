@@ -54,7 +54,7 @@ class TextureMeta {
         this.#animationFrameDuration = animationFrameDuration
         this.#angleBetweenRotations = angleBetweenRotations
         this.#isSymmetric = isSymmetric
-        this.#textureType = textureType
+        this.#textureType = typeof textureType === "string" ? TextureType[textureType] : textureType
         this.#pixelWidth = pixelWidth ?? pixelSize
         this.#pixelHeight = pixelHeight ?? pixelSize
         this.#worldWidth = worldWidth ?? worldSize
