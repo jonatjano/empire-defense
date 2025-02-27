@@ -1,6 +1,7 @@
 - montrer une grille blanche uniquement pendant le placement d'une tour
 - montrer l'écran de selection des tours au tout debut de la partie
-- les enemis apparaissent sur le chemin dans la map
+- les enemis apparaissent sur le chemin dans la map, au centre de la case
+- les ennemis disparaissent des qu'ils sont sur la case finale 
 - mode accéléré = vitesse x 2
 
 # init
@@ -31,7 +32,7 @@ crystal: 0
 | 1     | 1S          |
 | 2     | 3S          |
 | 3     | 4S          |
-| 4     |             |
+| 4     | 5S          |
 | 5     | 1F 5S       |
 | 6     | 8S          |
 | 7     | 10S         |
@@ -83,6 +84,7 @@ crystal: 0
 ## debut des vagues
 - la premiere vague commence quand la premiere tour est posée
 - une fleche rouge indique les spawns utilisés, des fléches vertes indiquent les sorties utilisés
+- clignotement des fleches pendant 5 secondes puis spawn
 
 # tours
 | tour    | level | cout | vente | temps | portée | dégats       | speed | hit ground | hit air | crystals | crystal penality |

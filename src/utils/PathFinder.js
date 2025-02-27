@@ -4,24 +4,50 @@ import AbstractBuilding from "../models/entities/AbstractBuilding.js";
 import {TileOption} from "../models/GameMap.js";
 
 /**
- * @typedef {Map<number, {target: Position, value: number}>} pathFinderCache
+ * @typedef {{target: Position, value: number}} cellData
+ */
+/**
+ * key is tile y * map.width + tile x
+ * @typedef {Map<number, cellData>} pathFinderCache
  */
 
 export default class PathFinder {
     /** @type {GameMap} */
     #map
     /**
-     * key is tile y * map.width + tile x, target is target Position, value is path length to final target
      * @type {Object<MovementType, pathFinderCache>}
      */
     #cache = {}
+    /**
+     * @type {Object<MovementType, pathFinderCache>}
+     */
+    #previousCache = {}
 
     constructor(map) {
         this.#map = map
     }
 
     recalculateAll() {
-        return Object.values(MovementType).reduce((acc, type) => acc && this.#precalculate(type), true)
+        return Object.values(MovementType).reduce((acc, type) => acc && this.recalculate(type), true)
+    }
+
+    /**
+     * @param {MovementType} movementType
+     * @returns {boolean}
+     */
+    recalculate(movementType) {
+        return this.#precalculate(movementType)
+    }
+
+    revertAll() {
+        return Object.values(MovementType).forEach(type => this.revert(type))
+    }
+
+    /**
+     * @param {MovementType} movementType
+     */
+    revert(movementType) {
+        this.#cache[movementType] = this.#previousCache[movementType]
     }
 
     /**
@@ -29,6 +55,8 @@ export default class PathFinder {
      */
     // TODO big optimisation as setValue is called thousands of times
     #precalculate(movementType) {
+        this.#previousCache[movementType] = this.#cache[movementType]
+
         /** @type {pathFinderCache} */
         const paths = new Map()
         const spawns = this.#map.spawns
@@ -54,7 +82,7 @@ export default class PathFinder {
                     entity instanceof AbstractBuilding && entity.position.equals(doing.position.x + 0.5, doing.position.y + 0.5)
                 ) !== undefined) { continue }
 
-                paths.set(key, {target: doing.from, value: doing.value, times: (paths.get(key)?.times ?? 0) + 1})
+                paths.set(key, {target: doing.from, value: doing.value})
 
                 const spawnAtThatPosition = spawns.find(spawnPos => spawnPos.x === doing.position.x && spawnPos.y === doing.position.y)
                 if (spawnAtThatPosition !== undefined) {
@@ -86,13 +114,14 @@ export default class PathFinder {
         }
 
         this.#cache[movementType] = paths
+
         return spawnFounds.size === this.#map.spawns.length
     }
 
     /**
      * @param {Position} currentPosition
      * @param {MovementType} movementType
-     * @return {{target: Position, value: number} | null}
+     * @return {cellData | null}
      */
     getNextTarget(currentPosition, movementType) {
         let cache = this.#cache[movementType]

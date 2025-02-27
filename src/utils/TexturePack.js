@@ -327,20 +327,7 @@ class Texture {
                 promises.push(new Promise((res, err) => {
                     image.onload = () => {
                         if (textureMeta.isSymmetric && hoistedAngle !== 0 && hoistedAngle !== 180) {
-                            // get utils canvas
-                            const canvas = document.getElementById("utilsCanvas")
-                            canvas.width = image.width
-                            canvas.height = image.height
-
-                            // paste the image reversed left<->right on it
-                            const context = canvas.getContext("2d")
-                            context.clearRect(0, 0, canvas.width, canvas.height);
-                            context.scale(-1, 1)
-                            context.drawImage(image, -canvas.width, 0)
-
-                            // create a new image element with the rotated image
-                            const rotatedImage = document.createElement("img")
-                            rotatedImage.src = canvas.toDataURL("image/png")
+                            const rotatedImage = Texture.#mirrorImage(image)
                             texturesDiv.appendChild(rotatedImage)
                             result.#imageElements.set(AngleUtils.clampAngleDeg(270 - hoistedAngle), rotatedImage)
                             promises.push(new Promise((res, err) => {
@@ -428,19 +415,7 @@ class Texture {
 
                             if (textureMeta.isSymmetric && hoistedAngle !== 0 && hoistedAngle !== 180) {
                                 image.onload = () => {
-                                    // create a canvas
-                                    const canvas = document.getElementById("utilsCanvas")
-                                    canvas.width = image.width
-                                    canvas.height = image.height
-                                    // paste the image reversed left<->right on it
-                                    const context = canvas.getContext("2d")
-                                    context.clearRect(0, 0, canvas.width, canvas.height);
-                                    context.scale(-1, 1)
-                                    context.drawImage(image, -canvas.width, 0)
-
-                                    // create a new image element with the rotated image
-                                    const rotatedImage = document.createElement("img")
-                                    rotatedImage.src = canvas.toDataURL("image/png")
+                                    const rotatedImage = Texture.#mirrorImage(image)
                                     texturesDiv.appendChild(rotatedImage)
                                     result.#imageElements.set(AngleUtils.clampAngleDeg(270 - hoistedAngle), rotatedImage)
                                 }
@@ -470,5 +445,23 @@ class Texture {
             fr.onerror = error => err(error)
             fr.readAsDataURL(file);
         })
+    }
+
+    static #mirrorImage(image) {
+        // get the canvas
+        const canvas = document.getElementById("utilsCanvas")
+        canvas.width = image.width
+        canvas.height = image.height
+
+        // paste the image reversed left<->right on it
+        const context = canvas.getContext("2d")
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.scale(-1, 1)
+        context.drawImage(image, -canvas.width, 0)
+
+        // create a new image element with the rotated image
+        const rotatedImage = document.createElement("img")
+        rotatedImage.src = canvas.toDataURL("image/png")
+        return rotatedImage
     }
 }
