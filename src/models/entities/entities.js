@@ -37,13 +37,25 @@ const entities = {
      *    PROJECTILES    *
      *********************/
     Arrow1: class extends AbstractProjectile {
-        static movements = new MovementCapability(6, 3600, 360, MovementType.Walking)
+        static movements = new MovementCapability(10, 3600, 360, MovementType.Unobstructed)
         constructor(position) {
             super(
                 entities.Arrow1.factory
-                    .setName("archery1")
+                    .setName("arrow1")
                     .setPosition(position)
                     .setMovements(entities.Arrow1.movements)
+            )
+        }
+    },
+
+    CannonBall1: class extends AbstractProjectile {
+        static movements = new MovementCapability(8, 3600, 360, MovementType.Unobstructed)
+        constructor(position) {
+            super(
+                entities.CannonBall1.factory
+                    .setName("cannonball1")
+                    .setPosition(position)
+                    .setMovements(entities.CannonBall1.movements)
             )
         }
     },
@@ -62,6 +74,36 @@ const entities = {
                     .setCrystalOnBuild(1)
                     .setProjectile(entities.Arrow1)
                     .setAttackDelay(2000)
+                    .setAttackRange(5)
+            )
+        }
+    },
+    Archery2: class extends AbstractBuilding {
+        constructor(position) {
+            super(
+                entities.Archery2.factory
+                    .setName("archery2")
+                    .setPosition(position)
+                    .setCost(4)
+                    .setCrystalOnBuild(1)
+                    .setProjectile(entities.Arrow1)
+                    .setAttackDelay(2000)
+                    .setAttackRange(10)
+            )
+        }
+    },
+
+
+    Cannon1: class extends AbstractBuilding {
+        constructor(position) {
+            super(
+                entities.Cannon1.factory
+                    .setName("cannon1")
+                    .setPosition(position)
+                    .setCost(20)
+                    .setCrystalOnBuild(2)
+                    .setProjectile(entities.CannonBall1)
+                    .setAttackDelay(5000)
                     .setAttackRange(10)
             )
         }

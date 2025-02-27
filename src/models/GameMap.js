@@ -211,7 +211,7 @@ export const mapsData = Object.freeze([
             "S",
             "3S",
             "4S",
-            // unknown
+            "5S",
             // "F 5S",
             "8S",
             "10S",

@@ -191,7 +191,7 @@ export default class Game {
         console.group("click")
         console.log(`clicked on cell ${x}, ${y}`)
 
-        const towerType = entities.Archery1
+        const towerType = entities.Cannon1
 
         const cellPosition = new Position(Math.floor(x), Math.floor(y), 0)
         const towerPosition = new Position(cellPosition.x + 0.5, cellPosition.y + 0.5, 0)
