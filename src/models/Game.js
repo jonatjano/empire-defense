@@ -22,7 +22,7 @@ export default class Game {
     #isPaused = true
     /** @type {AbstractEntity[]} */
     #entities = []
-    /** @type {?AbstractBuilding} */
+    /** @type {?{tower: AbstractBuilding, isValid: boolean}} */
     #ghostEntity = undefined
     /** @type {PathFinder} */
     #pathFinder
@@ -169,8 +169,16 @@ export default class Game {
             return
         }
 
+        if (this.#ghostEntity?.tower.position.equals(towerPosition)) {
+            return
+        }
+
         const tower = new towerType(cellPosition)
-        this.#ghostEntity = tower
+        this.addEntity(tower)
+        const isValid = this.#pathFinder.recalculateAll()
+        this.deleteEntity(tower)
+        this.#pathFinder.revertAll()
+        this.#ghostEntity = { tower, isValid }
     }
 
     /**
@@ -210,9 +218,9 @@ export default class Game {
         console.log(tower)
         this.addEntity(tower)
         if (! this.#pathFinder.recalculateAll()) {
-            console.log("failed to recalculate pathfinding")
             this.deleteEntity(tower)
-            this.#pathFinder.recalculateAll()
+            this.#pathFinder.revertAll()
+            console.groupEnd()
             return
         }
         this.money = this.money - tower.cost;

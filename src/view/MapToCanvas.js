@@ -127,7 +127,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                 return (a.position.y + movementTypeDrawPriority(a.movements.movementType)) -
                     (b.position.y + movementTypeDrawPriority(b.movements.movementType))
             }),
-        ...(game.ghostEntity ? [game.ghostEntity] : [])
+        ...(game.ghostEntity ? [game.ghostEntity.tower] : [])
     ]
 
     await Promise.all(
@@ -144,25 +144,10 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                     dy: (topMargin + entity.position.y + textureTopMargin) * options.zoom,
                     dw: entityTexture.worldWidth * options.zoom,
                     dh: entityTexture.worldHeight * options.zoom,
-                    alpha: entity === game.ghostEntity ? 0.5 : 1
+                    alpha: entity === game.ghostEntity?.tower ? 0.5 : 1
                 }
 
                 ctx.globalAlpha = drawImageArgs.alpha
-
-                if (entity === game.ghostEntity) {
-                    const ellipse = new Path2D()
-                    ellipse.ellipse(
-                        drawImageArgs.dx + (entityTexture.worldWidth - 0.5) * options.zoom,
-                        drawImageArgs.dy + (entityTexture.worldHeight - 0.5) * options.zoom,
-                        options.zoom * entity.attackRange, options.zoom * entity.attackRange,
-                        0, 0, 2 * Math.PI
-                    )
-
-                    const previousStyle = ctx.fillStyle
-                    ctx.fillStyle = "royalBlue";
-                    ctx.fill(ellipse);
-                    ctx.fillStyle = previousStyle
-                }
 
                 if (entityTexture.textureType !== TextureType.ROTATION_ONLY) {
                     ctx.drawImage(entityTexture.getBase(), drawImageArgs.dx, drawImageArgs.dy, drawImageArgs.dw, drawImageArgs.dh)
@@ -179,6 +164,21 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                         entityTexture.pixelWidth, entityTexture.pixelHeight,
                         drawImageArgs.dx, drawImageArgs.dy, drawImageArgs.dw, drawImageArgs.dh,
                     )
+                }
+
+                if (entity === game.ghostEntity?.tower) {
+                    const ellipse = new Path2D()
+                    ellipse.ellipse(
+                        drawImageArgs.dx + (entityTexture.worldWidth - 0.5) * options.zoom,
+                        drawImageArgs.dy + (entityTexture.worldHeight - 0.5) * options.zoom,
+                        options.zoom * entity.attackRange, options.zoom * entity.attackRange,
+                        0, 0, 2 * Math.PI
+                    )
+
+                    const previousStyle = ctx.fillStyle
+                    ctx.fillStyle = game.ghostEntity.isValid ? "royalBlue" : "red";
+                    ctx.fill(ellipse);
+                    ctx.fillStyle = previousStyle
                 }
 
                 if (entity.hp !== entity.maxHp) {
