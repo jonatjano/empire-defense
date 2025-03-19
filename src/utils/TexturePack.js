@@ -236,12 +236,12 @@ export default class TexturePack {
 
 
 class Texture {
-    /** @type {number} */
-    static #baseMarker = -1
+    /** @type {Symbol} */
+    static #baseMarker = Symbol("Texture.baseMarker");
 
     /** @type {TextureMeta} */
     #meta
-    /** @type {Map<number, HTMLImageElement>} */
+    /** @type {Map<number | Symbol, HTMLImageElement>} */
     #imageElements = new Map()
 
     constructor(meta) {
@@ -249,7 +249,7 @@ class Texture {
     }
 
     /**
-     * @param {number} orientation
+     * @param {number | Symbol} orientation
      * @return {HTMLImageElement}
      */
     getForOrientation(orientation) { return this.#imageElements.get(orientation) }
