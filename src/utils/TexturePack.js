@@ -37,14 +37,23 @@ const DEFAULTS = {
 class TextureMeta {
     /** @type {TextureMeta | null} */
     #parent
+    /** @type {string} */
     #extension
+    /** @type {number} */
     #animationFrameDuration
+    /** @type {number} */
     #angleBetweenRotations
+    /** @type {boolean} */
     #isSymmetric
+    /** @type {TextureType} */
     #textureType
+    /** @type {number} */
     #pixelWidth
+    /** @type {number} */
     #pixelHeight
+    /** @type {number} */
     #worldWidth
+    /** @type {number} */
     #worldHeight
 
     constructor(parent, {extension, animationFrameDuration, angleBetweenRotations, isSymmetric, textureType, pixelWidth, pixelHeight, pixelSize, worldWidth, worldHeight, worldSize}) {
@@ -61,20 +70,31 @@ class TextureMeta {
         this.#worldHeight = worldHeight ?? worldSize
     }
 
+    /** @return {string} */
     get extension() { return this.#extension ?? this.#parent.extension }
+    /** @return {number} */
     get animationFrameDuration() { return this.#animationFrameDuration ?? this.#parent.animationFrameDuration }
+    /** @return {number} */
     get angleBetweenRotations() { return this.#angleBetweenRotations ?? this.#parent.angleBetweenRotations }
     /** @return {TextureType} */
     get textureType() { return this.#textureType ?? this.#parent.textureType }
+    /** @return {boolean} */
     get isSymmetric() { return this.#isSymmetric ?? this.#parent.isSymmetric }
+    /** @return {number} */
     get pixelWidth() { return this.#pixelWidth ?? this.#parent.pixelWidth }
+    /** @return {number} */
     get pixelHeight() { return this.#pixelHeight ?? this.#parent.pixelHeight }
+    /** @return {number} */
     get worldWidth() { return this.#worldWidth ?? this.#parent.worldWidth }
+    /** @return {number} */
     get worldHeight() { return this.#worldHeight ?? this.#parent.worldHeight }
 }
 
 const textureListLeaf = Symbol()
 const textureList = {
+    // keep first here, ensure it is present when trying to frame other images
+    frame: textureListLeaf,
+
     // {buildings: {archer: textureListLeaf, ...}, ...}
     entities: Object.values(entities).reduce(
         (acc, klass) => {
@@ -111,7 +131,7 @@ const textureList = {
     maps: {
         classic: textureListLeaf,
         test: textureListLeaf
-    }
+    },
 }
 
 export default class TexturePack {
@@ -165,6 +185,7 @@ export default class TexturePack {
 
                 while(toGet.length !== 0) {
                     const [path, localMeta, item] = toGet.shift()
+                    console.log(path, localMeta, item)
                     if (item === textureListLeaf) {
                         let localDefault = DEFAULTS
                         let localPackMeta = packMeta
@@ -172,9 +193,13 @@ export default class TexturePack {
                             localDefault = localDefault?.[part]
                             localPackMeta = localPackMeta?.[part]
                         }
-                        textures[path.join("/")] = isWebkitDirectory ?
+                        const texture = isWebkitDirectory ?
                             await Texture.forWebkitDirectory(files, path, this.#name, new TextureMeta(localMeta, {...localDefault, ...localPackMeta})) :
                             await Texture.for(path, this.#name, new TextureMeta(localMeta, {...localDefault, ...localPackMeta}))
+                        if (path.join("/") !== "frame") {
+                            await texture.makeFramed(textures.frame, this.#name)
+                        }
+                        textures[path.join("/")] = texture
                     } else {
                         let localDefault = DEFAULTS
                         let localPackMeta = packMeta
@@ -236,12 +261,25 @@ export default class TexturePack {
 
 
 class Texture {
-    /** @type {number} */
-    static #baseMarker = -1
+    /** @type {Symbol} */
+    static #baseMarker = Symbol("Texture.baseMarker")
+    /** @type {Symbol} */
+    static #framedMarker = Symbol("Texture.framedMarker")
+
+    /**
+     * the rotation we want portrayed in the framed variant, the closest if not available
+     * @type {Number}
+     */
+    static #frameRotation = 330;
+    /**
+     * the scale applied to the image when framed
+     * @type {Number}
+     */
+    static #frameScale = 80/100;
 
     /** @type {TextureMeta} */
     #meta
-    /** @type {Map<number, HTMLImageElement>} */
+    /** @type {Map<number | Symbol, HTMLImageElement>} */
     #imageElements = new Map()
 
     constructor(meta) {
@@ -249,7 +287,7 @@ class Texture {
     }
 
     /**
-     * @param {number} orientation
+     * @param {number | Symbol} orientation
      * @return {HTMLImageElement}
      */
     getForOrientation(orientation) { return this.#imageElements.get(orientation) }
@@ -270,6 +308,58 @@ class Texture {
     get worldHeight() { return this.#meta.worldHeight; }
 
     /**
+     * @param {Texture} frame
+     * @param {string} texturePackName
+     * @return {Promise<>}
+     */
+    makeFramed(frame, texturePackName) {
+        if (this.#imageElements.has(Texture.#framedMarker)) {
+            return new Promise(() => {})
+        }
+
+
+        // get the canvas
+        const canvas = document.getElementById("utilsCanvas")
+        canvas.width = this.#meta.pixelWidth / this.#meta.worldWidth
+        canvas.height = this.#meta.pixelHeight / this.#meta.worldHeight
+
+        const margin = (1 - Texture.#frameScale) / 2
+        const scale = Texture.#frameScale
+
+        // paste the image reversed left<->right on it
+        const context = canvas.getContext("2d")
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        if (this.#meta.textureType === TextureType.IMAGE) {
+            context.drawImage(this.getBase(), canvas.width * margin, canvas.height * margin, canvas.width * scale, canvas.height * scale)
+        }
+        if (this.#meta.textureType === TextureType.BASE_ONLY || this.#meta.textureType === TextureType.ROTATION_AND_BASE) {
+            context.drawImage(this.getBase(), 0, 0, this.#meta.pixelWidth / this.#meta.worldWidth, this.#meta.pixelHeight / this.#meta.worldHeight, canvas.width * margin, canvas.height * margin, canvas.width * scale, canvas.height * scale)
+        }
+        if (this.#meta.textureType === TextureType.ROTATION_ONLY || this.#meta.textureType === TextureType.ROTATION_AND_BASE) {
+            const frameRotation = Math.ceil(Texture.#frameRotation / this.#meta.angleBetweenRotations) * this.#meta.angleBetweenRotations
+            console.log(
+                frameRotation,
+                this.getForOrientation(frameRotation),
+                this.#imageElements
+            )
+            context.drawImage(this.getForOrientation(frameRotation), 0, 0, this.#meta.pixelWidth / this.#meta.worldWidth, this.#meta.pixelHeight / this.#meta.worldHeight, canvas.width * margin, canvas.height * margin, canvas.width * scale, canvas.height * scale)
+        }
+        context.drawImage(frame.getBase(), 0, 0, canvas.width, canvas.height)
+
+        console.log(this.#imageElements)
+
+        // create a new image element with the rotated image
+        const framedImage = document.createElement("img")
+        framedImage.classList.add("framed")
+        framedImage.src = canvas.toDataURL("image/png")
+        TexturePack.getHtmlTextureContainerFor(texturePackName).appendChild(framedImage)
+        return new Promise((resolve, reject) => {
+            framedImage.onload = resolve
+            framedImage.onerror = reject
+        })
+    }
+
+    /**
      * @param {string[]} path
      * @param {string} texturePackName
      * @param {TextureMeta} textureMeta
@@ -277,7 +367,7 @@ class Texture {
      */
     static for(path, texturePackName, textureMeta) {
         const result = new Texture(textureMeta)
-        let texturesDiv = TexturePack.getHtmlTextureContainerFor(texturePackName)
+        const texturesDiv = TexturePack.getHtmlTextureContainerFor(texturePackName)
         /** @type {Promise[]} */
         const promises = []
 
@@ -356,7 +446,7 @@ class Texture {
      */
     static forWebkitDirectory(files, path, texturePackName, textureMeta) {
         const result = new Texture(textureMeta)
-        let texturesDiv = TexturePack.getHtmlTextureContainerFor(texturePackName)
+        const texturesDiv = TexturePack.getHtmlTextureContainerFor(texturePackName)
         /** @type {Promise[]} */
         const promises = []
 
@@ -447,6 +537,10 @@ class Texture {
         })
     }
 
+    /**
+     * @param {HTMLImageElement} image
+     * @returns {HTMLImageElement}
+     */
     static #mirrorImage(image) {
         // get the canvas
         const canvas = document.getElementById("utilsCanvas")
