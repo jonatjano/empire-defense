@@ -92,7 +92,7 @@ class TextureMeta {
 
 const textureListLeaf = Symbol()
 const textureList = {
-    // keep first here, ensure it is present when trying to frame other images
+    // keep first here to ensure it is present when trying to frame other images
     frame: textureListLeaf,
 
     // {buildings: {archer: textureListLeaf, ...}, ...}
@@ -255,7 +255,11 @@ export default class TexturePack {
 
     /** @param {HTMLImageElement} element */
     async changeElementTexture(element) {
-        element.setAttribute("src", (await this.getTexture(element.dataset.texture)).getBase().src)
+        if (element.dataset.texture.startsWith("framed/")) {
+            element.setAttribute("src", (await this.getTexture(element.dataset.texture.substring("framed/".length))).getFramed().src)
+        } else {
+            element.setAttribute("src", (await this.getTexture(element.dataset.texture)).getBase().src)
+        }
     }
 }
 
@@ -295,6 +299,10 @@ class Texture {
      * @return {HTMLImageElement}
      */
     getBase() { return this.getForOrientation(Texture.#baseMarker) }
+    /**
+     * @return {HTMLImageElement}
+     */
+    getFramed() { return this.getForOrientation(Texture.#framedMarker) }
 
     get animationFrameDuration() { return this.#meta.animationFrameDuration }
     get animationFrameCount() { return this.getForOrientation(0).height / this.pixelHeight }
@@ -323,17 +331,18 @@ class Texture {
         canvas.width = this.#meta.pixelWidth / this.#meta.worldWidth
         canvas.height = this.#meta.pixelHeight / this.#meta.worldHeight
 
-        const margin = (1 - Texture.#frameScale) / 2
+        const marginLeft = (1 - Texture.#frameScale) / 2
+        const marginTop = marginLeft // this.#meta.worldHeight === 1 ? marginLeft : 0
         const scale = Texture.#frameScale
 
         // paste the image reversed left<->right on it
         const context = canvas.getContext("2d")
         context.clearRect(0, 0, canvas.width, canvas.height);
         if (this.#meta.textureType === TextureType.IMAGE) {
-            context.drawImage(this.getBase(), canvas.width * margin, canvas.height * margin, canvas.width * scale, canvas.height * scale)
+            context.drawImage(this.getBase(), canvas.width * marginLeft, canvas.height * marginTop, canvas.width * scale, canvas.height * scale)
         }
         if (this.#meta.textureType === TextureType.BASE_ONLY || this.#meta.textureType === TextureType.ROTATION_AND_BASE) {
-            context.drawImage(this.getBase(), 0, 0, this.#meta.pixelWidth / this.#meta.worldWidth, this.#meta.pixelHeight / this.#meta.worldHeight, canvas.width * margin, canvas.height * margin, canvas.width * scale, canvas.height * scale)
+            context.drawImage(this.getBase(), 0, 0, this.#meta.pixelWidth / this.#meta.worldWidth, this.#meta.pixelHeight / this.#meta.worldHeight, canvas.width * marginLeft, canvas.height * marginTop, canvas.width * scale, canvas.height * scale)
         }
         if (this.#meta.textureType === TextureType.ROTATION_ONLY || this.#meta.textureType === TextureType.ROTATION_AND_BASE) {
             const frameRotation = Math.ceil(Texture.#frameRotation / this.#meta.angleBetweenRotations) * this.#meta.angleBetweenRotations
@@ -342,7 +351,7 @@ class Texture {
                 this.getForOrientation(frameRotation),
                 this.#imageElements
             )
-            context.drawImage(this.getForOrientation(frameRotation), 0, 0, this.#meta.pixelWidth / this.#meta.worldWidth, this.#meta.pixelHeight / this.#meta.worldHeight, canvas.width * margin, canvas.height * margin, canvas.width * scale, canvas.height * scale)
+            context.drawImage(this.getForOrientation(frameRotation), 0, 0, this.#meta.pixelWidth / this.#meta.worldWidth, this.#meta.pixelHeight / this.#meta.worldHeight, canvas.width * marginLeft, canvas.height * marginTop, canvas.width * scale, canvas.height * scale)
         }
         context.drawImage(frame.getBase(), 0, 0, canvas.width, canvas.height)
 
@@ -353,6 +362,7 @@ class Texture {
         framedImage.classList.add("framed")
         framedImage.src = canvas.toDataURL("image/png")
         TexturePack.getHtmlTextureContainerFor(texturePackName).appendChild(framedImage)
+        this.#imageElements.set(Texture.#framedMarker, framedImage)
         return new Promise((resolve, reject) => {
             framedImage.onload = resolve
             framedImage.onerror = reject
@@ -378,7 +388,7 @@ class Texture {
             result.#imageElements.set(Texture.#baseMarker, image)
             return new Promise((res, err) => {
                 image.onload = () => { res(result) }
-                image.onerror = error => { err(error) }
+                image.onerror = error => { err(`Couldn't load texture for path ${path.join("/")}: ${typeof error === "string" ? error : error.type}`) }
             })
         }
 
@@ -394,7 +404,7 @@ class Texture {
             result.#imageElements.set(Texture.#baseMarker, image)
             promises.push(new Promise((res, err) => {
                 image.onload = () => { res(Texture.#baseMarker) }
-                image.onerror = error => { err(error) }
+                image.onerror = error => { err(`Couldn't load texture for path ${path.join("/")}/base: ${typeof error === "string" ? error : error.type}`) }
             }))
         }
 
@@ -428,7 +438,7 @@ class Texture {
 
                         res(hoistedAngle - 90)
                     }
-                    image.onerror = error => err(error)
+                    image.onerror = error => err(`Couldn't load texture for path ${path.join("/")}/${angle}: ${typeof error === "string" ? error : error.type}`)
                 }))
             }
 
