@@ -154,7 +154,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                 }
 
                 if (entityTexture.textureType !== TextureType.BASE_ONLY) {
-                    let angle = AngleUtils.rad2deg(AngleUtils.clampAngleRad(-entity.position.rotation))
+                    let angle = AngleUtils.rad2deg(AngleUtils.clampAngleRad(entity.position.rotation))
                     angle = angle + (entityTexture.angleBetweenRotations / 2)
                     angle = angle - (angle % entityTexture.angleBetweenRotations)
 

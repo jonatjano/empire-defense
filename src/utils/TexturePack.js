@@ -186,7 +186,6 @@ export default class TexturePack {
 
                 while(toGet.length !== 0) {
                     const [path, localMeta, item] = toGet.shift()
-                    console.log(path, localMeta, item)
                     if (item === textureListLeaf) {
                         let localDefault = DEFAULTS
                         let localPackMeta = packMeta
@@ -259,7 +258,6 @@ export default class TexturePack {
             texturesDiv.appendChild(texturePackDetails)
         }
 
-
         return texturePackDetails.querySelector("& > div")
     }
 
@@ -292,12 +290,12 @@ class Texture {
      * the rotation we want portrayed in the framed variant, the closest if not available
      * @type {Number}
      */
-    static #frameRotation = 330;
+    static #frameRotation = 60;
     /**
      * the scale applied to the image when framed
      * @type {Number}
      */
-    static #frameScale = 80/100;
+    static #frameScale = 75/100;
 
     /** @type {TextureMeta} */
     #meta
@@ -313,13 +311,9 @@ class Texture {
      * @return {HTMLImageElement}
      */
     getForOrientation(orientation) { return this.#imageElements.get(orientation) }
-    /**
-     * @return {HTMLImageElement}
-     */
+    /** @return {HTMLImageElement} */
     getBase() { return this.getForOrientation(Texture.#baseMarker) }
-    /**
-     * @return {HTMLImageElement}
-     */
+    /** @return {HTMLImageElement} */
     getFramed() { return this.getForOrientation(Texture.#framedMarker) }
 
     get animationFrameDuration() { return this.#meta.animationFrameDuration }
@@ -339,6 +333,7 @@ class Texture {
      * @return {Promise<>}
      */
     makeFramed(frame, texturePackName) {
+        // TODO animation
         if (this.#imageElements.has(Texture.#framedMarker)) {
             return new Promise(() => {})
         }
@@ -360,16 +355,11 @@ class Texture {
             context.drawImage(this.getBase(), canvas.width * marginLeft, canvas.height * marginTop, canvas.width * scale, canvas.height * scale)
         }
         if (this.#meta.textureType === TextureType.BASE_ONLY || this.#meta.textureType === TextureType.ROTATION_AND_BASE) {
-            context.drawImage(this.getBase(), 0, 0, this.#meta.pixelWidth / this.#meta.worldWidth, this.#meta.pixelHeight / this.#meta.worldHeight, canvas.width * marginLeft, canvas.height * marginTop, canvas.width * scale, canvas.height * scale)
+            context.drawImage(this.getBase(), 0, 0, this.#meta.pixelWidth / this.#meta.worldWidth, this.#meta.pixelHeight, canvas.width * marginLeft, canvas.height * marginTop, canvas.width * scale, this.#meta.pixelHeight * scale)
         }
         if (this.#meta.textureType === TextureType.ROTATION_ONLY || this.#meta.textureType === TextureType.ROTATION_AND_BASE) {
             const frameRotation = Math.ceil(Texture.#frameRotation / this.#meta.angleBetweenRotations) * this.#meta.angleBetweenRotations
-            console.log(
-                frameRotation,
-                this.getForOrientation(frameRotation),
-                this.#imageElements
-            )
-            context.drawImage(this.getForOrientation(frameRotation), 0, 0, this.#meta.pixelWidth / this.#meta.worldWidth, this.#meta.pixelHeight / this.#meta.worldHeight, canvas.width * marginLeft, canvas.height * marginTop, canvas.width * scale, canvas.height * scale)
+            context.drawImage(this.getForOrientation(frameRotation), 0, 0, this.#meta.pixelWidth / this.#meta.worldWidth, this.#meta.pixelHeight, canvas.width * marginLeft, canvas.height * marginTop, canvas.width * scale, this.#meta.pixelHeight * scale)
         }
         context.drawImage(frame.getBase(), 0, 0, canvas.width, canvas.height)
 
@@ -439,7 +429,7 @@ class Texture {
                 image.style.order = result.#id.toString(10)
                 image.src = `/assets/images/${texturePackName}/${path.join("/")}/${angle}.${textureMeta.extension}`
                 texturesDiv.appendChild(image)
-                result.#imageElements.set(AngleUtils.clampAngleDeg(hoistedAngle - 90), image)
+                result.#imageElements.set(hoistedAngle, image)
                 if (hoistedAngle === 0) {
                     result.#imageElements.set(360, image);
                 }
@@ -450,14 +440,14 @@ class Texture {
                             const rotatedImage = Texture.#mirrorImage(image)
                             rotatedImage.style.order = result.#id.toString(10)
                             texturesDiv.appendChild(rotatedImage)
-                            result.#imageElements.set(AngleUtils.clampAngleDeg(270 - hoistedAngle), rotatedImage)
+                            result.#imageElements.set(360 - hoistedAngle, rotatedImage)
                             promises.push(new Promise((res, err) => {
-                                rotatedImage.onload = () => res(270 - hoistedAngle)
+                                rotatedImage.onload = () => res(hoistedAngle)
                                 rotatedImage.onerror = error => err(error)
                             }))
                         }
 
-                        res(hoistedAngle - 90)
+                        res(hoistedAngle)
                     }
                     image.onerror = error => err(`Couldn't load texture for path ${path.join("/")}/${angle}: ${typeof error === "string" ? error : error.type}`)
                 }))
@@ -465,6 +455,7 @@ class Texture {
 
             angle += textureMeta.angleBetweenRotations
         }
+        console.log(result)
         return Promise.all(promises).then(() => result)
     }
 
@@ -535,17 +526,17 @@ class Texture {
                             image.src = dataUrl
                             image.style.order = result.#id.toString(10)
                             texturesDiv.appendChild(image)
-                            result.#imageElements.set(AngleUtils.clampAngleDeg(hoistedAngle - 90), image)
+                            result.#imageElements.set(AngleUtils.clampAngleDeg(hoistedAngle), image)
 
                             if (textureMeta.isSymmetric && hoistedAngle !== 0 && hoistedAngle !== 180) {
                                 image.onload = () => {
                                     const rotatedImage = Texture.#mirrorImage(image)
                                     rotatedImage.style.order = result.#id.toString(10)
                                     texturesDiv.appendChild(rotatedImage)
-                                    result.#imageElements.set(AngleUtils.clampAngleDeg(270 - hoistedAngle), rotatedImage)
+                                    result.#imageElements.set(AngleUtils.clampAngleDeg(360 - hoistedAngle), rotatedImage)
                                 }
                             }
-                            if (hoistedAngle - 90 === 0) {
+                            if (hoistedAngle === 0) {
                                 result.#imageElements.set(360, image);
                             }
                         }))
