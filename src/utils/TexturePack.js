@@ -182,6 +182,7 @@ export default class TexturePack {
                 const toGet = [[[], null, textureList]]
                 /** @type {{[key: string]: Texture}} */
                 const textures = {}
+                const promises = []
 
                 while(toGet.length !== 0) {
                     const [path, localMeta, item] = toGet.shift()
@@ -193,13 +194,20 @@ export default class TexturePack {
                             localDefault = localDefault?.[part]
                             localPackMeta = localPackMeta?.[part]
                         }
-                        const texture = isWebkitDirectory ?
-                            await Texture.forWebkitDirectory(files, path, this.#name, new TextureMeta(localMeta, {...localDefault, ...localPackMeta})) :
-                            await Texture.for(path, this.#name, new TextureMeta(localMeta, {...localDefault, ...localPackMeta}))
-                        if (path.join("/") !== "frame") {
-                            await texture.makeFramed(textures.frame, this.#name)
+                        const texturePromise = isWebkitDirectory ?
+                            Texture.forWebkitDirectory(files, path, this.#name, new TextureMeta(localMeta, {...localDefault, ...localPackMeta})) :
+                            Texture.for(path, this.#name, new TextureMeta(localMeta, {...localDefault, ...localPackMeta}))
+                        if (path.join("/") === "frame") {
+                            const texture = await texturePromise
+                            textures[path.join("/")] = texture
+                            /*await */texture.makeFramed(textures.frame, this.#name)
+                        } else {
+                            promises.push(
+                                texturePromise
+                                    .then(texture => textures[path.join("/")] = texture )
+                                    .then(texture => texture.makeFramed(textures.frame, this.#name) )
+                            )
                         }
-                        textures[path.join("/")] = texture
                     } else {
                         let localDefault = DEFAULTS
                         let localPackMeta = packMeta
@@ -220,6 +228,7 @@ export default class TexturePack {
                         })
                     }
                 }
+                await Promise.all(promises)
                 this.#textures = new Map()
                 ;[...Object.entries(textures)].forEach(([key, item]) => this.#textures.set(key, item))
             })
