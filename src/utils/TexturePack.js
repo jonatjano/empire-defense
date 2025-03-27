@@ -200,7 +200,7 @@ export default class TexturePack {
                         if (path.join("/") === "frame") {
                             const texture = await texturePromise
                             textures[path.join("/")] = texture
-                            /*await */texture.makeFramed(textures.frame, this.#name)
+                            promises.push(texture.makeFramed(textures.frame, this.#name))
                         } else {
                             promises.push(
                                 texturePromise
@@ -252,9 +252,15 @@ export default class TexturePack {
             texturePackSummary.textContent = texturePackName
             texturePackDetails.append(texturePackSummary)
 
+            const div = document.createElement("div")
+            div.classList.add("textures-grid")
+            texturePackDetails.append(div)
+
             texturesDiv.appendChild(texturePackDetails)
         }
-        return texturePackDetails
+
+
+        return texturePackDetails.querySelector("& > div")
     }
 
     changeDocumentTextures() {
@@ -274,6 +280,9 @@ export default class TexturePack {
 
 
 class Texture {
+    static #idGenerator = 0;
+    #id = Texture.#idGenerator++;
+
     /** @type {Symbol} */
     static #baseMarker = Symbol("Texture.baseMarker")
     /** @type {Symbol} */
@@ -364,12 +373,11 @@ class Texture {
         }
         context.drawImage(frame.getBase(), 0, 0, canvas.width, canvas.height)
 
-        console.log(this.#imageElements)
-
         // create a new image element with the rotated image
         const framedImage = document.createElement("img")
         framedImage.classList.add("framed")
         framedImage.src = canvas.toDataURL("image/png")
+        framedImage.style.order = this.#id.toString(10)
         TexturePack.getHtmlTextureContainerFor(texturePackName).appendChild(framedImage)
         this.#imageElements.set(Texture.#framedMarker, framedImage)
         return new Promise((resolve, reject) => {
@@ -393,6 +401,7 @@ class Texture {
         if (textureMeta.textureType === TextureType.IMAGE) {
             const image = document.createElement("img")
             image.src = `/assets/images/${texturePackName}/${path.join("/")}.${textureMeta.extension}`
+            image.style.order = result.#id.toString(10)
             texturesDiv.appendChild(image)
             result.#imageElements.set(Texture.#baseMarker, image)
             return new Promise((res, err) => {
@@ -409,6 +418,7 @@ class Texture {
         if (textureMeta.textureType !== TextureType.ROTATION_ONLY) {
             const image = document.createElement("img")
             image.src = `/assets/images/${texturePackName}/${path.join("/")}/base.${textureMeta.extension}`
+            image.style.order = result.#id.toString(10)
             texturesDiv.appendChild(image)
             result.#imageElements.set(Texture.#baseMarker, image)
             promises.push(new Promise((res, err) => {
@@ -426,6 +436,7 @@ class Texture {
             if (angle <= 180 || (angle > 180 && ! textureMeta.isSymmetric)) {
                 const hoistedAngle = angle
                 const image = document.createElement("img")
+                image.style.order = result.#id.toString(10)
                 image.src = `/assets/images/${texturePackName}/${path.join("/")}/${angle}.${textureMeta.extension}`
                 texturesDiv.appendChild(image)
                 result.#imageElements.set(AngleUtils.clampAngleDeg(hoistedAngle - 90), image)
@@ -437,6 +448,7 @@ class Texture {
                     image.onload = () => {
                         if (textureMeta.isSymmetric && hoistedAngle !== 0 && hoistedAngle !== 180) {
                             const rotatedImage = Texture.#mirrorImage(image)
+                            rotatedImage.style.order = result.#id.toString(10)
                             texturesDiv.appendChild(rotatedImage)
                             result.#imageElements.set(AngleUtils.clampAngleDeg(270 - hoistedAngle), rotatedImage)
                             promises.push(new Promise((res, err) => {
@@ -476,6 +488,7 @@ class Texture {
                     .then(dataUrl => {
                         const image = document.createElement("img")
                         image.src = dataUrl
+                        image.style.order = result.#id.toString(10)
                         texturesDiv.appendChild(image)
                         result.#imageElements.set(Texture.#baseMarker, image)
                     })
@@ -497,6 +510,7 @@ class Texture {
                     .then(dataUrl => {
                         const image = document.createElement("img")
                         image.src = dataUrl
+                        image.style.order = result.#id.toString(10)
                         texturesDiv.appendChild(image)
                         result.#imageElements.set(Texture.#baseMarker, image)
                     }))
@@ -519,12 +533,14 @@ class Texture {
                         .then(dataUrl => {
                             const image = document.createElement("img")
                             image.src = dataUrl
+                            image.style.order = result.#id.toString(10)
                             texturesDiv.appendChild(image)
                             result.#imageElements.set(AngleUtils.clampAngleDeg(hoistedAngle - 90), image)
 
                             if (textureMeta.isSymmetric && hoistedAngle !== 0 && hoistedAngle !== 180) {
                                 image.onload = () => {
                                     const rotatedImage = Texture.#mirrorImage(image)
+                                    rotatedImage.style.order = result.#id.toString(10)
                                     texturesDiv.appendChild(rotatedImage)
                                     result.#imageElements.set(AngleUtils.clampAngleDeg(270 - hoistedAngle), rotatedImage)
                                 }

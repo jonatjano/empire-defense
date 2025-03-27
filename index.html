@@ -13,6 +13,18 @@
 		screen.orientation.lock('landscape').catch(() => {})
 		mainMenu()
 	</script>
+	<style>
+		.textures-grid {
+			display: flex;
+			flex-direction: row;
+			flex-wrap: wrap;
+			align-items: baseline;
+
+			& img {
+				/* border: 1px solid black; */
+			}
+		}
+	</style>
 </head>
 <body>
 	<div id="mainMenu" class="hidden">
