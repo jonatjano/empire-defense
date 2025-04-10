@@ -22,8 +22,6 @@ export default class Game {
     #isPaused = true
     /** @type {AbstractEntity[]} */
     #entities = []
-    /** @type {?{tower: AbstractBuilding, isValid: boolean}} */
-    #ghostEntity = undefined
     /** @type {PathFinder} */
     #pathFinder
 
@@ -35,6 +33,11 @@ export default class Game {
     #waveNumber
     /** @type {boolean} */
     #lastEnemySpawned = false
+
+    /** @type {{tower: AbstractBuilding, isValid: boolean} | null} */
+    #ghostEntity = null
+    /** @type {typeof AbstractBuilding | null} */
+    #selectedTower = null
 
     /**
      * @param {GameMap} map
@@ -48,6 +51,7 @@ export default class Game {
         this.money = 20
         this.crystal = 0
         this.waveNumber = 0
+        this.playableTowers = [entities.Archery1, entities.Cannon1]
     }
 
     addEntity(entity) {
@@ -71,6 +75,30 @@ export default class Game {
      */
     getEntitiesWithCondition(condition, type = AbstractEntity) { return this.#entities.filter(entity => entity instanceof type && condition(entity)) }
     getEntitiesCloseTo(position, range, type = AbstractEntity) { return this.#entities.filter(entity => entity instanceof type && entity.position.distanceFrom(position) < range) }
+
+    /**
+     * @param {AbstractBuilding[]} playableTowers
+     */
+    set playableTowers(playableTowers) {
+        const towersContainer = document.querySelector("#towers")
+        towersContainer.innerHTML = ""
+        towersContainer.append(
+            ...playableTowers.map(tower => {
+                const element = document.createElement("button")
+                console.log(tower.name)
+                element.innerHTML = `<img data-texture="framed/entities/buildings/${tower.name}" src="" alt="${tower.name}">`
+                element.onclick = () => {
+                    if (this.#selectedTower === tower) {
+                         this.#selectedTower = null
+                    } else {
+                        this.#selectedTower = tower
+                    }
+                }
+                return element
+            })
+        )
+        globalThis.options.texturePack.changeDocumentTextures()
+    }
 
     get ghostEntity() {
         return this.#ghostEntity
@@ -132,7 +160,9 @@ export default class Game {
     get money() { return this.#money }
     set money(value) {
         this.#money = value
-        document.querySelector("#moneyLabel").textContent = value.toString()
+        if (! globalThis.options.unlimitedMoney) {
+            document.querySelector("#moneyLabel").textContent = value.toString()
+        }
     }
 
     get crystal() { return this.#crystal }
@@ -155,17 +185,20 @@ export default class Game {
     moveOver(x, y) {
         if (this.#isPaused) { return }
 
-        const towerType = entities.Archery1
+        const towerType = this.#selectedTower
+        if (towerType === null) {
+            return
+        }
 
         const cellPosition = new Position(Math.floor(x), Math.floor(y), 0)
         const towerPosition = new Position(cellPosition.x + 0.5, cellPosition.y + 0.5, 0)
 
         if (! this.#map.positionIsInBoundaries(cellPosition) || ! TileOption.is(this.#map.getTileOption(cellPosition.x, cellPosition.y), TileOption.buildable)) {
-            this.#ghostEntity = undefined
+            this.#ghostEntity = null
             return
         }
         if (this.getEntities(AbstractBuilding).some(building => building.position.equals(towerPosition))) {
-            this.#ghostEntity = undefined
+            this.#ghostEntity = null
             return
         }
 
@@ -188,49 +221,44 @@ export default class Game {
     click(x, y) {
         if (this.#isPaused) { return }
 
-        console.group("click")
-        console.log(`clicked on cell ${x}, ${y}`)
-
-        const towerType = entities.Cannon1
+        const towerType = this.#selectedTower
+        // TODO if null but clicking on a tower then select that tower
+        if (towerType === null) {
+            return
+        }
 
         const cellPosition = new Position(Math.floor(x), Math.floor(y), 0)
         const towerPosition = new Position(cellPosition.x + 0.5, cellPosition.y + 0.5, 0)
-        console.log(cellPosition)
 
         if (! this.#map.positionIsInBoundaries(cellPosition) || ! TileOption.is(this.#map.getTileOption(cellPosition.x, cellPosition.y), TileOption.buildable)) {
-            console.log("Tile is not buildable")
-            console.groupEnd()
+            console.error("Tile is not buildable")
             return
         }
         if (this.getEntities(AbstractBuilding).some(building => building.position.equals(towerPosition))) {
-            console.log("Position is already taken", this.getEntities(AbstractBuilding))
-            console.groupEnd()
+            console.error("Position is already taken", this.getEntities(AbstractBuilding))
             return
         }
-        // if (this.#money < towerType.cost) {
-        //     console.log(`Not enough money for this tower, got ${this.#money}, required ${towerType.cost}`)
-        //     console.groupEnd()
-        //     return
-        // }
 
-        console.log("building tower")
-        const tower = new towerType(cellPosition)
-        console.log(tower)
+        if (this.#money < towerType.cost && ! globalThis.options.unlimitedMoney) {
+            console.error(`Not enough money for this tower, got ${this.#money}, required ${towerType.cost}`)
+            return
+        }
+
+
+        const tower = new towerType(towerPosition)
         this.addEntity(tower)
         if (! this.#pathFinder.recalculateAll()) {
             this.deleteEntity(tower)
             this.#pathFinder.revertAll()
-            console.groupEnd()
             return
         }
-        this.money = this.money - tower.cost;
+        this.money = this.money - towerType.cost;
         this.crystal = this.crystal + tower.crystalOnBuild
         if (this.waveNumber === 0) {
             this.#launchNextWave()
         }
-
-        console.log("end")
-        console.groupEnd()
+        this.#selectedTower = null
+        this.#ghostEntity = null
     }
 
     #launchNextWave() {

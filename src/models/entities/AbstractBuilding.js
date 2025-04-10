@@ -15,8 +15,6 @@ export class BuildingFactory extends EntityFactory {
     /** @type {number} */
     attackRange
     /** @type {number} */
-    cost
-    /** @type {number} */
     crystalOnBuild
 
     constructor() {
@@ -25,7 +23,6 @@ export class BuildingFactory extends EntityFactory {
         this.upgradesTo = null
         this.attackDelay = 0
         this.attackRange = 0
-        this.cost = 0
         this.crystalOnBuild = 0
         this.setMovements(BuildingFactory.#movements)
     }
@@ -54,11 +51,6 @@ export class BuildingFactory extends EntityFactory {
      * @param {number} value
      * @return {this}
      */
-    setCost(value) { this.cost = value; return this }
-    /**
-     * @param {number} value
-     * @return {this}
-     */
     setCrystalOnBuild(value) { this.crystalOnBuild = value; return this }
 }
 
@@ -68,7 +60,6 @@ export default class AbstractBuilding extends AbstractEntity {
     #upgradesTo
     #attackDelay
     #attackRange
-    #cost
     #crystalOnBuild
 
     /**
@@ -89,7 +80,6 @@ export default class AbstractBuilding extends AbstractEntity {
         this.#upgradesTo = factory.upgradesTo
         this.#attackDelay = factory.attackDelay
         this.#attackRange = factory.attackRange
-        this.#cost = factory.cost
         this.#crystalOnBuild = factory.crystalOnBuild
     }
 
@@ -100,7 +90,7 @@ export default class AbstractBuilding extends AbstractEntity {
         return new BuildingFactory()
     }
 
-    get cost() { return this.#cost }
+    static get cost() { return Infinity }
     get crystalOnBuild() { return this.#crystalOnBuild }
     /** @return {typeof AbstractBuilding | null} */
     get upgradesTo() { return this.#upgradesTo }

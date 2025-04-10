@@ -33,6 +33,9 @@ class Options {
     /** @type {number[]} */
     #speeds = Object.freeze([1, 2, 5])
 
+    /** @type {boolean} */
+    #unlimitedMoney = false
+
     // todo stuff with local storage and proxy and stuff
     constructor() {
         // document.body.classList.add("hidden")
@@ -53,11 +56,13 @@ class Options {
                  *  debug: ?boolean,
                  *  debugTextures: ?boolean,
                  *  showStats: ?boolean
+                 *  unlimitedMoney: ?boolean,
                  * }} meta */
                 meta => {
                 /* debug */
                 this.debug = meta.debug ?? false
                 this.showStats = meta.showStats ?? this.debug
+                this.unlimitedMoney = meta.unlimitedMoney ?? this.debug
 
                 /* languages */
                 this.#knownLanguages = meta.languages.list
@@ -129,6 +134,17 @@ class Options {
     set showStats(value) {
         document.getElementById("debugOverlay").classList.toggle("hidden", ! value)
     }
+
+    /** @param {boolean} value */
+    set unlimitedMoney(value) {
+        console.log("\n\n\n\n\nggresdgrdgrd\n\n\n\n\n", value)
+        this.#unlimitedMoney = value
+        if (value) {
+            document.querySelector("#moneyLabel").textContent = "∞"
+        }
+    }
+
+    get unlimitedMoney() { return this.#unlimitedMoney }
 
     /** @param {string} value */
     set language(value) {

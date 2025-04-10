@@ -65,12 +65,12 @@ const entities = {
      *      TOWERS       *
      *********************/
     Archery1: class extends AbstractBuilding {
+        static get cost() { return 5 }
         constructor(position) {
             super(
                 entities.Archery1.factory
                     .setName("archery1")
                     .setPosition(position)
-                    .setCost(5)
                     .setCrystalOnBuild(1)
                     .setProjectile(entities.Arrow1)
                     .setAttackDelay(2000)
@@ -79,12 +79,12 @@ const entities = {
         }
     },
     Archery2: class extends AbstractBuilding {
+        static get cost() { return 4 }
         constructor(position) {
             super(
                 entities.Archery2.factory
                     .setName("archery2")
                     .setPosition(position)
-                    .setCost(4)
                     .setCrystalOnBuild(1)
                     .setProjectile(entities.Arrow1)
                     .setAttackDelay(2000)
@@ -95,12 +95,12 @@ const entities = {
 
 
     Cannon1: class extends AbstractBuilding {
+        static get cost() { return 20 }
         constructor(position) {
             super(
                 entities.Cannon1.factory
                     .setName("cannon1")
                     .setPosition(position)
-                    .setCost(20)
                     .setCrystalOnBuild(2)
                     .setProjectile(entities.CannonBall1)
                     .setAttackDelay(5000)
