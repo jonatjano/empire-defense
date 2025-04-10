@@ -4,6 +4,7 @@ import AbstractBuilding from "./entities/AbstractBuilding.js";
 import {TileOption} from "./GameMap.js";
 import entities from "./entities/entities.js";
 import AbstractUnit from "./entities/AbstractUnit.js";
+import TexturePack from "../utils/TexturePack";
 
 let lastFrameTiming
 let firstFrameTiming = undefined;
@@ -51,7 +52,7 @@ export default class Game {
         this.money = 20
         this.crystal = 0
         this.waveNumber = 0
-        this.playableTowers = [entities.Archery1, entities.Cannon1]
+        this.playableTowers = [entities.Archery2, entities.Cannon1]
     }
 
     addEntity(entity) {
@@ -83,15 +84,15 @@ export default class Game {
         const towersContainer = document.querySelector("#towers")
         towersContainer.innerHTML = ""
         towersContainer.append(
-            ...playableTowers.map(tower => {
+            ...playableTowers.map(towerType => {
                 const element = document.createElement("button")
-                console.log(tower.name)
-                element.innerHTML = `<img data-texture="framed/entities/buildings/${tower.name}" src="" alt="${tower.name}">`
+                const tower = new towerType(new Position(0, 0, TexturePack.framedRotation))
+                element.innerHTML = `<img data-texture="framed/entities/buildings/${tower.name}" src="" alt="${towerType.name}">`
                 element.onclick = () => {
-                    if (this.#selectedTower === tower) {
+                    if (this.#selectedTower === towerType) {
                          this.#selectedTower = null
                     } else {
-                        this.#selectedTower = tower
+                        this.#selectedTower = towerType
                     }
                 }
                 return element
@@ -191,7 +192,7 @@ export default class Game {
         }
 
         const cellPosition = new Position(Math.floor(x), Math.floor(y), 0)
-        const towerPosition = new Position(cellPosition.x + 0.5, cellPosition.y + 0.5, 0)
+        const towerPosition = new Position(cellPosition.x + 0.5, cellPosition.y + 0.5, TexturePack.framedRotation)
 
         if (! this.#map.positionIsInBoundaries(cellPosition) || ! TileOption.is(this.#map.getTileOption(cellPosition.x, cellPosition.y), TileOption.buildable)) {
             this.#ghostEntity = null

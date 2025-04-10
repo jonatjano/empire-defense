@@ -135,6 +135,12 @@ const textureList = {
 }
 
 export default class TexturePack {
+    /**
+     * the rotation we want portrayed in the framed variant, the closest if not available
+     * @type {Number}
+     */
+    static get framedRotation() {return 60};
+
     /** @type {string} */
     #name
     /** @type {Map<string, Texture>} */
@@ -287,11 +293,6 @@ class Texture {
     static #framedMarker = Symbol("Texture.framedMarker")
 
     /**
-     * the rotation we want portrayed in the framed variant, the closest if not available
-     * @type {Number}
-     */
-    static #frameRotation = 60;
-    /**
      * the scale applied to the image when framed
      * @type {Number}
      */
@@ -358,8 +359,8 @@ class Texture {
             context.drawImage(this.getBase(), 0, 0, this.#meta.pixelWidth / this.#meta.worldWidth, this.#meta.pixelHeight, canvas.width * marginLeft, canvas.height * marginTop, canvas.width * scale, this.#meta.pixelHeight * scale)
         }
         if (this.#meta.textureType === TextureType.ROTATION_ONLY || this.#meta.textureType === TextureType.ROTATION_AND_BASE) {
-            const frameRotation = Math.ceil(Texture.#frameRotation / this.#meta.angleBetweenRotations) * this.#meta.angleBetweenRotations
-            context.drawImage(this.getForOrientation(frameRotation), 0, 0, this.#meta.pixelWidth / this.#meta.worldWidth, this.#meta.pixelHeight, canvas.width * marginLeft, canvas.height * marginTop, canvas.width * scale, this.#meta.pixelHeight * scale)
+            const framedRotation = Math.ceil(TexturePack.framedRotation / this.#meta.angleBetweenRotations) * this.#meta.angleBetweenRotations
+            context.drawImage(this.getForOrientation(framedRotation), 0, 0, this.#meta.pixelWidth / this.#meta.worldWidth, this.#meta.pixelHeight, canvas.width * marginLeft, canvas.height * marginTop, canvas.width * scale, this.#meta.pixelHeight * scale)
         }
         context.drawImage(frame.getBase(), 0, 0, canvas.width, canvas.height)
 
