@@ -112,7 +112,7 @@ export default class AbstractBuilding extends AbstractEntity {
 
         const targets = globalThis.game.getEntitiesCloseTo(this.position, this.#attackRange, AbstractUnit)
         if (targets.length !== 0) {
-            this.position.rotation = this.position.angleTo(targets[0].position)
+            this.position.rotation = targets[0].position.angleTo(this.position)
 
             if (this.#attackCooldown <= 0) {
                 this.#attackCooldown += this.#attackDelay
