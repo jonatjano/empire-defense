@@ -1,1 +1,17 @@
-{}
+{
+	"entities": {
+		"buildings": {
+			"archery1": {
+				"textureType": "BASE_ONLY"
+			},
+			"cannon1": {
+				"textureType": "ROTATION_ONLY"
+			}
+		},
+		"projectiles": {
+			"cannonball1": {
+				"textureType": "BASE_ONLY"
+			}
+		}
+	}
+}

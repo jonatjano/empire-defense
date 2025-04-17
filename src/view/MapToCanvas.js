@@ -18,24 +18,25 @@ const HP_BAR_STYLE = Object.freeze({
 /**
  * @param {HTMLCanvasElement} canvas
  * @param {(x: number, y: number) => undefined} clickListener
+ * @param {(x: number, y: number) => undefined} moveListener
  */
-export function setCanvasEvent(canvas, clickListener) {
-    const leftMargin = (canvas.width / options.zoom - game.map.width) / 2;
-    const topMargin = (canvas.height / options.zoom - game.map.height) / 2;
-    canvas.ondragend = event => {
-        console.log("drop", event)
-    }
-    canvas.onclick = event => {
-        console.log(event)
+export function setCanvasEvent(canvas, clickListener, moveListener) {
+    const callback = (event, listener) => {
+        const leftMargin = (canvas.width / globalThis.options.zoom - game.map.width) / 2;
+        const topMargin = (canvas.height / globalThis.options.zoom - game.map.height) / 2;
+
         const boundingRect = canvas.getBoundingClientRect()
         const xRatio = canvas.width / boundingRect.width
         const yRatio = canvas.height / boundingRect.height
         const canvasX = event.x - boundingRect.left
         const canvasY = event.y - boundingRect.top
-        const mapX = (canvasX * xRatio) / options.zoom - leftMargin
-        const mapY = (canvasY * yRatio) / options.zoom - topMargin
-        clickListener(mapX, mapY)
+        const mapX = (canvasX * xRatio) / globalThis.options.zoom - leftMargin
+        const mapY = (canvasY * yRatio) / globalThis.options.zoom - topMargin
+        listener(mapX, mapY)
     }
+
+    canvas.onmousemove = event => callback(event, moveListener)
+    canvas.onclick = event => callback(event, clickListener)
 }
 
 /**
@@ -120,10 +121,14 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
     /**
      * @type {AbstractEntity[]}
      */
-    const entities = [...game.getEntities()].sort((a, b) => {
-        return (a.position.y + movementTypeDrawPriority(a.movements.movementType)) -
-            (b.position.y + movementTypeDrawPriority(b.movements.movementType))
-    })
+    const entities = [
+        ...game.getEntities()
+            .sort((a, b) => {
+                return (a.position.y + movementTypeDrawPriority(a.movements.movementType)) -
+                    (b.position.y + movementTypeDrawPriority(b.movements.movementType))
+            }),
+        ...(game.ghostEntity ? [game.ghostEntity.tower] : [])
+    ]
 
     await Promise.all(
         entities.map(entity =>
@@ -134,21 +139,22 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                 const textureVerticalSpan = entityTexture.worldHeight
                 const textureTopMargin = -textureVerticalSpan + 0.5
 
-                /** @type {[number, number, number, number]} */
                 const drawImageArgs = {
                     dx: (leftMargin + entity.position.x + textureLeftMargin) * options.zoom,
                     dy: (topMargin + entity.position.y + textureTopMargin) * options.zoom,
                     dw: entityTexture.worldWidth * options.zoom,
-                    dh: entityTexture.worldHeight * options.zoom
+                    dh: entityTexture.worldHeight * options.zoom,
+                    alpha: entity === game.ghostEntity?.tower ? 0.5 : 1
                 }
 
+                ctx.globalAlpha = drawImageArgs.alpha
 
                 if (entityTexture.textureType !== TextureType.ROTATION_ONLY) {
                     ctx.drawImage(entityTexture.getBase(), drawImageArgs.dx, drawImageArgs.dy, drawImageArgs.dw, drawImageArgs.dh)
                 }
 
                 if (entityTexture.textureType !== TextureType.BASE_ONLY) {
-                    let angle = AngleUtils.rad2deg(AngleUtils.clampAngleRad(-entity.position.rotation))
+                    let angle = AngleUtils.rad2deg(AngleUtils.clampAngleRad(entity.position.rotation))
                     angle = angle + (entityTexture.angleBetweenRotations / 2)
                     angle = angle - (angle % entityTexture.angleBetweenRotations)
 
@@ -158,6 +164,21 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                         entityTexture.pixelWidth, entityTexture.pixelHeight,
                         drawImageArgs.dx, drawImageArgs.dy, drawImageArgs.dw, drawImageArgs.dh,
                     )
+                }
+
+                if (entity === game.ghostEntity?.tower) {
+                    const ellipse = new Path2D()
+                    ellipse.ellipse(
+                        drawImageArgs.dx + (entityTexture.worldWidth - 0.5) * options.zoom,
+                        drawImageArgs.dy + (entityTexture.worldHeight - 0.5) * options.zoom,
+                        options.zoom * entity.attackRange, options.zoom * entity.attackRange,
+                        0, 0, 2 * Math.PI
+                    )
+
+                    const previousStyle = ctx.fillStyle
+                    ctx.fillStyle = game.ghostEntity.isValid ? "royalBlue" : "red";
+                    ctx.fill(ellipse);
+                    ctx.fillStyle = previousStyle
                 }
 
                 if (entity.hp !== entity.maxHp) {

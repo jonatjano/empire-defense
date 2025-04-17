@@ -12,6 +12,8 @@
 			"fr"
 		]
 	},
-	"debug": true,
-	"debugTextures": true
+	"debug": false,
+	"debugTextures": true,
+	"showStats": true,
+	"unlimitedMoney": true
 }

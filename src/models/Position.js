@@ -94,7 +94,7 @@ export default class Position {
      * @return {number}
      */
     angleTo(position) {
-        return AngleUtils.clampAngleRad(Math.atan2(position.y - this.y, position.x - this.x));
+        return AngleUtils.clampAngleRad(Math.atan2(this.x - position.x, this.y - position.y, ));
     }
 
     /**
@@ -108,7 +108,7 @@ export default class Position {
         const result = new Position(from)
 
         // calculate movement angle
-        const movementAngle = AngleUtils.clampAngleRad(Math.atan2(to.y - from.y, to.x - from.x))
+        const movementAngle = AngleUtils.clampAngleRad(Math.atan2(to.x - from.x, to.y - from.y))
 
         // get a rotation delta in [-pi; pi] to avoid doing a full turn
         let rotationDelta = movementAngle - from.#rotation
@@ -135,19 +135,19 @@ export default class Position {
         if (rotationDelta > Math.PI) { rotationDelta -= 2*Math.PI }
         const rotationDirection = Math.sign(rotationDelta)
 
-        // calculate the times needed to end the movement, Infinity indicate that we're good
+        // calculate the times needed to end the movement; Infinity indicates that no movement is needed for that direction
         const neededTimes = {
-            x: Math.cos(movementAngle) === 0 ? Infinity : ((to.#x - result.#x) / (Math.cos(movementAngle) * movements.movementSpeed)),
-            y: Math.sin(movementAngle) === 0 ? Infinity : ((to.#y - result.#y) / (Math.sin(movementAngle) * movements.movementSpeed)),
+            x: Math.sin(movementAngle) === 0 ? Infinity : ((to.#x - result.#x) / (Math.sin(movementAngle) * movements.movementSpeed)),
+            y: Math.cos(movementAngle) === 0 ? Infinity : ((to.#y - result.#y) / (Math.cos(movementAngle) * movements.movementSpeed)),
             t: Math.abs(rotationDelta) / movements.rotationSpeed,
         }
-        Object.entries(neededTimes).forEach(([key, value]) => neededTimes[key] = Math.abs(value) < 0.001 ? Infinity : value)
+        Object.entries(neededTimes).forEach(([key, value]) => neededTimes[key] = Math.abs(value) < 1e-10 ? Infinity : value)
 
         // while we have some time and a need to move, move according to the movement requiring the less time
         while (duration > 0 && (neededTimes.x !== Infinity || neededTimes.y !== Infinity || neededTimes.t !== Infinity)) {
             let time = Math.min(duration, neededTimes.x, neededTimes.y, neededTimes.t)
-            result.#x += Math.cos(movementAngle) * movements.movementSpeed * (neededTimes.x !== Infinity ? time : 0)
-            result.#y += Math.sin(movementAngle) * movements.movementSpeed * (neededTimes.y !== Infinity ? time : 0)
+            result.#x += Math.sin(movementAngle) * movements.movementSpeed * (neededTimes.x !== Infinity ? time : 0)
+            result.#y += Math.cos(movementAngle) * movements.movementSpeed * (neededTimes.y !== Infinity ? time : 0)
             result.rotation -= movements.rotationSpeed * rotationDirection * (neededTimes.t !== Infinity ? time : 0)
             duration -= time
             // set neededTimes to Infinity if we don't need them anymore

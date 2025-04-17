@@ -1,6 +1,8 @@
 import * as Translator from "./Translator.js";
 import TexturePack from "./TexturePack.js";
 
+const BUTTON_INTERVAL_TIME = 100
+
 class Options {
     /** @type {boolean} */
     #debug
@@ -19,12 +21,28 @@ class Options {
     /** @type {TexturePack} */
     #defaultTexturePack
 
+    /** @type {number} */
+    #zoom = 60
+    /** @type {number} */
+    #minZoom = 20
+    /** @type {number} */
+    #maxZoom = 300
+
+    /** @type {number} */
+    #speed = 1
+    /** @type {number[]} */
+    #speeds = Object.freeze([1, 2, 5])
+
+    /** @type {boolean} */
+    #unlimitedMoney = false
+
     // todo stuff with local storage and proxy and stuff
     constructor() {
         // document.body.classList.add("hidden")
         // document.querySelector("#mapPreview").classList.add("hidden")
         // document.querySelectorAll("#game > *").forEach(element => element.classList.add("hidden"))
         this.loadMeta()
+        this.addEventsToDom();
     }
 
     loadMeta() {
@@ -34,14 +52,17 @@ class Options {
                 /** @param {{
                  *  languages: {default: string, list: string[]},
                  *  texturePacks: {default: string, list: string[]},
+                 *  speeds: number[]
                  *  debug: ?boolean,
                  *  debugTextures: ?boolean,
                  *  showStats: ?boolean
+                 *  unlimitedMoney: ?boolean,
                  * }} meta */
                 meta => {
                 /* debug */
                 this.debug = meta.debug ?? false
                 this.showStats = meta.showStats ?? this.debug
+                this.unlimitedMoney = meta.unlimitedMoney ?? this.debug
 
                 /* languages */
                 this.#knownLanguages = meta.languages.list
@@ -65,15 +86,43 @@ class Options {
                 if (meta.debugTextures) {
                     document.querySelector("#textures").classList.remove("hidden")
                 }
+                if (this.debug) { console.log(this) }
             })
-            .then(_ => console.log(this))
     }
 
-    get zoom() { return 60 }
+    reduceZoom() {
+        this.#zoom *= 0.9
+        document.querySelector("#zoomIn").style.visibility = "visible"
+        if (this.#zoom < this.#minZoom) {
+            this.#zoom = this.#minZoom
+            document.querySelector("#zoomOut").style.visibility = "hidden"
+        }
+    }
+    augmentZoom() {
+        this.#zoom *= 1.1
+        document.querySelector("#zoomOut").style.visibility = "visible"
+        if (this.#zoom > this.#maxZoom) {
+            this.#zoom = this.#maxZoom
+            document.querySelector("#zoomIn").style.visibility = "hidden"
+        }
+    }
+    get zoom() { return this.#zoom }
 
-    /**
-     * @param {boolean} value
-     */
+
+    changeSpeed() {
+        let newIndex = this.#speeds.indexOf(this.#speed) + 1
+        if (newIndex === this.#speeds.length) { newIndex = 0 }
+        this.#speed = this.#speeds[newIndex]
+        const buttonImage = document.querySelector("#speed img")
+        buttonImage.dataset.texture = `icons/speed${this.#speed}`
+        this.texturePack.changeElementTexture(buttonImage)
+    }
+
+    get speed() { return this.#speed }
+    get speeds() { return this.#speeds }
+
+
+    /** @param {boolean} value */
     set debug(value) {
         if (this.debug === value) { return }
         this.#debug = !! value
@@ -81,16 +130,23 @@ class Options {
     }
     get debug() { return this.#debug }
 
-    /**
-     * @param {boolean} value
-     */
+    /** @param {boolean} value */
     set showStats(value) {
         document.getElementById("debugOverlay").classList.toggle("hidden", ! value)
     }
 
-    /**
-     * @param {string} value
-     */
+    /** @param {boolean} value */
+    set unlimitedMoney(value) {
+        console.log("\n\n\n\n\nggresdgrdgrd\n\n\n\n\n", value)
+        this.#unlimitedMoney = value
+        if (value) {
+            document.querySelector("#moneyLabel").textContent = "∞"
+        }
+    }
+
+    get unlimitedMoney() { return this.#unlimitedMoney }
+
+    /** @param {string} value */
     set language(value) {
         if (this.language === value) { return }
         if (! Translator.KNOWN_LANGUAGES.includes(value)) {
@@ -146,6 +202,57 @@ class Options {
                 option.selected = true
                 texturePackSelect.append(option)
             })
+    }
+
+    addEventsToDom() {
+        // ***********
+        //   options
+        // ***********
+        /** @type {HTMLButtonElement} */
+        const option = document.querySelector("#option")
+        option.addEventListener("click", () => {
+            globalThis.game?.pause()
+            document.querySelector("#pauseMenu").classList.toggle("hidden", false)
+        })
+
+        // *********
+        //   speed
+        // *********
+        /** @type {HTMLButtonElement} */
+        const speed = document.querySelector("#speed")
+        speed.addEventListener("click", () => this.changeSpeed())
+
+        // ********
+        //   zoom
+        // ********
+        let zoomInterval
+        /** @type {HTMLButtonElement} */
+        const zoomIn = document.querySelector("#zoomIn")
+        zoomIn.addEventListener("mousedown", () => {
+            this.augmentZoom()
+            zoomInterval = setInterval(() => this.augmentZoom(), BUTTON_INTERVAL_TIME)
+        })
+        zoomIn.addEventListener("mouseup", () => clearInterval(zoomInterval))
+        zoomIn.addEventListener("mouseleave", () => clearInterval(zoomInterval))
+        /** @type {HTMLButtonElement} */
+        const zoomOut = document.querySelector("#zoomOut")
+        zoomOut.addEventListener("mousedown", () => {
+            this.reduceZoom()
+            zoomInterval = setInterval(() => this.reduceZoom(), BUTTON_INTERVAL_TIME)
+        })
+        zoomOut.addEventListener("mouseup", () => clearInterval(zoomInterval))
+        zoomOut.addEventListener("mouseleave", () => clearInterval(zoomInterval))
+
+        // **************
+        //   pause menu
+        // **************
+        const resumeButton = document.querySelector("#resumeButton")
+        resumeButton.addEventListener("click", () => {
+            globalThis.game?.resume()
+            document.querySelector("#pauseMenu").classList.toggle("hidden", true)
+        })
+        const quitButton = document.querySelector("#quitButton")
+        quitButton.addEventListener("click", () => window.location.reload())
     }
 }
 

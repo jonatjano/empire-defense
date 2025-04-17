@@ -43,7 +43,7 @@ result="{"
 result="$result$(addFeature "texturePacks" $DEFAULT_TEXTURE_PACK images),"
 result="$result$(addFeature "languages" $DEFAULT_LANGUAGE translations)"
 if [[ ! -z $DEBUG ]]; then
-	result="$result,\n\t\"debug\": true\n}"
+	result="$result,\n\t\"debug\": true,\n\t\"debugTextures\": true,\n\t\"showStats\": true\n}"
 else
 	result="$result}"
 fi
