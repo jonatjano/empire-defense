@@ -4,7 +4,7 @@ import AbstractBuilding from "./entities/AbstractBuilding.js";
 import {TileOption} from "./GameMap.js";
 import entities from "./entities/entities.js";
 import AbstractUnit from "./entities/AbstractUnit.js";
-import TexturePack from "../utils/TexturePack";
+import TexturePack from "../utils/TexturePack.js";
 
 let lastFrameTiming
 let firstFrameTiming = undefined;
