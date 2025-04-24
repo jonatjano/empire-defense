@@ -271,6 +271,7 @@ export default class Game {
         const spawnData = this.map.waves[this.waveNumber - 1]
         console.log(spawnData)
         let unitIndex = 0
+        // TODO replace the interval by an usage of the time between frame
         const interval = setInterval(() => {
             let spawnCount = 0
             for (const spawnIndex in spawnData) {
