@@ -19,6 +19,30 @@ const entities = {
             )
         }
     },
+    Footman: class extends AbstractUnit {
+        static movements = new MovementCapability(1, 3600, 360, MovementType.Walking)
+        constructor(position, deathCallback = () => {}) {
+            super(
+                entities.Knight.factory.setPosition(position).setMovements(entities.Knight.movements).setDeathCallback(deathCallback)
+                    .setName("footman")
+                    .setBaseHp(100)
+                    .setKillReward(1)
+                    .setKillCrystalReward(1)
+            )
+        }
+    },
+    Cannoneer: class extends AbstractUnit {
+        static movements = new MovementCapability(0.75, 3600, 360, MovementType.Walking)
+        constructor(position, deathCallback = () => {}) {
+            super(
+                entities.Knight.factory.setPosition(position).setMovements(entities.Knight.movements).setDeathCallback(deathCallback)
+                    .setName("cannoneer")
+                    .setBaseHp(100)
+                    .setKillReward(2)
+                    .setKillCrystalReward(2)
+            )
+        }
+    },
     Knight: class extends AbstractUnit {
         static movements = new MovementCapability(2, 3600, 360, MovementType.Walking)
         constructor(position, deathCallback = () => {}) {
@@ -28,6 +52,54 @@ const entities = {
                     .setBaseHp(100)
                     .setKillReward(2)
                     .setKillCrystalReward(2)
+            )
+        }
+    },
+    Ram: class extends AbstractUnit {
+        static movements = new MovementCapability(0.25, 3600, 60, MovementType.Walking)
+        constructor(position, deathCallback = () => {}) {
+            super(
+                entities.Knight.factory.setPosition(position).setMovements(entities.Knight.movements).setDeathCallback(deathCallback)
+                    .setName("ram")
+                    .setBaseHp(100)
+                    .setKillReward(6)
+                    .setKillCrystalReward(5)
+            )
+        }
+    },
+    Champion: class extends AbstractUnit {
+        static movements = new MovementCapability(2, 3600, 360, MovementType.Walking)
+        constructor(position, deathCallback = () => {}) {
+            super(
+                entities.Knight.factory.setPosition(position).setMovements(entities.Knight.movements).setDeathCallback(deathCallback)
+                    .setName("champion")
+                    .setBaseHp(100)
+                    .setKillReward(3)
+                    .setKillCrystalReward(2)
+            )
+        }
+    },
+    Harpy: class extends AbstractUnit {
+        static movements = new MovementCapability(2, 3600, 360, MovementType.Flying)
+        constructor(position, deathCallback = () => {}) {
+            super(
+                entities.Knight.factory.setPosition(position).setMovements(entities.Knight.movements).setDeathCallback(deathCallback)
+                    .setName("harpy")
+                    .setBaseHp(100)
+                    .setKillReward(5)
+                    .setKillCrystalReward(5)
+            )
+        }
+    },
+    Elephant: class extends AbstractUnit {
+        static movements = new MovementCapability(0.25, 3600, 60, MovementType.Walking)
+        constructor(position, deathCallback = () => {}) {
+            super(
+                entities.Knight.factory.setPosition(position).setMovements(entities.Knight.movements).setDeathCallback(deathCallback)
+                    .setName("elephant")
+                    .setBaseHp(100)
+                    .setKillReward(6)
+                    .setKillCrystalReward(5)
             )
         }
     },

@@ -147,13 +147,13 @@ function mapDataFromString(template) {
 function developWaveData(waveData) {
     const letterToEntityType = {
         "S": Entities.Squire,
-        // "F": Entities.Footman,
-        // "C": Entities.Cannon,
+        "F": Entities.Footman,
+        "C": Entities.Cannoneer,
         "K": Entities.Knight,
-        // "B": Entities.BatteringRam,
-        // "H": Entities.Champion,
-        // "Y": Entities.Harpy,
-        // "E": Entities.Elephant,
+        "B": Entities.Ram,
+        "H": Entities.Champion,
+        "Y": Entities.Harpy,
+        "E": Entities.Elephant,
     }
     let count = 0;
     return waveData.map(row => [
@@ -212,17 +212,17 @@ export const mapsData = Object.freeze([
             "3S",
             "4S",
             "5S",
-            // "F 5S",
+            "F 5S",
             "8S",
             "10S",
             "12S",
-            // "5F",
-            // "6S 3F 10S",
-            // "5F",
-            // "2C",
-            // "8F",
-            // "10F",
-            // "18S 2C 5F",
+            "5F",
+            "6S 3F 10S",
+            "5F",
+            "2C",
+            "8F",
+            "10F",
+            "18S 2C 5F",
         ])
     ),
     new GameMap(
