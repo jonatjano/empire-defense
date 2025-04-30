@@ -32,8 +32,10 @@ export default class Game {
     #crystal
     /** @type {number} */
     #waveNumber
-    /** @type {boolean} */
-    #lastEnemySpawned = false
+    /** @type {spawnData[]} */
+    #unitsToSpawn = []
+    /** @type {number} */
+    #spawnCooldown = 0
 
     /** @type {{tower: AbstractBuilding, isValid: boolean} | null} */
     #ghostEntity = null
@@ -136,6 +138,7 @@ export default class Game {
         document.getElementById("entityCount").textContent = this.#entities.length.toString()
 
         const durationToSend = frameDuration * globalThis.options.speed
+        this.#spawnNextUnits(durationToSend)
         this.#entities.forEach((entity) => {
             entity.act(durationToSend)
         })
@@ -265,39 +268,40 @@ export default class Game {
     #launchNextWave() {
         console.log("new wave")
         this.waveNumber = this.waveNumber + 1
-        this.#lastEnemySpawned = false
         console.log(this.waveNumber)
+        this.#unitsToSpawn = this.map.waves[this.waveNumber - 1].map(spawnLists => spawnLists.map(spawn => spawn))
+        console.log(this.map.waves)
+    }
+
+    #spawnNextUnits(frameDuration) {
+        this.#spawnCooldown = this.#spawnCooldown - frameDuration
         const callback = this.#waveDeathCallback.bind(this)
-        const spawnData = this.map.waves[this.waveNumber - 1]
-        console.log(spawnData)
-        let unitIndex = 0
-        // TODO replace the interval by an usage of the time between frame
-        const interval = setInterval(() => {
-            let spawnCount = 0
-            for (const spawnIndex in spawnData) {
-                const spawnPosition = this.map.spawns[spawnIndex]
-                const unitList = spawnData[spawnIndex]
-                if (unitIndex < unitList.length) {
-                    const unitType = unitList[unitIndex]
-                    console.log("spawning", unitType, spawnPosition)
-                    this.addEntity(new unitType(spawnPosition, callback))
-                    spawnCount++
+
+        if (this.#unitsToSpawn.some(spawnList => spawnList.length !== 0)) {
+            if (this.#spawnCooldown <= 0) {
+                this.#spawnCooldown += Game.SPAWN_INTERVAL
+                for (const spawnIndex in this.#unitsToSpawn) {
+                    const spawnPosition = this.map.spawns[spawnIndex]
+                    const unitList = this.#unitsToSpawn[spawnIndex]
+                    if (unitList.length !== 0) {
+                        const unitType = unitList.shift()
+                        console.log("spawning", unitType, spawnPosition)
+                        this.addEntity(new unitType(spawnPosition, callback))
+                    }
                 }
             }
-            console.log(`spawned ${spawnCount} units`)
-            if (spawnCount === 0) {
-                clearInterval(interval)
-                this.#lastEnemySpawned = true
+        } else {
+            if (this.#spawnCooldown < 0) {
+                this.#spawnCooldown = 0
             }
-            unitIndex++
-        }, Game.SPAWN_INTERVAL)
+        }
     }
 
     #waveDeathCallback(unit) {
         this.money += unit.killReward
         this.crystal += unit.killCrystalReward
 
-        if (this.#lastEnemySpawned && this.getEntities(AbstractUnit).length === 0) {
+        if (this.#unitsToSpawn.every(spawnList => spawnList.length === 0) && this.getEntities(AbstractUnit).length === 0) {
             if (this.map.waves.length === this.waveNumber) {
                 alert("victory")
             } else {
