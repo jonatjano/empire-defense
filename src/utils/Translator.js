@@ -1,9 +1,5 @@
 import options from "./Options.js";
 
-/** @type {string} */
-export const FALLBACK_LANGUAGE = "en"
-/** @type {string[]} */
-export const KNOWN_LANGUAGES = ["en", "fr"]
 let globalTranslations = null
 let globalFallbackTranslations = null
 
