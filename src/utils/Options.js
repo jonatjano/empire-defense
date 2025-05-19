@@ -149,7 +149,7 @@ class Options {
     /** @param {string} value */
     set language(value) {
         if (this.language === value) { return }
-        if (! Translator.KNOWN_LANGUAGES.includes(value)) {
+	    if (! this.#knownLanguages.includes(value)) {
             console.warn(`Language "${value}" is not supported, defaulting to ${this.#fallbackLanguage}`)
             value = this.#fallbackLanguage
         }
