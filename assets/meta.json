@@ -2,7 +2,8 @@
 	"texturePacks":{
 		"default": "devpack",
 		"list": [
-			"devpack"
+			"devpack",
+			"classic"
 		]
 	},
 	"languages":{

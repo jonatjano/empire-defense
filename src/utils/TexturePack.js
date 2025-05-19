@@ -165,7 +165,7 @@ export default class TexturePack {
      */
     async getTexture(path) {
         if (this.#textures === null && this.#initPromise === null) {
-            this.#initPromise = fetch(`/assets/images/${this.#name}/pack.json`)
+            this.#initPromise = fetch(`/assets/texturePacks/${this.#name}/pack.json`)
                 .then(res => res.blob())
                 .then(blob => this.init(blob))
         }
@@ -391,7 +391,7 @@ class Texture {
 
         if (textureMeta.textureType === TextureType.IMAGE) {
             const image = document.createElement("img")
-            image.src = `/assets/images/${texturePackName}/${path.join("/")}.${textureMeta.extension}`
+            image.src = `/assets/texturePacks/${texturePackName}/${path.join("/")}.${textureMeta.extension}`
             image.style.order = result.#id.toString(10)
             texturesDiv.appendChild(image)
             result.#imageElements.set(Texture.#baseMarker, image)
@@ -408,7 +408,7 @@ class Texture {
 
         if (textureMeta.textureType !== TextureType.ROTATION_ONLY) {
             const image = document.createElement("img")
-            image.src = `/assets/images/${texturePackName}/${path.join("/")}/base.${textureMeta.extension}`
+            image.src = `/assets/texturePacks/${texturePackName}/${path.join("/")}/base.${textureMeta.extension}`
             image.style.order = result.#id.toString(10)
             texturesDiv.appendChild(image)
             result.#imageElements.set(Texture.#baseMarker, image)
@@ -428,7 +428,7 @@ class Texture {
                 const hoistedAngle = angle
                 const image = document.createElement("img")
                 image.style.order = result.#id.toString(10)
-                image.src = `/assets/images/${texturePackName}/${path.join("/")}/${angle}.${textureMeta.extension}`
+                image.src = `/assets/texturePacks/${texturePackName}/${path.join("/")}/${angle}.${textureMeta.extension}`
                 texturesDiv.appendChild(image)
                 result.#imageElements.set(hoistedAngle, image)
                 if (hoistedAngle === 0) {
