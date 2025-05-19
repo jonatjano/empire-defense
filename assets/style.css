@@ -44,13 +44,6 @@ html, body {
         left: 0;
     }
 
-    & > * {
-        pointer-events: none;
-        &:first-child {
-            pointer-events: all;
-        }
-    }
-
     & > #gui {
         position: absolute;
         width: 100%;
@@ -58,18 +51,24 @@ html, body {
         top: 0;
         left: 0;
         font-size: max(20px,5vh);
+        pointer-events: none;
 
         display: grid;
         grid-template:
             "money life void1 crystal void2 void3 wave" 1fr
-            "menu menu menu action action action action" 1fr / 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+            "menu menu menu towers towers towers towers" 1fr / 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
 
         & > #money { grid-area: money }
         & > #life { grid-area: life }
         & > #crystal { grid-area: crystal }
         & > #wave { grid-area: wave }
         & > #menu { grid-area: menu }
-        & > #entityActions { grid-area: action }
+        & > #towers {
+            grid-area: towers;
+            display: flex;
+            justify-content: right;
+            align-items: end;
+        }
 
         /* justification */
         & > #money, & > #life, & > #menu { justify-self: start }
@@ -80,12 +79,21 @@ html, body {
         & > #money, & > #life, & > #crystal, & > #wave { align-self: start }
         & > #menu, & > #entityActions { align-self: end }
 
-    }
+        & > #money, & > #life, & > #menu, & > #crystal, & > #wave {
+            display: flex;
+            align-items: center;
+        }
+        & button { font-size: 1em }
+        & img { height: 1.5lh }
 
-    #money, #life, #menu, #crystal, #wave {
-        display: flex;
-        align-items: center;
-        & > img { height: 1.5em }
+        & > #menu > *, & > #towers > * {
+            pointer-events: all;
+        }
+
+        #menu > * {
+            border: none;
+            background: none;
+        }
     }
 }
 

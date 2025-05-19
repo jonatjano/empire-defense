@@ -1,5 +1,5 @@
 import Position from "./Position.js";
-import entities from "./entities/entities.js";
+import Entities from "./entities/entities.js";
 
 export const TileOption = {
     walkable: 1 << 0,
@@ -141,20 +141,38 @@ function mapDataFromString(template) {
 }
 
 /**
- * @param {unprocessedWaveGroupData} waveData
+ * @param {string[]} waveData
  * @return {waveGroupData}
  */
 function developWaveData(waveData) {
-    return waveData.map(wave => wave.map(spawn => spawn.reduce((acc, unit) => {
-        if (Array.isArray(unit)) {
-            for (let i = 0; i < unit[0]; i++) {
-                acc.push(unit[1])
+    const letterToEntityType = {
+        "S": Entities.Squire,
+        "F": Entities.Footman,
+        "C": Entities.Cannoneer,
+        "K": Entities.Knight,
+        "B": Entities.Ram,
+        "H": Entities.Champion,
+        "Y": Entities.Harpy,
+        "E": Entities.Elephant,
+    }
+    let count = 0;
+    return waveData.map(row => [
+        row.split("").reduce((acc, char) => {
+            if (char === " ") {
+                // ignore
+            } else if (char.match(/[0-9]/)) {
+                count = count * 10 + Number.parseInt(char)
+            } else {
+                const entityType = letterToEntityType[char];
+                const spawnedCount = Math.max(count, 1)
+                for (let i = 0; i < spawnedCount; ++i) {
+                    acc.push(entityType)
+                }
+                count = 0;
             }
-        } else {
-            acc.push(unit)
-        }
-        return acc
-    }, [])))
+            return acc
+        }, [])
+    ])
 }
 
 /** @typedef {unprocessedWaveData[]} unprocessedWaveGroupData */
@@ -190,16 +208,21 @@ export const mapsData = Object.freeze([
         [{x: 21, y: 5}],
         {},
         developWaveData([
-            [[ // wave 1
-                [2, entities.Squire],
-                entities.knight,
-                [2, entities.Squire]
-            ]],
-            [[ // wave 2
-                [2, entities.knight],
-                entities.Squire,
-                [2, entities.knight]
-            ]]
+            "S",
+            "3S",
+            "4S",
+            "5S",
+            "F 5S",
+            "8S",
+            "10S",
+            "12S",
+            "5F",
+            "6S 3F 10S",
+            "5F",
+            "2C",
+            "8F",
+            "10F",
+            "18S 2C 5F",
         ])
     ),
     new GameMap(
@@ -215,15 +238,9 @@ export const mapsData = Object.freeze([
         [{x: 1, y: 1}],
         [{x: 3, y: 1}],
         {},
-        [[ // wave 1
-            [2, entities.Squire],
-            entities.knight,
-            [2, entities.Squire]
-        ]],
-        [[ // wave 2
-            [2, entities.knight],
-            entities.Squire,
-            [2, entities.knight]
-        ]]
+        developWaveData([
+            "2S K 2S",
+            "2K S 2K"
+        ])
     )
 ])
