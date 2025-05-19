@@ -1,6 +1,21 @@
 {
-	"pixelSize": 64,
 	"maps": {
+		"pixelSize": 64,
 		"extension": "jpg"
+	},
+	"entities": {
+		"buildings": {
+			"archery1": {
+				"textureType": "BASE_ONLY"
+			},
+			"cannon1": {
+				"textureType": "ROTATION_ONLY"
+			}
+		},
+		"projectiles": {
+			"cannonball1": {
+				"textureType": "BASE_ONLY"
+			}
+		}
 	}
 }
