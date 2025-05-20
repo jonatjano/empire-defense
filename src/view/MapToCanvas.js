@@ -82,14 +82,17 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
             ctx.fillRect((leftMargin + x) * options.zoom - (gridWeight / 2), topMargin * options.zoom - (gridWeight / 2), gridWeight, map.height * options.zoom + gridWeight);
         }
     } else {
-        // draw the grid to the size of the visible map
-        for (let y = 0; y <= mapHeight; y++) {
-            ctx.fillRect(visibleLeftMargin * options.zoom - (gridWeight / 2), (visibleTopMargin + y) * options.zoom - (gridWeight / 2), mapWidth * options.zoom + gridWeight, gridWeight);
+        if (game.ghostEntity) {
+            ctx.fillStyle = "white"
+            // draw the grid to the size of the visible map
+            for (let y = 0; y <= mapHeight; y++) {
+                ctx.fillRect(visibleLeftMargin * options.zoom - (gridWeight / 2), (visibleTopMargin + y) * options.zoom - (gridWeight / 2), mapWidth * options.zoom + gridWeight, gridWeight)
+            }
+            for (let x = 0; x <= mapWidth; x++) {
+                ctx.fillRect((visibleLeftMargin + x) * options.zoom - (gridWeight / 2), visibleTopMargin * options.zoom - (gridWeight / 2), gridWeight, mapHeight * options.zoom + gridWeight)
+            }
+            ctx.fillStyle = "black"
         }
-        for (let x = 0; x <= mapWidth; x++) {
-            ctx.fillRect((visibleLeftMargin + x) * options.zoom - (gridWeight / 2), visibleTopMargin * options.zoom - (gridWeight / 2), gridWeight, mapHeight * options.zoom + gridWeight);
-        }
-
     }
 
     if (game instanceof GameMap) {
