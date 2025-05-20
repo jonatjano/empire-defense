@@ -5,6 +5,7 @@ import * as AngleUtils from "../utils/AngleUtils.js";
 import {TextureType} from "../utils/TexturePack.js";
 import GameMap from "../models/GameMap.js";
 import Game from "../models/Game.js";
+import AbstractProjectile from "../models/entities/AbstractProjectile.js";
 
 const TILE_MARGIN = -1
 
@@ -127,6 +128,8 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
     const entities = [
         ...game.getEntities()
             .sort((a, b) => {
+                if (a instanceof AbstractProjectile) { return Infinity }
+                if  (b instanceof AbstractProjectile) { return -Infinity }
                 return (a.position.y + movementTypeDrawPriority(a.movements.movementType)) -
                     (b.position.y + movementTypeDrawPriority(b.movements.movementType))
             }),
