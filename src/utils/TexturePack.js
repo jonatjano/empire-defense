@@ -456,7 +456,6 @@ class Texture {
 
             angle += textureMeta.angleBetweenRotations
         }
-        console.log(result)
         return Promise.all(promises).then(() => result)
     }
 
