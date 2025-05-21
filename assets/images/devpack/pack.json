@@ -13,5 +13,12 @@
 				"textureType": "BASE_ONLY"
 			}
 		}
+	},
+	"maps": {
+		"classic": {
+			"animationFrameDuration": 250,
+			"pixelHeight": 1664,
+			"pixelWidth": 2176
+		}
 	}
 }
