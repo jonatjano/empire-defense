@@ -13,7 +13,7 @@ const entities = {
             super(
                 entities.Squire.factory.setPosition(position).setMovements(entities.Squire.movements).setDeathCallback(deathCallback)
                     .setName("squire")
-                    .setBaseHp(100)
+                    .setBaseHp(1)
                     .setKillReward(1)
                     .setKillCrystalReward(1)
             )

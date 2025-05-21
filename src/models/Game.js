@@ -1,4 +1,5 @@
 import AbstractEntity from "./entities/AbstractEntity.js";
+import FloatingText from "./entities/FloatingText.js"
 import Position from "./Position.js";
 import AbstractBuilding from "./entities/AbstractBuilding.js";
 import {TileOption} from "./GameMap.js";
@@ -13,7 +14,6 @@ let frameCounterSinceLastPause = 0
 
 export default class Game {
     static get SPAWN_INTERVAL() { return 1 / entities.Squire.movements.movementSpeed }
-    static get INTER_WAVE_DURATION() { return 10000 }
 
     /** @type {GameMap} */
     #map
@@ -300,6 +300,7 @@ export default class Game {
     #waveDeathCallback(unit) {
         this.money += unit.killReward
         this.crystal += unit.killCrystalReward
+        this.addEntity(new FloatingText(unit.killReward.toString(10), "gold", new Position(unit.position.x, unit.position.y - 0.5)))
 
         if (this.#unitsToSpawn.every(spawnList => spawnList.length === 0) && this.getEntities(AbstractUnit).length === 0) {
             if (this.map.waves.length === this.waveNumber) {
