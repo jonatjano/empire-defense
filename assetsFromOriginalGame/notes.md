@@ -23,9 +23,9 @@ crystal: 0
 | elephant      | E  |         |             |        |         |
 
 ## hp notes
-- footman takes 2 hits from archery 1 in wave [1;7]
-- footman takes 2.1 hits from archery 1 in wave [8;[
-- heavy takes 3.1 hits from archery 1 in wave [5;9..[
+- footman takes <= 2 hits from archery 1 in wave [1;7]
+- footman takes > 2 hits from archery 1 in wave [8;[
+- heavy takes > 3 hits from archery 1 in wave [5;9[
 
 # vagues
 | vague | composition | time in empireDefense1to50.mp4 |

@@ -67,11 +67,11 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
 
     // print map base
     await globalThis.options.texturePack.getTexture(`maps/${map.name}`).then(mapTexture => {
-        ctx.drawImage(mapTexture.getBase(),
-            visibleLeftMargin * options.zoom,
-            visibleTopMargin * options.zoom,
-            options.zoom * mapWidth,
-            options.zoom * mapHeight
+        ctx.drawImage(
+            mapTexture.getBase(),
+            0, mapTexture.pixelHeight * (Math.floor(frameTiming / mapTexture.animationFrameDuration) % mapTexture.animationFrameCountForBase),
+            mapTexture.pixelWidth, mapTexture.pixelHeight,
+            visibleLeftMargin * options.zoom, visibleTopMargin * options.zoom, mapWidth * options.zoom, mapHeight * options.zoom,
         )
     })
     const gridWeight = Math.max(1, Math.abs(TILE_MARGIN))
