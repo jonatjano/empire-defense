@@ -286,7 +286,11 @@ export default class Game {
                     if (unitList.length !== 0) {
                         const unitType = unitList.shift()
                         console.log("spawning", unitType, spawnPosition)
-                        this.addEntity(new unitType(spawnPosition, callback))
+                        const unit = new unitType(spawnPosition, callback)
+                        this.addEntity(unit)
+                        if (Math.random() < 0.5) {
+                            unit.setAnimation("walk", lastFrameTiming)
+                        }
                     }
                 }
             }

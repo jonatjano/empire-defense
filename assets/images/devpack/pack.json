@@ -1,6 +1,13 @@
 {
 	"entities": {
 		"buildings": {
+			"animations": [
+				{
+					"name": "idle",
+					"timings": [1000],
+					"fixedStart": false
+				}
+			],
 			"archery1": {
 				"textureType": "BASE_ONLY"
 			},
@@ -12,13 +19,35 @@
 			"cannonball1": {
 				"textureType": "BASE_ONLY"
 			}
+		},
+		"units": {
+			"squire": {
+				"animations": [
+					{
+						"name": "idle",
+						"timings": [4000, 1000],
+						"fixedStart": true
+					},
+					{
+						"name": "walk",
+						"timings": [2000, 2000],
+						"fixedStart": true
+					}
+				]
+			}
 		}
 	},
 	"maps": {
 		"classic": {
-			"animationFrameDuration": 250,
 			"pixelHeight": 1664,
-			"pixelWidth": 2176
+			"pixelWidth": 2168,
+			"animations": [
+				{
+					"name": "idle",
+					"timings": [300, 300],
+					"fixedStart": false
+				}
+			]
 		}
 	}
 }
