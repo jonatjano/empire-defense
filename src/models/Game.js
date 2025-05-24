@@ -40,7 +40,7 @@ export default class Game {
     /** @type {{tower: AbstractBuilding, isGhost: boolean, isValid: boolean} | null} */
     #selectedEntity = null
     /** @type {typeof AbstractBuilding | null} */
-    #selectedTower = null
+    #selectedTowerType = null
 
     /**
      * @param {GameMap} map
@@ -91,10 +91,10 @@ export default class Game {
                 const tower = new towerType(new Position(0, 0, TexturePack.framedRotation))
                 element.innerHTML = `<img data-texture="framed/entities/buildings/${tower.name}" src="" alt="${towerType.name}">`
                 element.onclick = () => {
-                    if (this.#selectedTower === towerType) {
-                         this.#selectedTower = null
+                    if (this.#selectedTowerType === towerType) {
+                         this.#selectedTowerType = null
                     } else {
-                        this.#selectedTower = towerType
+                        this.#selectedTowerType = towerType
                     }
                 }
                 return element
@@ -105,6 +105,11 @@ export default class Game {
 
     get selectedEntity() {
         return this.#selectedEntity
+    }
+    /** @type {{tower: AbstractBuilding, isGhost: boolean, isValid: boolean} | null} */
+    set selectedEntity(value) {
+        this.#selectedEntity = value
+        document.querySelector("#towerMenu").classList.toggle("hidden", value?.isGhost ?? true)
     }
 
     /**
@@ -189,7 +194,7 @@ export default class Game {
     moveOver(x, y) {
         if (this.#isPaused) { return }
 
-        const towerType = this.#selectedTower
+        const towerType = this.#selectedTowerType
         if (towerType === null) {
             return
         }
@@ -198,15 +203,15 @@ export default class Game {
         const towerPosition = new Position(cellPosition.x + 0.5, cellPosition.y + 0.5, TexturePack.framedRotation)
 
         if (! this.#map.positionIsInBoundaries(cellPosition) || ! TileOption.is(this.#map.getTileOption(cellPosition.x, cellPosition.y), TileOption.buildable)) {
-            this.#selectedEntity = null
+            this.selectedEntity = null
             return
         }
         if (this.getEntities(AbstractBuilding).some(building => building.position.equals(towerPosition))) {
-            this.#selectedEntity = null
+            this.selectedEntity = null
             return
         }
 
-        if (this.#selectedEntity?.tower.position.equals(towerPosition)) {
+        if (this.selectedEntity?.tower.position.equals(towerPosition)) {
             return
         }
 
@@ -215,7 +220,7 @@ export default class Game {
         const isValid = this.#pathFinder.recalculateAll()
         this.deleteEntity(tower)
         this.#pathFinder.revertAll()
-        this.#selectedEntity = { tower, isValid, isGhost: true }
+        this.selectedEntity = { tower, isValid, isGhost: true }
     }
 
     /**
@@ -225,15 +230,18 @@ export default class Game {
     click(x, y) {
         if (this.#isPaused) { return }
 
-        const towerType = this.#selectedTower
+        const towerType = this.#selectedTowerType
         if (towerType === null) {
             const cellPosition = new Position(Math.floor(x), Math.floor(y), 0)
             const towerPosition = new Position(cellPosition.x + 0.5, cellPosition.y + 0.5, 0)
 
             /** @type {AbstractBuilding | undefined} */
             const tower = this.getEntities(AbstractBuilding).find(building => building.position.equals(towerPosition))
+
             if (tower !== undefined) {
-                this.#selectedEntity = {tower, isValid: true, isGhost: false}
+                this.selectedEntity = {tower, isValid: true, isGhost: false}
+            } else {
+                this.selectedEntity = null
             }
 
             return
@@ -269,8 +277,8 @@ export default class Game {
         if (this.waveNumber === 0) {
             this.#launchNextWave()
         }
-        this.#selectedTower = null
-        this.#selectedEntity = null
+        this.#selectedTowerType = null
+        this.selectedEntity = null
     }
 
     #launchNextWave() {

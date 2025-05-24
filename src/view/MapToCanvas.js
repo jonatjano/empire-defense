@@ -185,6 +185,18 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                         ctx.fillStyle = game.selectedEntity.isValid ? "white" : "red";
                         ctx.fill(ellipse);
                         ctx.fillStyle = previousStyle
+
+                        const towerMenu = document.querySelector("#towerMenu")
+
+                        const canvasRect = canvas.getBoundingClientRect();
+                        const xFactor = canvasRect.width / canvas.width;
+                        const yFactor = canvasRect.height / canvas.height;
+
+                        const xPos = (leftMargin + game.selectedEntity.tower.position.x - 0.5) * globalThis.options.zoom * xFactor
+                        const yPos = (topMargin + game.selectedEntity.tower.position.y - 1.5) * globalThis.options.zoom * yFactor
+                        const maxHeight = entityTexture.worldHeight * globalThis.options.zoom * yFactor
+                        const maxWidth = entityTexture.worldWidth * globalThis.options.zoom * xFactor
+                        towerMenu.style = `--tower-x: ${xPos}px; --tower-y: ${yPos}px; --tower-height: ${maxHeight}px; --tower-width: ${maxWidth}px;`
                     }
                     ctx.globalAlpha = drawImageArgs.alpha
 
