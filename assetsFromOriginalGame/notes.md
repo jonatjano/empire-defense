@@ -105,8 +105,10 @@ crystal: 0
 
 ## construction
 - montre la tour en transparence à l'endroit visé
+  - tour verte
 - montre le cercle de portée de la tour
-- ajoute un filtre rouge sur la position ne convients pas
+  - cercle blanc
+  - ajoute un filtre rouge sur la position ne convients pas
 - impossible de construire si cela bloque des unités
 
 ## amelioration
