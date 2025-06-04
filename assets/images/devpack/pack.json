@@ -45,7 +45,16 @@
 		}
 	},
 	"icons": {
-		"pixelSize": 32
+		"pixelSize": 32,
+		"crystal": {
+			"animations": [
+				{
+					"name": "idle",
+					"timings": [2000, 100, 150, 100],
+					"fixedStart": true
+				}
+			]
+		}
 	},
 	"maps": {
 		"classic": {

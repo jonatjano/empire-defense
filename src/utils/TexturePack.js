@@ -303,12 +303,26 @@ export default class TexturePack {
      */
     updateDocumentTextures(currentTime = 0) {
         const elements = document.body.querySelectorAll("*[data-texture]")
+        const canvas = document.getElementById("utilsCanvas")
+        const ctx = canvas.getContext("2d")
+
         elements.forEach(async element => {
-            if (element.dataset.framed === "true") {
-                element.setAttribute("src", (await this.getTexture(element.dataset.texture)).getFramed().src)
-            } else {
-                element.setAttribute("src", (await this.getTexture(element.dataset.texture)).getBase().src)
-            }
+            this.getTexture(element.dataset.texture).then(texture => {
+                const image = element.dataset.framed === "true" ? texture.getFramed() : texture.getBase()
+                const position = element.dataset.framed === "true" ?
+                    texture.getFramedAnimationFramePosition(0, 0, currentTime) :
+                    texture.getAnimationFramePosition(0, 0, currentTime)
+                canvas.width = texture.pixelWidth
+                canvas.height = texture.pixelHeight
+
+                ctx.drawImage(
+                    image,
+                    position.sx, position.sy, position.sw, position.sh,
+                    0, 0, canvas.width, canvas.height
+                )
+
+                element.setAttribute("src", canvas.toDataURL("image/png"))
+            })
         })
     }
 }
