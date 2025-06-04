@@ -89,7 +89,7 @@ export default class Game {
             ...playableTowers.map(towerType => {
                 const element = document.createElement("button")
                 const tower = new towerType(new Position(0, 0, TexturePack.framedRotation))
-                element.innerHTML = `<img data-texture="framed/entities/buildings/${tower.name}" src="" alt="${towerType.name}">`
+                element.innerHTML = `<img data-framed="true" data-texture="entities/buildings/${tower.name}" src="" alt="${towerType.name}">`
                 element.onclick = () => {
                     if (this.#selectedTower === towerType) {
                          this.#selectedTower = null

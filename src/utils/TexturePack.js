@@ -167,7 +167,7 @@ const textureList = {
 
 export default class TexturePack {
     /**
-     * the rotation we want portrayed in the framed variant, the closest if not available
+     * the rotation in degree we want portrayed in the framed variant, the closest if not available
      * @type {Number}
      */
     static get framedRotation() {return 60};
@@ -305,8 +305,8 @@ export default class TexturePack {
 
     /** @param {HTMLImageElement} element */
     async changeElementTexture(element) {
-        if (element.dataset.texture.startsWith("framed/")) {
-            element.setAttribute("src", (await this.getTexture(element.dataset.texture.substring("framed/".length))).getFramed().src)
+        if (element.dataset.framed === "true") {
+            element.setAttribute("src", (await this.getTexture(element.dataset.texture)).getFramed().src)
         } else {
             element.setAttribute("src", (await this.getTexture(element.dataset.texture)).getBase().src)
         }
