@@ -298,18 +298,18 @@ export default class TexturePack {
         return texturePackDetails.querySelector("& > div")
     }
 
-    changeDocumentTextures() {
+    /**
+     * @param {number} currentTime current global time, used to get the correct animation frame
+     */
+    updateDocumentTextures(currentTime = 0) {
         const elements = document.body.querySelectorAll("*[data-texture]")
-        elements.forEach(element => this.changeElementTexture(element))
-    }
-
-    /** @param {HTMLImageElement} element */
-    async changeElementTexture(element) {
-        if (element.dataset.framed === "true") {
-            element.setAttribute("src", (await this.getTexture(element.dataset.texture)).getFramed().src)
-        } else {
-            element.setAttribute("src", (await this.getTexture(element.dataset.texture)).getBase().src)
-        }
+        elements.forEach(async element => {
+            if (element.dataset.framed === "true") {
+                element.setAttribute("src", (await this.getTexture(element.dataset.texture)).getFramed().src)
+            } else {
+                element.setAttribute("src", (await this.getTexture(element.dataset.texture)).getBase().src)
+            }
+        })
     }
 }
 

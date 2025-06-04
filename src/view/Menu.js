@@ -74,8 +74,13 @@ function game(map) {
     gameController.resume()
     eventReceiver(0)
 
+    // event called by the game at each step, it is responsible for drawing stuff
     function eventReceiver(frameTiming) {
+        // update all the button icons
+        globalThis.options.texturePack?.updateDocumentTextures(frameTiming)
+        // update the whole canvas
         drawMap(entitiesCanvas, entitiesCtx, gameController, frameTiming)
+        // show or hide the pause menu
         document.getElementById("pauseMenu").classList.toggle("hidden", ! gameController.isPaused)
     }
 }

@@ -115,7 +115,6 @@ class Options {
         this.#speed = this.#speeds[newIndex]
         const buttonImage = document.querySelector("#speed img")
         buttonImage.dataset.texture = `icons/speed${this.#speed}`
-        this.texturePack.changeElementTexture(buttonImage)
     }
 
     get speed() { return this.#speed }
@@ -168,8 +167,7 @@ class Options {
         }
         if (texturePack) {
             this.#texturePack = texturePack
-            this.#texturePack.changeDocumentTextures()
-            console.log(texturePack)
+            this.#texturePack.updateDocumentTextures()
         }
     }
 

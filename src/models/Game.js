@@ -100,7 +100,6 @@ export default class Game {
                 return element
             })
         )
-        globalThis.options.texturePack.changeDocumentTextures()
     }
 
     get ghostEntity() {
