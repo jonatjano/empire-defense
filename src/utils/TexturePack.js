@@ -41,7 +41,7 @@ const DEFAULTS = {
     pixelSize: 128,
     worldSize: 1,
     animations: [
-        new AnimationMeta("idle", [2000, 1000], true)
+        new AnimationMeta("idle", [1000], true)
     ],
     entities: {
         textureType: TextureType.ROTATION_ONLY,
@@ -327,7 +327,7 @@ class Texture {
      * the scale applied to the image when framed
      * @type {Number}
      */
-    static #frameScale = 75/100;
+    static #framedScale = 75/100;
 
     /**
      * @type {TextureMeta}
@@ -350,12 +350,15 @@ class Texture {
     getBase() { return this.getForOrientation(Texture.#baseMarker) }
 
     /**
+     * get the source values to send to drawImage to get the correct animation frame
      * @param {number} animationIndex
      * @param {number} animationStartTime
      * @param {number} frameTiming
-     * @returns {{sx, sy, sw: number, sh: number}}
+     * @returns {{sx: number, sy: number, sw: number, sh: number}}
      */
     getAnimationFramePosition(animationIndex, animationStartTime, frameTiming) {
+        // each line is an animation
+        // each column is a frame of the corresponding animation
         const totalAnimationTime = this.animations[animationIndex].timings.reduce((acc, timing) => acc + timing, 0)
         let currentLoopStart = (frameTiming - animationStartTime) % totalAnimationTime
         let frame = -1
@@ -367,6 +370,23 @@ class Texture {
             sw: this.pixelWidth, sh: this.pixelHeight,
         }
     }
+
+    /**
+     * get the source values to send to drawImage to get the correct animation frame
+     * this version returns the values for the framed variant specifically
+     * @param {number} animationIndex
+     * @param {number} animationStartTime
+     * @param {number} frameTiming
+     * @returns {{sx: number, sy: number, sw: number, sh: number}}
+     */
+    getFramedAnimationFramePosition(animationIndex, animationStartTime, frameTiming) {
+        const basePosition = this.getAnimationFramePosition(animationIndex, animationStartTime, frameTiming)
+        return {
+            sx: basePosition.sx / this.worldWidth, sy: basePosition.sy / this.worldHeight,
+            sw: basePosition.sw / this.worldWidth, sh: basePosition.sh / this.worldHeight,
+        }
+    }
+
     /** @return {HTMLImageElement} */
     getFramed() { return this.getForOrientation(Texture.#framedMarker) }
     get animations() { return this.#meta.animations }
@@ -378,28 +398,93 @@ class Texture {
     get worldWidth() { return this.#meta.worldWidth }
     get worldHeight() { return this.#meta.worldHeight; }
 
+    makeFramed(frame, texturePackName) {
+        if (this.#imageElements.has(Texture.#framedMarker)) {
+            return new Promise(() => {})
+        }
+
+        // the size of one cell
+        const cellHeight = this.#meta.pixelHeight / this.#meta.worldHeight
+        const cellWidth = this.#meta.pixelWidth / this.#meta.worldWidth
+
+        // the transformation to apply to the image when drawing it on the canvas
+        const marginLeft = (1 - Texture.#framedScale) / 2
+        const marginTop = marginLeft // this.#meta.worldHeight === 1 ? marginLeft : 0
+        const scale = Texture.#framedScale
+
+        // get the canvas
+        const canvas = document.getElementById("utilsCanvas")
+        // 1. make the canvas the correct size
+        const animationCount = this.animations.length
+        const longestAnimationFrameCount = Math.max(...this.animations.map(animation => animation.timings.length))
+        // a framed image is one cell regardless of the base image
+        canvas.height = animationCount * cellHeight
+        canvas.width = longestAnimationFrameCount * cellWidth
+
+        const context = canvas.getContext("2d")
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        for (let line = 0; line < animationCount; line++) {
+            const animation = this.animations[line]
+            for (let col = 0; col < animation.timings.length; col++) {
+                // 2. get the images as needed in the canvas
+                if (this.#meta.textureType === TextureType.IMAGE) {
+                    console.log(cellWidth, cellHeight, scale, cellWidth * scale, cellHeight * scale, canvas.width, canvas.height)
+                    context.drawImage(this.getBase(),
+                        col * this.pixelWidth, line * this.pixelHeight, cellWidth, cellHeight,
+                        cellWidth * (col + marginLeft), cellHeight * (line + marginTop), cellWidth * scale, cellHeight * scale
+                    )
+                }
+                if (this.#meta.textureType === TextureType.BASE_ONLY || this.#meta.textureType === TextureType.ROTATION_AND_BASE) {
+                    context.drawImage(this.getBase(),
+                        col * this.pixelWidth, line * this.pixelHeight, cellWidth, cellHeight,
+                        cellWidth * (col + marginLeft), cellHeight * (line + marginTop), cellWidth * scale, cellHeight * scale
+                    )
+                }
+                if (this.#meta.textureType === TextureType.ROTATION_ONLY || this.#meta.textureType === TextureType.ROTATION_AND_BASE) {
+                    const framedRotation = Math.ceil(TexturePack.framedRotation / this.#meta.angleBetweenRotations) * this.#meta.angleBetweenRotations
+                    context.drawImage(this.getForOrientation(framedRotation),
+                        col * this.pixelWidth, line * this.pixelHeight, cellWidth, cellHeight,
+                        cellWidth * (col + marginLeft), cellHeight * (line + marginTop), cellWidth * scale, cellHeight * scale
+                    )
+                }
+
+                // 3. put the frame image on top of each position
+                context.drawImage(frame.getBase(), col * cellWidth, line * cellHeight, cellWidth, cellHeight)
+            }
+        }
+
+        // create a new image element with the rotated image
+        const framedImage = document.createElement("img")
+        framedImage.classList.add("framed")
+        framedImage.src = canvas.toDataURL("image/png")
+        framedImage.style.order = this.#id.toString(10)
+        TexturePack.getHtmlTextureContainerFor(texturePackName).appendChild(framedImage)
+        this.#imageElements.set(Texture.#framedMarker, framedImage)
+        return new Promise((resolve, reject) => {
+            framedImage.onload = resolve
+            framedImage.onerror = reject
+        })
+    }
+
     /**
      * @param {Texture} frame
      * @param {string} texturePackName
      * @return {Promise<>}
      */
-    makeFramed(frame, texturePackName) {
-        // TODO animated frame
+    makeFramedLegacy(frame, texturePackName) {
         if (this.#imageElements.has(Texture.#framedMarker)) {
             return new Promise(() => {})
         }
-
 
         // get the canvas
         const canvas = document.getElementById("utilsCanvas")
         canvas.width = this.#meta.pixelWidth / this.#meta.worldWidth
         canvas.height = this.#meta.pixelHeight / this.#meta.worldHeight
 
-        const marginLeft = (1 - Texture.#frameScale) / 2
+        const marginLeft = (1 - Texture.#framedScale) / 2
         const marginTop = marginLeft // this.#meta.worldHeight === 1 ? marginLeft : 0
-        const scale = Texture.#frameScale
+        const scale = Texture.#framedScale
 
-        // paste the image reversed left<->right on it
         const context = canvas.getContext("2d")
         context.clearRect(0, 0, canvas.width, canvas.height);
         if (this.#meta.textureType === TextureType.IMAGE) {

@@ -1,13 +1,6 @@
 {
 	"entities": {
 		"buildings": {
-			"animations": [
-				{
-					"name": "idle",
-					"timings": [1000],
-					"fixedStart": false
-				}
-			],
 			"archery1": {
 				"textureType": "BASE_ONLY"
 			},
@@ -16,11 +9,25 @@
 			}
 		},
 		"projectiles": {
+			"animations": [
+				{
+					"name": "idle",
+					"timings": [1000, 1000],
+					"fixedStart": false
+				}
+			],
 			"cannonball1": {
 				"textureType": "BASE_ONLY"
 			}
 		},
 		"units": {
+			"animations": [
+				{
+					"name": "idle",
+					"timings": [1000, 2000],
+					"fixedStart": false
+				}
+			],
 			"squire": {
 				"animations": [
 					{
@@ -36,6 +43,9 @@
 				]
 			}
 		}
+	},
+	"icons": {
+		"pixelSize": 32
 	},
 	"maps": {
 		"classic": {

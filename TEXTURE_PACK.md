@@ -92,12 +92,9 @@ These are the values used when you do not define them in your `pack.json`, defin
 	"animations": [
 		{
 			"name": "idle",
-			"timings": [
-				2000,
-				1000
-			],
+			"timings": [1000],
 			"fixedStart": true
-		},
+		}
 	],
 	"entities": {
 		"textureType": "ROTATION_ONLY",
