@@ -11,27 +11,9 @@ export const TextureType = {
     BASE_ONLY: Symbol("BASE_ONLY")
 }
 
-class AnimationMeta {
-    /** @type {string} */
-    #name
-    /** @type {number[]} */
-    #timings
-    /** @type {boolean} */
-    #fixedStart
-
-    constructor(name, timings, fixedStart) {
-        this.#name = name
-        this.#timings = timings
-        this.#fixedStart = fixedStart
-    }
-
-    /** @return {string} */
-    get name() { return this.#name }
-    /** @return {number[]} */
-    get timings() { return this.#timings }
-    /** @return {boolean} */
-    get fixedStart() { return this.#fixedStart }
-}
+/**
+ * @typedef {{timings: number[], fixedStart: boolean}} AnimationMeta
+ */
 
 const DEFAULTS = {
     extension: "png",
@@ -40,9 +22,12 @@ const DEFAULTS = {
     textureType: TextureType.IMAGE,
     pixelSize: 128,
     worldSize: 1,
-    animations: [
-        new AnimationMeta("idle", [1000], true)
-    ],
+    animations: {
+        idle: {
+            timings: [1000],
+            fixedStart: true
+        }
+    },
     entities: {
         textureType: TextureType.ROTATION_ONLY,
         buildings: {
@@ -77,7 +62,7 @@ class TextureMeta {
     #worldWidth
     /** @type {number} */
     #worldHeight
-    /** @type {AnimationMeta[]} */
+    /** @type {Record<string, AnimationMeta>} */
     #animations
 
     constructor(parent, {
@@ -117,7 +102,7 @@ class TextureMeta {
     get worldWidth() { return this.#worldWidth ?? this.#parent.worldWidth }
     /** @return {number} */
     get worldHeight() { return this.#worldHeight ?? this.#parent.worldHeight }
-    /** @return {AnimationMeta[]} */
+    /** @return {Record<string, AnimationMeta>} */
     get animations() { return this.#animations ?? this.#parent.animations }
 }
 
@@ -310,8 +295,8 @@ export default class TexturePack {
             this.getTexture(element.dataset.texture).then(texture => {
                 const image = element.dataset.framed === "true" ? texture.getFramed() : texture.getBase()
                 const position = element.dataset.framed === "true" ?
-                    texture.getFramedAnimationFramePosition(0, 0, currentTime) :
-                    texture.getAnimationFramePosition(0, 0, currentTime)
+                    texture.getFramedAnimationFramePosition("idle", 0, currentTime) :
+                    texture.getAnimationFramePosition("idle", 0, currentTime)
                 canvas.width = texture.pixelWidth
                 canvas.height = texture.pixelHeight
 
@@ -365,20 +350,21 @@ class Texture {
 
     /**
      * get the source values to send to drawImage to get the correct animation frame
-     * @param {number} animationIndex
+     * @param {string} animationName
      * @param {number} animationStartTime
      * @param {number} frameTiming
      * @returns {{sx: number, sy: number, sw: number, sh: number}}
      */
-    getAnimationFramePosition(animationIndex, animationStartTime, frameTiming) {
+    getAnimationFramePosition(animationName, animationStartTime, frameTiming) {
         // each line is an animation
         // each column is a frame of the corresponding animation
-        const totalAnimationTime = this.animations[animationIndex].timings.reduce((acc, timing) => acc + timing, 0)
+        const totalAnimationTime = this.animations[animationName].timings.reduce((acc, timing) => acc + timing, 0)
         let currentLoopStart = (frameTiming - animationStartTime) % totalAnimationTime
         let frame = -1
         while (currentLoopStart > 0) {
-            currentLoopStart -= this.animations[animationIndex].timings[++frame]
+            currentLoopStart -= this.animations[animationName].timings[++frame]
         }
+        const animationIndex = Object.keys(this.animations).findIndex(key => key === animationName)
         return {
             sx: frame * this.pixelWidth, sy: animationIndex * this.pixelHeight,
             sw: this.pixelWidth, sh: this.pixelHeight,
@@ -388,13 +374,13 @@ class Texture {
     /**
      * get the source values to send to drawImage to get the correct animation frame
      * this version returns the values for the framed variant specifically
-     * @param {number} animationIndex
+     * @param {string} animationName
      * @param {number} animationStartTime
      * @param {number} frameTiming
      * @returns {{sx: number, sy: number, sw: number, sh: number}}
      */
-    getFramedAnimationFramePosition(animationIndex, animationStartTime, frameTiming) {
-        const basePosition = this.getAnimationFramePosition(animationIndex, animationStartTime, frameTiming)
+    getFramedAnimationFramePosition(animationName, animationStartTime, frameTiming) {
+        const basePosition = this.getAnimationFramePosition(animationName, animationStartTime, frameTiming)
         return {
             sx: basePosition.sx / this.worldWidth, sy: basePosition.sy / this.worldHeight,
             sw: basePosition.sw / this.worldWidth, sh: basePosition.sh / this.worldHeight,
@@ -429,8 +415,8 @@ class Texture {
         // get the canvas
         const canvas = document.getElementById("utilsCanvas")
         // 1. make the canvas the correct size
-        const animationCount = this.animations.length
-        const longestAnimationFrameCount = Math.max(...this.animations.map(animation => animation.timings.length))
+        const animationCount = Object.keys(this.animations).length
+        const longestAnimationFrameCount = Math.max(...Object.values(this.animations).map(animation => animation.timings.length))
         // a framed image is one cell regardless of the base image
         canvas.height = animationCount * cellHeight
         canvas.width = longestAnimationFrameCount * cellWidth
@@ -438,7 +424,7 @@ class Texture {
         const context = canvas.getContext("2d")
         context.clearRect(0, 0, canvas.width, canvas.height);
         for (let line = 0; line < animationCount; line++) {
-            const animation = this.animations[line]
+            const animation = Object.values(this.animations)[line]
             for (let col = 0; col < animation.timings.length; col++) {
                 // 2. get the images as needed in the canvas
                 if (this.#meta.textureType === TextureType.IMAGE) {

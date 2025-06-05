@@ -67,7 +67,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
 
     // print map base
     await globalThis.options.texturePack.getTexture(`maps/${map.name}`).then(mapTexture => {
-        let mapAnimationFramePosition = mapTexture.getAnimationFramePosition(0, 0, frameTiming)
+        let mapAnimationFramePosition = mapTexture.getAnimationFramePosition("idle", 0, frameTiming)
         ctx.drawImage(
             mapTexture.getBase(),
             mapAnimationFramePosition.sx, mapAnimationFramePosition.sy, mapAnimationFramePosition.sw, mapAnimationFramePosition.sh,

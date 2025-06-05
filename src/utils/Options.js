@@ -136,9 +136,9 @@ class Options {
 
     /** @param {boolean} value */
     set unlimitedMoney(value) {
-        console.log("\n\n\n\n\nggresdgrdgrd\n\n\n\n\n", value)
         this.#unlimitedMoney = value
         if (value) {
+            console.log("\n\n\n\n\nunlimited money activated\n\n\n\n\n")
             document.querySelector("#moneyLabel").textContent = "∞"
         }
     }

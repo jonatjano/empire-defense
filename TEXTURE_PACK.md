@@ -89,13 +89,14 @@ These are the values used when you do not define them in your `pack.json`, defin
 	"textureType": "IMAGE",
 	"pixelSize": 128,
 	"worldSize": 1,
-	"animations": [
-		{
-			"name": "idle",
-			"timings": [1000],
+	"animations": {
+		"idle": {
+			"timings": [
+				1000
+			],
 			"fixedStart": true
 		}
-	],
+	},
 	"entities": {
 		"textureType": "ROTATION_ONLY",
 		"buildings": {

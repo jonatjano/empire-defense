@@ -9,64 +9,58 @@
 			}
 		},
 		"projectiles": {
-			"animations": [
-				{
-					"name": "idle",
+			"animations": {
+				"idle": {
 					"timings": [1000, 1000],
 					"fixedStart": false
 				}
-			],
+			},
 			"cannonball1": {
 				"textureType": "BASE_ONLY"
 			}
 		},
 		"units": {
-			"animations": [
-				{
-					"name": "idle",
-					"timings": [1000, 2000],
+			"animations": {
+				"idle": {
+					"timings": [1000, 1000],
 					"fixedStart": false
 				}
-			],
+			},
 			"squire": {
-				"animations": [
-					{
-						"name": "idle",
+				"animations": {
+					"idle": {
 						"timings": [4000, 1000],
 						"fixedStart": true
 					},
-					{
-						"name": "walk",
+					"walk": {
 						"timings": [2000, 2000],
 						"fixedStart": true
 					}
-				]
+				}
 			}
 		}
 	},
 	"icons": {
 		"pixelSize": 32,
 		"crystal": {
-			"animations": [
-				{
-					"name": "idle",
-					"timings": [2000, 100, 150, 100],
-					"fixedStart": true
+			"animations": {
+				"idle": {
+					"timings": [11000, 100, 150, 100],
+					"fixedStart": false
 				}
-			]
+			}
 		}
 	},
 	"maps": {
 		"classic": {
 			"pixelHeight": 1664,
 			"pixelWidth": 2168,
-			"animations": [
-				{
-					"name": "idle",
+			"animations": {
+				"idle": {
 					"timings": [300, 300],
 					"fixedStart": false
 				}
-			]
+			}
 		}
 	}
 }

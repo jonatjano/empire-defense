@@ -79,8 +79,8 @@ export default class AbstractEntity {
     #target
     /** @type {EntityDeathCallback} */
     #deathCallback
-    /** @type {number} */
-    #animationIndex = 0
+    /** @type {string} */
+    #animationName = "idle"
     /** @type {number} */
     #animationStartTime = 0
     /** @type {number} */
@@ -141,39 +141,25 @@ export default class AbstractEntity {
     /** @return {Promise<Texture>} */
     get texture() { throw new Error("AbstractEntity initialised") }
     /**
-     * @param {string | number} value must be a valid name found in the `animations` property
+     * @param {string} name must be a valid name found in the `animations` property
      * @param {number} startingFrame frame when the animation starts
      */
-    setAnimation(value, startingFrame) {
+    setAnimation(name, startingFrame) {
         return this.texture.then(texture => {
-            let found = false;
-            if (typeof value === "number") {
-                if (value < texture.animations.length) {
-                    this.#animationIndex = value
-                    found = true
-                }
-            } else {
-                for (let i = 0; i < texture.animations.length; i++) {
-                    if (texture.animations[i].name === value) {
-                        this.#animationIndex = i
-                        found = true
-                        break
-                    }
-                }
-            }
-            if (found) {
-                this.#animationStartTime = texture.animations[this.#animationIndex].fixedStart ? startingFrame : 0
+            if (texture.animations[name]) {
+                this.#animationName = name
+                this.#animationStartTime = texture.animations[this.#animationName].fixedStart ? startingFrame : 0
             }
         })
     }
 
-    get currentAnimation() { return this.texture.then(texture => texture.animations[this.#animationIndex]) }
+    get currentAnimation() { return this.texture.then(texture => texture.animations[this.#animationName]) }
 
     /**
      * @param {number} frameTiming
      * @returns {Promise<{sx, sy, sw: number, sh: number}>}
      */
     getAnimationFramePosition(frameTiming) {
-        return this.texture.then(texture => texture.getAnimationFramePosition(this.#animationIndex, this.#animationStartTime, frameTiming) )
+        return this.texture.then(texture => texture.getAnimationFramePosition(this.#animationName, this.#animationStartTime, frameTiming) )
     }
 }
