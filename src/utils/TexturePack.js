@@ -40,6 +40,19 @@ const DEFAULTS = {
             angleBetweenRotations: 15,
             animationFrameDuration: 500
         }
+    },
+    vfx: {
+        pixelSize: 32,
+        animations: {
+            spawnArrow: {
+                timings: [1000, 1000],
+                fixedStart: true
+            },
+            targetArrow: {
+                timings: [1000, 1000],
+                fixedStart: true
+            }
+        }
     }
 }
 
@@ -110,6 +123,8 @@ const textureListLeaf = Symbol()
 const textureList = {
     // keep first here to ensure it is present when trying to frame other images
     frame: textureListLeaf,
+
+    vfx: textureListLeaf,
 
     // {buildings: {archer: textureListLeaf, ...}, ...}
     entities: Object.values(entities).reduce(

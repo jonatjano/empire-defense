@@ -6,6 +6,7 @@ import {TileOption} from "./GameMap.js";
 import entities from "./entities/entities.js";
 import AbstractUnit from "./entities/AbstractUnit.js";
 import TexturePack from "../utils/TexturePack.js";
+import Vfx from "./entities/Vfx.js";
 
 let lastFrameTiming
 let firstFrameTiming = undefined;
@@ -267,8 +268,18 @@ export default class Game {
     #launchNextWave() {
         console.log("new wave")
         this.waveNumber = this.waveNumber + 1
+
+        this.#map.spawns.forEach(pos => {
+            this.addEntity(new Vfx(pos, lastFrameTiming, 5000, "spawnArrow"))
+        })
+        this.#map.targets.forEach(pos => {
+            this.addEntity(new Vfx(pos, lastFrameTiming, 5000, "targetArrow"))
+        })
+
+        setTimeout(() => {
+            this.#unitsToSpawn = this.map.waves[this.waveNumber - 1].map(spawnLists => spawnLists.map(spawn => spawn))
+        }, 5000)
         console.log(this.waveNumber)
-        this.#unitsToSpawn = this.map.waves[this.waveNumber - 1].map(spawnLists => spawnLists.map(spawn => spawn))
         console.log(this.map.waves)
     }
 

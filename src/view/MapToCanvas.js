@@ -7,6 +7,7 @@ import {TextureType} from "../utils/TexturePack.js";
 import GameMap from "../models/GameMap.js";
 import Game from "../models/Game.js";
 import AbstractProjectile from "../models/entities/AbstractProjectile.js";
+import Vfx from "../models/entities/Vfx.js";
 
 const TILE_MARGIN = -1
 
@@ -138,9 +139,9 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
     ]
 
     await Promise.all(
-        entities.map(entity =>
-            entity instanceof FloatingText ?
-                new Promise(resolve => {
+        entities.map(entity => {
+            if (entity instanceof FloatingText) {
+                return new Promise(resolve => {
                     ctx.fillStyle = entity.color
                     ctx.textAlign = "center"
                     ctx.textBaseline = "middle"
@@ -154,8 +155,26 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                     ctx.fillStyle = "black"
                     resolve()
                 })
-                :
-                entity.texture.then(async entityTexture => {
+            }
+            else if (entity instanceof Vfx) {
+                return entity.texture.then(async entityTexture => {
+                    const drawImagePosition = {
+                        dx: (leftMargin + entity.position.x - 0.5) * options.zoom,
+                        dy: (topMargin + entity.position.y - 0.5) * options.zoom,
+                        dw: entityTexture.worldWidth * options.zoom,
+                        dh: entityTexture.worldHeight * options.zoom,
+                    }
+                    const animationFramePosition = await entity.getAnimationFramePosition(frameTiming)
+
+                    ctx.drawImage(
+                        entityTexture.getBase(),
+                        animationFramePosition.sx, animationFramePosition.sy, animationFramePosition.sw, animationFramePosition.sh,
+                        drawImagePosition.dx, drawImagePosition.dy, drawImagePosition.dw, drawImagePosition.dh
+                    )
+                })
+            }
+            else {
+                return entity.texture.then(async entityTexture => {
                     const textureHorizontalSpan = entityTexture.worldWidth
                     const textureLeftMargin = -textureHorizontalSpan / 2
 
@@ -250,9 +269,9 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                             (topMargin + entity.position.y) * options.zoom + TILE_MARGIN + Math.sin(entity.position.rotation) * 1000 * entity.movements.movementSpeed * options.zoom, 5, 5
                         )
                     }
-                }
-            )
-        )
+                })
+            }
+        })
     )
 
     if (globalThis.options.debug) {
