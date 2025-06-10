@@ -13,18 +13,7 @@
 		screen.orientation.lock('landscape').catch(() => {})
 		mainMenu()
 	</script>
-	<style>
-		.textures-grid {
-			display: flex;
-			flex-direction: row;
-			flex-wrap: wrap;
-			align-items: baseline;
-
-			& img {
-				/* border: 1px solid black; */
-			}
-		}
-	</style>
+	<link rel="stylesheet" href="style.css">
 </head>
 <body>
 	<div id="mainMenu" class="hidden">
@@ -55,10 +44,14 @@
 			<div id="towers">
 			</div>
 		</div>
-		<div id="pauseMenu" style="position: absolute; top: 300px; left: 300px;">
+		<div id="pauseMenu" >
 			<button id="resumeButton" data-translation="generic.resume">Resume</button>
 			<button id="quitButton" data-translation="generic.quit">Quit</button>
 			<p>WIP: more to come (options)</p>
+		</div>
+		<div id="towerMenu" class="hidden">
+			<button id="upgradeTower"><img data-texture="framed/icons/money" src="" alt="Upgrade"></button>
+			<button id="sellTower"><img data-texture="framed/entities/buildings/archery2" src="" alt="Sell"></button>
 		</div>
 <!--		<div id="optionMenu" style="position: absolute; top: 300px; left: 300px;">-->
 <!--			<p>WIP: </p>-->

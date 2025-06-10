@@ -10,6 +10,7 @@ import AbstractProjectile from "../models/entities/AbstractProjectile.js";
 import Vfx from "../models/entities/Vfx.js";
 
 const TILE_MARGIN = -1
+const ALPHA_VALUE = 0.4
 
 const HP_BAR_STYLE = Object.freeze({
     get WIDTH() { return 0.7 * options.zoom },
@@ -85,7 +86,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
             ctx.fillRect((leftMargin + x) * options.zoom - (gridWeight / 2), topMargin * options.zoom - (gridWeight / 2), gridWeight, map.height * options.zoom + gridWeight);
         }
     } else {
-        if (game.ghostEntity) {
+        if (game.selectedEntity?.isGhost) {
             ctx.fillStyle = "white"
             // draw the grid to the size of the visible map
             for (let y = 0; y <= mapHeight; y++) {
@@ -128,14 +129,14 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
      * @type {AbstractEntity[]}
      */
     const entities = [
+        ...(game.selectedEntity?.isGhost ? [game.selectedEntity.tower] : []),
         ...game.getEntities()
             .sort((a, b) => {
-                if (a instanceof AbstractProjectile || a instanceof FloatingText) { return Infinity }
-                if  (b instanceof AbstractProjectile || b instanceof FloatingText) { return -Infinity }
+                if (a === game.selectedEntity?.tower || a instanceof AbstractProjectile || a instanceof FloatingText) { return Infinity }
+                if  (b === game.selectedEntity?.tower || b instanceof AbstractProjectile || b instanceof FloatingText) { return -Infinity }
                 return (a.position.y + movementTypeDrawPriority(a.movements.movementType)) -
                     (b.position.y + movementTypeDrawPriority(b.movements.movementType))
-            }),
-        ...(game.ghostEntity ? [game.ghostEntity.tower] : [])
+            })
     ]
 
     await Promise.all(
@@ -186,10 +187,37 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                         dy: (topMargin + entity.position.y + textureTopMargin) * options.zoom,
                         dw: entityTexture.worldWidth * options.zoom,
                         dh: entityTexture.worldHeight * options.zoom,
-                        alpha: entity === game.ghostEntity?.tower ? 0.5 : 1
+                        alpha: entity === game.selectedEntity?.tower && game.selectedEntity?.isGhost ? ALPHA_VALUE : 1
                     }
                     const animationFramePosition = await entity.getAnimationFramePosition(frameTiming)
 
+                    if (entity === game.selectedEntity?.tower) {
+                        ctx.globalAlpha = ALPHA_VALUE
+                        const ellipse = new Path2D()
+                        ellipse.ellipse(
+                            drawImagePosition.dx + (entityTexture.worldWidth - 0.5) * options.zoom,
+                            drawImagePosition.dy + (entityTexture.worldHeight - 0.5) * options.zoom,
+                            options.zoom * entity.attackRange, options.zoom * entity.attackRange,
+                            0, 0, 2 * Math.PI
+                        )
+
+                        const previousStyle = ctx.fillStyle
+                        ctx.fillStyle = game.selectedEntity.isValid ? "white" : "red";
+                        ctx.fill(ellipse);
+                        ctx.fillStyle = previousStyle
+
+                        const towerMenu = document.querySelector("#towerMenu")
+
+                        const canvasRect = canvas.getBoundingClientRect();
+                        const xFactor = canvasRect.width / canvas.width;
+                        const yFactor = canvasRect.height / canvas.height;
+
+                        const xPos = (leftMargin + game.selectedEntity.tower.position.x - 0.5) * globalThis.options.zoom * xFactor
+                        const yPos = (topMargin + game.selectedEntity.tower.position.y - 1.5) * globalThis.options.zoom * yFactor
+                        const maxHeight = entityTexture.worldHeight * globalThis.options.zoom * yFactor
+                        const maxWidth = entityTexture.worldWidth * globalThis.options.zoom * xFactor
+                        towerMenu.style = `--tower-x: ${xPos}px; --tower-y: ${yPos}px; --tower-height: ${maxHeight}px; --tower-width: ${maxWidth}px;`
+                    }
                     ctx.globalAlpha = drawImagePosition.alpha
 
                     if (entityTexture.textureType !== TextureType.ROTATION_ONLY) {
@@ -211,21 +239,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                             drawImagePosition.dx, drawImagePosition.dy, drawImagePosition.dw, drawImagePosition.dh,
                         )
                     }
-
-                    if (entity === game.ghostEntity?.tower) {
-                        const ellipse = new Path2D()
-                        ellipse.ellipse(
-                            drawImagePosition.dx + (entityTexture.worldWidth - 0.5) * options.zoom,
-                            drawImagePosition.dy + (entityTexture.worldHeight - 0.5) * options.zoom,
-                            options.zoom * entity.attackRange, options.zoom * entity.attackRange,
-                            0, 0, 2 * Math.PI
-                        )
-
-                        const previousStyle = ctx.fillStyle
-                        ctx.fillStyle = game.ghostEntity.isValid ? "royalBlue" : "red";
-                        ctx.fill(ellipse);
-                        ctx.fillStyle = previousStyle
-                    }
+                    ctx.globalAlpha = 1
 
                     if (entity.hp !== entity.maxHp) {
                         // HP bar
