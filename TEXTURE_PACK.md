@@ -37,19 +37,19 @@ When setting a property, it will apply automatically to all the subfolders recur
 ### properties
 Valid properties are :
 
-| property name         | description                                                                                                           | expected value |
-|-----------------------|-----------------------------------------------------------------------------------------------------------------------|----------------|
-| extension             | The file format of the images                                                                                         | string         |
-| textureType           | gives information about which images the game should look for in the current path<br/>Details at the end of the table | string         |
-| angleBetweenRotations | The angle in deg between rotation of images when the unit can rotate                                                  | number         |
-| isSymmetric           | For units which can rotate : if true, will mirror image oriented to the right to create images oriented to the left   | boolean        |
-| pixelWidth            | The width of the image in pixel (when doing animation you must specify the width of one state)                        | number         |
-| pixelHeight           | The Height of the image in pixel (when doing animation you must specify the height of one state)                      | number         |
-| pixelSize             | Define both `pixelWidth` and `pixelHeight` in a single rule                                                           | number         |
-| worldWidth            | The width of the unit when drawn in the game, expressed in cell                                                       | number         |
-| worldHeight           | The height of the unit when drawn in the game, expressed in cell                                                      | number         |
-| worldSize             | Define both `worldWidth` and `worldHeight` in a single rule                                                           | number         |
-| animations            | Give details about the entity animations                                                                              | Animation[]    |
+| property name         | description                                                                                                           | expected value          |
+|-----------------------|-----------------------------------------------------------------------------------------------------------------------|-------------------------|
+| extension             | The file format of the images                                                                                         | string                  |
+| textureType           | gives information about which images the game should look for in the current path<br/>Details at the end of the table | string                  |
+| angleBetweenRotations | The angle in deg between rotation of images when the unit can rotate                                                  | number                  |
+| isSymmetric           | For units which can rotate : if true, will mirror image oriented to the right to create images oriented to the left   | boolean                 |
+| pixelWidth            | The width of the image in pixel (when doing animation you must specify the width of one state)                        | number                  |
+| pixelHeight           | The Height of the image in pixel (when doing animation you must specify the height of one state)                      | number                  |
+| pixelSize             | Define both `pixelWidth` and `pixelHeight` in a single rule                                                           | number                  |
+| worldWidth            | The width of the unit when drawn in the game, expressed in cell                                                       | number                  |
+| worldHeight           | The height of the unit when drawn in the game, expressed in cell                                                      | number                  |
+| worldSize             | Define both `worldWidth` and `worldHeight` in a single rule                                                           | number                  |
+| animations            | Give details about the entity animations                                                                              | Record<name, Animation> |
 
 #### textureType details
 `textureType` can take one the following values :
@@ -71,9 +71,11 @@ there is no need for 360° because it is equivalent to 0°
 #### animation details
 An Animation is an object, here are the properties of these objects
 
+While you can add new animation, those won't be played, so there is no reason to do it
+You can however remove animations, the game will simply not play them
+
 | property name | description                                                                                                               | expected value |
 |---------------|---------------------------------------------------------------------------------------------------------------------------|----------------|
-| name          | The name of the animation                                                                                                 | string         |
 | timings       | An array containing the time of each frame in millisecond                                                                 | number[]       |
 | fixedStart    | Whether the animation frame is decided based on the global time (`true`) or the time when the animation was set (`false`) | boolean        |
 
