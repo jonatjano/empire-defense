@@ -79,6 +79,10 @@ export default class AbstractEntity {
     #target
     /** @type {EntityDeathCallback} */
     #deathCallback
+    /** @type {string} */
+    #animationName = "idle"
+    /** @type {number} */
+    #animationStartTime = 0
     /** @type {number} */
     #id
     /** @type {number} */
@@ -136,4 +140,26 @@ export default class AbstractEntity {
 
     /** @return {Promise<Texture>} */
     get texture() { throw new Error("AbstractEntity initialised") }
+    /**
+     * @param {string} name must be a valid name found in the `animations` property
+     * @param {number} startingFrame frame when the animation starts
+     */
+    setAnimation(name, startingFrame) {
+        return this.texture.then(texture => {
+            if (texture.animations[name]) {
+                this.#animationName = name
+                this.#animationStartTime = texture.animations[this.#animationName].fixedStart ? startingFrame : 0
+            }
+        })
+    }
+
+    get currentAnimation() { return this.texture.then(texture => texture.animations[this.#animationName]) }
+
+    /**
+     * @param {number} frameTiming
+     * @returns {Promise<{sx, sy, sw: number, sh: number}>}
+     */
+    getAnimationFramePosition(frameTiming) {
+        return this.texture.then(texture => texture.getAnimationFramePosition(this.#animationName, this.#animationStartTime, frameTiming) )
+    }
 }

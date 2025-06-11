@@ -28,11 +28,11 @@ export default class FloatingText extends AbstractEntity {
 	get color() { return this.#color }
 
 	act(frameDuration) {
-		if (this.#lifetime > 0) {
-			this.position.teleport(Position.move(this.position, this.#target, this.movements, frameDuration).position)
-			this.#lifetime -= frameDuration
-		} else {
+		this.#lifetime -= frameDuration
+		if (this.#lifetime <= 0) {
 			this.hit(Infinity)
+		} else {
+			this.position.teleport(Position.move(this.position, this.#target, this.movements, frameDuration).position)
 		}
 	}
 }

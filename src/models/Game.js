@@ -6,6 +6,7 @@ import {TileOption} from "./GameMap.js";
 import entities from "./entities/entities.js";
 import AbstractUnit from "./entities/AbstractUnit.js";
 import TexturePack from "../utils/TexturePack.js";
+import Vfx from "./entities/Vfx.js";
 
 let lastFrameTiming
 let firstFrameTiming = undefined;
@@ -89,7 +90,7 @@ export default class Game {
             ...playableTowers.map(towerType => {
                 const element = document.createElement("button")
                 const tower = new towerType(new Position(0, 0, TexturePack.framedRotation))
-                element.innerHTML = `<img data-texture="framed/entities/buildings/${tower.name}" src="" alt="${towerType.name}">`
+                element.innerHTML = `<img data-framed="true" data-texture="entities/buildings/${tower.name}" src="" alt="${towerType.name}">`
                 element.onclick = () => {
                     if (this.#selectedTowerType === towerType) {
                          this.#selectedTowerType = null
@@ -100,7 +101,6 @@ export default class Game {
                 return element
             })
         )
-        globalThis.options.texturePack.changeDocumentTextures()
     }
 
     get selectedEntity() {
@@ -284,8 +284,18 @@ export default class Game {
     #launchNextWave() {
         console.log("new wave")
         this.waveNumber = this.waveNumber + 1
+
+        this.#map.spawns.forEach(pos => {
+            this.addEntity(new Vfx(pos, lastFrameTiming, 5000, "spawnArrow"))
+        })
+        this.#map.targets.forEach(pos => {
+            this.addEntity(new Vfx(pos, lastFrameTiming, 5000, "targetArrow"))
+        })
+
+        setTimeout(() => {
+            this.#unitsToSpawn = this.map.waves[this.waveNumber - 1].map(spawnLists => spawnLists.map(spawn => spawn))
+        }, 5000)
         console.log(this.waveNumber)
-        this.#unitsToSpawn = this.map.waves[this.waveNumber - 1].map(spawnLists => spawnLists.map(spawn => spawn))
         console.log(this.map.waves)
     }
 
@@ -302,7 +312,11 @@ export default class Game {
                     if (unitList.length !== 0) {
                         const unitType = unitList.shift()
                         console.log("spawning", unitType, spawnPosition)
-                        this.addEntity(new unitType(spawnPosition, callback))
+                        const unit = new unitType(spawnPosition, callback)
+                        this.addEntity(unit)
+                        if (Math.random() < 0.5) {
+                            unit.setAnimation("walk", lastFrameTiming)
+                        }
                     }
                 }
             }
