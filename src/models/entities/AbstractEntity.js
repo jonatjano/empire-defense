@@ -113,6 +113,7 @@ export default class AbstractEntity {
     /**
      * move toward target
      * @param {number} frameDuration
+     * @param {number} currentTime
      * @return {void}
      */
     act(frameDuration, currentTime) {

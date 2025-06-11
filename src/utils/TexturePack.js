@@ -725,6 +725,7 @@ class Texture {
 
     /**
      * @param {HTMLImageElement} image
+     * @param {number} frameWidth size in pixel of one animation frame
      * @returns {HTMLImageElement}
      */
     static #mirrorImage(image, frameWidth) {
