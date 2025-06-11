@@ -27,7 +27,7 @@ export default class FloatingText extends AbstractEntity {
 
 	get color() { return this.#color }
 
-	act(frameDuration) {
+    act(frameDuration, currentTime) {
 		this.#lifetime -= frameDuration
 		if (this.#lifetime <= 0) {
 			this.hit(Infinity)

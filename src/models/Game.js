@@ -55,15 +55,18 @@ export default class Game {
         this.money = 20
         this.crystal = 0
         this.waveNumber = 0
-        this.playableTowers = [entities.Archery2, entities.Cannon1]
+        this.playableTowers = [entities.Archery1, entities.Cannon1]
     }
 
     addEntity(entity) {
         this.#entities.push(entity)
     }
 
-    deleteEntity(entity) {
+    deleteEntity(entity, skipPathFinder = false) {
         this.#entities = this.#entities.filter(ent => ent !== entity)
+        if (entity instanceof AbstractBuilding && !skipPathFinder) {
+            this.pathFinder.recalculateAll()
+        }
     }
 
     /**
@@ -110,6 +113,19 @@ export default class Game {
     set selectedEntity(value) {
         this.#selectedEntity = value
         document.querySelector("#towerMenu").classList.toggle("hidden", value?.isGhost ?? true)
+        document.querySelector("#sellTower").onclick = value ? this.#sellTower.bind(this, value.tower) : undefined
+    }
+
+    #sellTower(tower) {
+        // TODO selling crystal loss
+        tower.setAnimation("sell", lastFrameTiming).then(success => {
+            // if we couldn't set the animation, we need to delete the tower ourselves as it won't delete itself
+            if (! success) { this.deleteEntity(tower) }
+        })
+        this.money = this.money + 2 // TODO get correct amount of money on sell according to tower type
+        if (this.#selectedEntity.tower === tower) {
+            this.selectedEntity = null
+        }
     }
 
     /**
@@ -145,7 +161,7 @@ export default class Game {
         const durationToSend = frameDuration * globalThis.options.speed
         this.#spawnNextUnits(durationToSend)
         this.#entities.forEach((entity) => {
-            entity.act(durationToSend)
+            entity.act(durationToSend, lastFrameTiming)
         })
 
         this.#eventListener(frameTiming)
@@ -218,7 +234,7 @@ export default class Game {
         const tower = new towerType(cellPosition)
         this.addEntity(tower)
         const isValid = this.#pathFinder.recalculateAll()
-        this.deleteEntity(tower)
+        this.deleteEntity(tower, true)
         this.#pathFinder.revertAll()
         this.selectedEntity = { tower, isValid, isGhost: true }
     }
@@ -268,7 +284,7 @@ export default class Game {
         const tower = new towerType(towerPosition)
         this.addEntity(tower)
         if (! this.#pathFinder.recalculateAll()) {
-            this.deleteEntity(tower)
+            this.deleteEntity(tower, true)
             this.#pathFinder.revertAll()
             return
         }

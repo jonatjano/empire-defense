@@ -8,7 +8,7 @@ export default class AbstractProjectile extends AbstractEntity {
         super(factory);
     }
 
-    act(frameDuration) {
+    act(frameDuration, currentTime) {
         const ATTACK_RANGE = 2
         const ATTACK_DAMAGE = 10
 

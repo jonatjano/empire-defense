@@ -84,6 +84,8 @@ export default class AbstractEntity {
     /** @type {number} */
     #animationStartTime = 0
     /** @type {number} */
+    #animationEndTime = 0
+    /** @type {number} */
     #id
     /** @type {number} */
     static #idGenerator = 0
@@ -111,9 +113,10 @@ export default class AbstractEntity {
     /**
      * move toward target
      * @param {number} frameDuration
+     * @param {number} currentTime
      * @return {void}
      */
-    act(frameDuration) {
+    act(frameDuration, currentTime) {
         throw new Error("AbstractEntity initialised")
     }
 
@@ -143,16 +146,26 @@ export default class AbstractEntity {
     /**
      * @param {string} name must be a valid name found in the `animations` property
      * @param {number} startingFrame frame when the animation starts
+     * @return {Promise<boolean>} indicated if the animation was successfully set
      */
     setAnimation(name, startingFrame) {
         return this.texture.then(texture => {
             if (texture.animations[name]) {
                 this.#animationName = name
-                this.#animationStartTime = texture.animations[this.#animationName].fixedStart ? startingFrame : 0
             }
+            this.#animationStartTime =
+                texture.animations[this.#animationName]?.fixedStart ?
+                    startingFrame :
+                    0
+            this.#animationEndTime =
+                texture.animations[this.#animationName]?.fixedStart ?
+                    texture.animations[this.#animationName].timings.reduce((acc, frame) => acc + frame, this.#animationStartTime) :
+                    Infinity
+            return this.#animationName === name
         })
     }
 
+    get animationDetails() { return {name: this.#animationName, start: this.#animationStartTime, end: this.#animationEndTime} }
     get currentAnimation() { return this.texture.then(texture => texture.animations[this.#animationName]) }
 
     /**
