@@ -1,7 +1,23 @@
 {
 	"entities": {
 		"buildings": {
+			"animations": {
+				"idle": {
+					"timings": [1000],
+					"fixedStart": false
+				}
+			},
 			"archery1": {
+				"animations": {
+					"idle": {
+						"timings": [1000],
+						"fixedStart": false
+					},
+					"sell": {
+						"timings": [1000],
+						"fixedStart": true
+					}
+				},
 				"textureType": "BASE_ONLY"
 			},
 			"cannon1": {

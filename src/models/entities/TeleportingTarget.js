@@ -14,7 +14,8 @@ export default class TeleportingTarget extends AbstractEntity {
                 .setMaxHp(1)
         )
     }
-    act(frameDuration) {
+
+    act(frameDuration, currentTime) {
         this.#counter += frameDuration;
         if (this.#counter > 2000) {
             this.position.teleport(new Position(Math.random() * globalThis.game.map.width, Math.random() * globalThis.game.map.height))

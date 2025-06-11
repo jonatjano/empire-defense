@@ -31,6 +31,16 @@ const DEFAULTS = {
     entities: {
         textureType: TextureType.ROTATION_ONLY,
         buildings: {
+            animations: {
+                idle: {
+                    timings: [1000],
+                    fixedStart: true
+                },
+                sell: {
+                    timings: [1000],
+                    fixedStart: true
+                }
+            },
             textureType: TextureType.ROTATION_AND_BASE,
             pixelHeight: 256,
             worldHeight: 2,

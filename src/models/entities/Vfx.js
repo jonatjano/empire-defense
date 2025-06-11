@@ -32,7 +32,7 @@ export default class Vfx extends AbstractEntity {
         })
     }
 
-    act(frameDuration) {
+    act(frameDuration, currentTime) {
         this.#lifetime -= frameDuration
         if (this.#lifetime <= 0) {
             this.hit(Infinity)
