@@ -7,13 +7,13 @@ import Position from "../Position.js";
  *
  * @param {string} name the tower name
  * @param {string} projectileName the name of the projectile used by the tower
- * @param {{cost: number, crystal: number, projectile: {speed: number, damage: number, range: number, cooldown: number}}[]} levels
+ * @param {{cost: number, sellPrice: number, crystal: number, projectile: {speed: number, damage: number, range: number, cooldown: number}}[]} levels
  */
 export function buildingFactory(name, projectileName, levels) {
     /**
      * @param {string} name the tower name
      * @param {string} projectileName the name of the projectile used by the tower
-     * @param {{cost: number, crystal: number, projectile: {speed: number, damage: number, range: number, cooldown: number}}[]} levels
+     * @param {{cost: number, sellPrice: number, crystal: number, projectile: {speed: number, damage: number, range: number, cooldown: number}}[]} levels
      * @param {number} currentLevel
      */
     function innerFactory(name, projectileName, levels, currentLevel) {
@@ -31,10 +31,11 @@ export function buildingFactory(name, projectileName, levels) {
             static get movements() { return AbstractEntity.movements }
             static get name() { return name + levelName }
             static get cost() { return levels[currentLevel].cost }
+            static get sellPrice() { return levels[currentLevel].sellPrice }
             static get crystalOnBuild() { return levels[currentLevel].crystal }
             /** @return {typeof AbstractBuilding | null} */
             static get upgradesTo() { return upgradesTo }
-            static get projectile() {return projectile}
+            static get projectile() { return projectile }
 
             constructor(position) {
                 super(position)
@@ -54,7 +55,10 @@ export default class AbstractBuilding extends AbstractEntity {
         super(position);
     }
 
+    static get sellPrice() { return 0 }
+
     get cost() { return this.__proto__.constructor.cost }
+    get sellPrice() { return this.__proto__.constructor.sellPrice }
     get crystalOnBuild() { return this.__proto__.constructor.crystalOnBuild }
     /** @return {typeof AbstractBuilding | null} */
     get upgradesTo() { return this.__proto__.constructor.upgradesTo }
