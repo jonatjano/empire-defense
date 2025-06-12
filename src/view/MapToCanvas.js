@@ -147,7 +147,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                     ctx.textRendering = "optimizeLegibility"
                     ctx.font = "20px Arial, sans-serif"
                     ctx.fillText(
-                        entity.name,
+                        entity.text,
                         (leftMargin + entity.position.x) * options.zoom,
                         (topMargin + entity.position.y) * options.zoom
                     )
@@ -194,7 +194,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                         ellipse.ellipse(
                             drawImageArgs.dx + (entityTexture.worldWidth - 0.5) * options.zoom,
                             drawImageArgs.dy + (entityTexture.worldHeight - 0.5) * options.zoom,
-                            options.zoom * entity.attackRange, options.zoom * entity.attackRange,
+                            options.zoom * entity.projectile.range, options.zoom * entity.projectile.range,
                             0, 0, 2 * Math.PI
                         )
 

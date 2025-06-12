@@ -1,46 +1,28 @@
-import AbstractEntity, {EntityFactory} from "./AbstractEntity.js";
+import AbstractEntity from "./AbstractEntity.js";
 import Position from "../Position.js";
 
-export class UnitFactory extends EntityFactory {
-    /** @type {number} */
-    killReward
-    /** @type {number} */
-    killCrystalReward
+export function unitFactory(name, movement, killReward, killCrystalReward, hpFunction) {
+    return class extends AbstractUnit {
+        static movements = movement
+        static get movements() { return this.movements }
+        static get name() { return name; }
+        static get killReward() { return killReward }
+        static get killCrystalReward() { return killCrystalReward }
 
-    constructor() {
-        super()
-        this.killReward = 0
-        this.killCrystalReward = 0
+        constructor(position, deathCallback, wave) {
+            super(position, deathCallback, hpFunction(wave));
+        }
     }
-
-    /**
-     * @param {number} value
-     * @return {this}
-     */
-    setKillReward(value) { this.killReward = value; return this }
-
-    /**
-     * @param {number} value
-     * @return {this}
-     */
-    setKillCrystalReward(value) { this.killCrystalReward = value; return this }
 }
 
 export default class AbstractUnit extends AbstractEntity {
-    /** @type {number} */
-    #killReward
-    /** @type {number} */
-    #killCrystalReward
+    static get killReward() { return 0 }
+    get killReward() { return this.__proto__.constructor.killReward }
+    static get killCrystalReward() { return 0 }
+    get killCrystalReward() { return this.__proto__.constructor.killCrystalReward }
 
-    constructor(factory) {
-        super(factory)
-        this.#killReward = factory.killReward
-        this.#killCrystalReward = factory.killCrystalReward
-    }
-
-    /** @return {UnitFactory} */
-    static get factory() {
-        return new UnitFactory()
+    constructor(position, deathCallback, maxHp) {
+        super(position, deathCallback, maxHp);
     }
 
     act(frameDuration) {
@@ -72,9 +54,6 @@ export default class AbstractUnit extends AbstractEntity {
             }
         }
     }
-
-    get killReward() { return this.#killReward }
-    get killCrystalReward() { return this.#killCrystalReward }
 
     get texture() { return globalThis.options.texturePack.getTexture(`entities/units/${this.__proto__.constructor.name.toLowerCase()}`) }
 }

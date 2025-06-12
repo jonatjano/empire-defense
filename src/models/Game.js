@@ -54,7 +54,7 @@ export default class Game {
         this.money = 20
         this.crystal = 0
         this.waveNumber = 0
-        this.playableTowers = [entities.Archery2, entities.Cannon1]
+        this.playableTowers = Object.values(entities).filter(entity => entity.prototype instanceof AbstractBuilding)
     }
 
     addEntity(entity) {
@@ -88,8 +88,7 @@ export default class Game {
         towersContainer.append(
             ...playableTowers.map(towerType => {
                 const element = document.createElement("button")
-                const tower = new towerType(new Position(0, 0, TexturePack.framedRotation))
-                element.innerHTML = `<img data-texture="framed/entities/buildings/${tower.name}" src="" alt="${towerType.name}">`
+                element.innerHTML = `<img data-texture="framed/entities/buildings/${towerType.name}" src="" alt="${towerType.name}">`
                 element.onclick = () => {
                     if (this.#selectedTower === towerType) {
                          this.#selectedTower = null
@@ -242,7 +241,6 @@ export default class Game {
             console.error("Position is already taken", this.getEntities(AbstractBuilding))
             return
         }
-
         if (this.#money < towerType.cost && ! globalThis.options.unlimitedMoney) {
             console.error(`Not enough money for this tower, got ${this.#money}, required ${towerType.cost}`)
             return
@@ -286,7 +284,7 @@ export default class Game {
                     if (unitList.length !== 0) {
                         const unitType = unitList.shift()
                         console.log("spawning", unitType, spawnPosition)
-                        this.addEntity(new unitType(spawnPosition, callback))
+                        this.addEntity(new unitType(spawnPosition, callback, this.waveNumber))
                     }
                 }
             }

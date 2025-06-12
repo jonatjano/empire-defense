@@ -6,101 +6,35 @@ import {default as MovementCapability, MovementType} from "../MovementCapability
  * @param {AbstractEntity} entity
  */
 
-export class EntityFactory {
-    /** @type {string} */
-    name
-    /** @type {number} */
-    baseHp
-    /** @type {number} */
-    selectionRange
-    /** @type {MovementCapability} */
-    movements
-    /** @type {Position} */
-    position
-    /** @type {EntityDeathCallback}*/
-    deathCallback
-
-    constructor() {
-        this.name = ""
-        this.baseHp = 1
-        this.selectionRange = 0
-        this.movements = new MovementCapability(0, 0, 0, MovementType.Walking)
-        this.position = new Position(0, 0, 0)
-        this.deathCallback = () => {}
-    }
-
-    /**
-     * @param {string} value
-     * @return {this}
-     */
-    setName(value) { this.name = value; return this }
-
-    /**
-     * @param {number} value
-     * @return {this}
-     */
-    setBaseHp(value) { this.baseHp = value; return this }
-
-    /**
-     * @param {number} value
-     * @return {this}
-     */
-    setSelectionRange(value) { this.selectionRange = value; return this }
-
-    /**
-     * @param {MovementCapability} value
-     * @return {this}
-     */
-    setMovements(value) { this.movements = value; return this }
-
-    /**
-     * @param {Position} value
-     * @return {this}
-     */
-    setPosition(value) { this.position = value; return this }
-
-    /**
-     * @param {(AbstractEntity) => void} value
-     * @return {this}
-     */
-    setDeathCallback(value) { this.deathCallback = value; return this }
-}
-
 export default class AbstractEntity {
-    #name
-    #hp
+    /** @type {number} */
     #maxHp
-    #selectionRange
-    /** @type {MovementCapability} */
-    #movements
-    /** @type {Position} */
-    #position
-    /** @type {Position | AbstractEntity} */
-    #target
+    /** @type {number} */
+    #hp
     /** @type {EntityDeathCallback} */
     #deathCallback
+    /** @type {Position} */
+    #position
+
     /** @type {number} */
-    #id
+    #id = AbstractEntity.#idGenerator++
     /** @type {number} */
     static #idGenerator = 0
 
-    static get factory() {
-        return new EntityFactory()
-    }
+    static defaultDeathCallback = () => {}
+    static #movements = new MovementCapability(0, 0, 0, MovementType.Walking)
 
     /**
-     * @param {EntityFactory} factory
+     * @param {Position} position
+     * @param {EntityDeathCallback} deathCallback
+     * @param {number} [maxHp]
      */
-    constructor(factory) {
-        this.#id = AbstractEntity.#idGenerator++
-        this.#name = factory.name
-        this.#position = Position.getTileCenterPosition(factory.position)
-        this.#movements = factory.movements
-        this.#maxHp = factory.baseHp
-        this.#selectionRange = factory.selectionRange
-        this.#deathCallback = factory.deathCallback
+    constructor(position, deathCallback = AbstractEntity.defaultDeathCallback, maxHp = Infinity) {
+        this.#position = Position.getTileCenterPosition(position)
+        this.#deathCallback = deathCallback
 
-        this.#hp = this.#maxHp
+        this.#maxHp = maxHp
+        this.#hp = maxHp
     }
 
 
@@ -122,18 +56,18 @@ export default class AbstractEntity {
         else if (this.#hp > this.#maxHp) { this.#hp = this.#maxHp }
     }
 
-    get name() { return this.#name }
-    /** @return {Position | AbstractEntity} */
-    get target() { return this.#target }
-    set target(value) { this.#target = value }
-    /** @return {Position} */
-    get position() { return this.#position }
-    /** @return {MovementCapability} */
-    get movements() { return this.#movements }
-
     get hp() { return this.#hp }
     get maxHp() { return this.#maxHp }
 
+    /** @return {Position} */
+    get position() { return this.#position }
+
     /** @return {Promise<Texture>} */
     get texture() { throw new Error("AbstractEntity initialised") }
+
+    get name() { return this.__proto__.constructor.name }
+    get movements() { return this.__proto__.constructor.movements }
+    static get name() { return "AbstractEntity" }
+    /** @return {MovementCapability} */
+    static get movements() { return this.#movements }
 }
