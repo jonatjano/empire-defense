@@ -129,7 +129,7 @@ export default class Game {
             // if we couldn't set the animation, we need to delete the tower ourselves as it won't delete itself
             if (! success) { this.deleteEntity(tower) }
         })
-        this.money = this.money + tower.sellPrice // TODO get correct amount of money on sell according to tower type
+        this.money = this.money + tower.sellPrice
         if (this.#selectedEntity.tower === tower) {
             this.selectedEntity = null
         }
