@@ -1,116 +1,81 @@
-import AbstractEntity, {EntityFactory} from "./AbstractEntity.js";
-import AbstractProjectile from "./AbstractProjectile.js";
-import {default as MovementCapability, MovementType} from "../MovementCapability.js";
+import AbstractEntity from "./AbstractEntity.js";
+import {projectileFactory} from "./AbstractProjectile.js"
 import AbstractUnit from "./AbstractUnit.js";
 import Position from "../Position.js";
 
-export class BuildingFactory extends EntityFactory {
-    static #movements = new MovementCapability(0, 3600, 360, MovementType.Unobstructed)
-    /** @type {typeof AbstractProjectile} */
-    projectile
-    /** @type {typeof AbstractBuilding | null} */
-    upgradesTo
-    /** @type {number} */
-    attackDelay
-    /** @type {number} */
-    attackRange
-    /** @type {number} */
-    crystalOnBuild
+/**
+ *
+ * @param {string} name the tower name
+ * @param {string} projectileName the name of the projectile used by the tower
+ * @param {{cost: number, crystal: number, projectile: {speed: number, damage: number, range: number, cooldown: number}}[]} levels
+ */
+export function buildingFactory(name, projectileName, levels) {
+    /**
+     * @param {string} name the tower name
+     * @param {string} projectileName the name of the projectile used by the tower
+     * @param {{cost: number, crystal: number, projectile: {speed: number, damage: number, range: number, cooldown: number}}[]} levels
+     * @param {number} currentLevel
+     */
+    function innerFactory(name, projectileName, levels, currentLevel) {
+        if (! levels[currentLevel]) {
+            return null
+        }
 
-    constructor() {
-        super()
-        this.projectile = AbstractProjectile
-        this.upgradesTo = null
-        this.attackDelay = 0
-        this.attackRange = 0
-        this.crystalOnBuild = 0
-        this.setMovements(BuildingFactory.#movements)
+        const levelName = currentLevel + 1
+
+        const upgradesTo = innerFactory(name, projectileName, levels, currentLevel + 1)
+        const projectile = projectileFactory(projectileName + levelName, levels[currentLevel].projectile.speed, levels[currentLevel].projectile.damage, levels[currentLevel].projectile.range, levels[currentLevel].projectile.cooldown)
+
+        return class extends AbstractBuilding {
+            /** @return {MovementCapability} */
+            static get movements() { return AbstractEntity.movements }
+            static get name() { return name + levelName }
+            static get cost() { return levels[currentLevel].cost }
+            static get crystalOnBuild() { return levels[currentLevel].crystal }
+            /** @return {typeof AbstractBuilding | null} */
+            static get upgradesTo() { return upgradesTo }
+            static get projectile() {return projectile}
+
+            constructor(position) {
+                super(position)
+            }
+        }
     }
-
-    /**
-     * @param {Object} value
-     * @return {this}
-     */
-    setProjectile(value) { this.projectile = value; return this }
-    /**
-     * @param {Object} value
-     * @return {this}
-     */
-    setUpgradesTo(value) { this.upgradesTo = value; return this }
-    /**
-     * @param {number} value
-     * @return {this}
-     */
-    setAttackDelay(value) { this.attackDelay = value; return this }
-    /**
-     * @param {number} value
-     * @return {this}
-     */
-    setAttackRange(value) { this.attackRange = value; return this }
-    /**
-     * @param {number} value
-     * @return {this}
-     */
-    setCrystalOnBuild(value) { this.crystalOnBuild = value; return this }
+    return innerFactory(name, projectileName, levels, 0);
 }
 
 export default class AbstractBuilding extends AbstractEntity {
     #attackCooldown = 0
-    #projectile
-    #upgradesTo
-    #attackDelay
-    #attackRange
-    #crystalOnBuild
 
     /**
-     * @param {BuildingFactory} factory
+     * @param {Position} position
      */
-    constructor(factory) {
-        super(factory);
-
-        if (! ((new factory.projectile(new Position(0, 0))) instanceof AbstractProjectile)) {
-            console.error(factory.projectile)
-            throw "Object is not a valid projectile"
-        }
-        if (factory.upgradesTo !== null && ! ((new factory.upgradesTo()) instanceof AbstractBuilding)) {
-            console.error(factory.upgradesTo)
-            throw "Object is not a valid building"
-        }
-        this.#projectile = factory.projectile
-        this.#upgradesTo = factory.upgradesTo
-        this.#attackDelay = factory.attackDelay
-        this.#attackRange = factory.attackRange
-        this.#crystalOnBuild = factory.crystalOnBuild
+    constructor(position) {
+        super(position);
     }
 
-    /**
-     * @return {BuildingFactory}
-     */
-    static get factory() {
-        return new BuildingFactory()
-    }
-
-    static get cost() { return Infinity }
-    get crystalOnBuild() { return this.#crystalOnBuild }
+    get cost() { return this.__proto__.constructor.cost }
+    get crystalOnBuild() { return this.__proto__.constructor.crystalOnBuild }
     /** @return {typeof AbstractBuilding | null} */
-    get upgradesTo() { return this.#upgradesTo }
+    get upgradesTo() { return this.__proto__.constructor.upgradesTo }
+    /** @return {typeof AbstractProjectile} */
+    get projectile() { return this.__proto__.constructor.projectile }
 
-    get attackRange() { return this.#attackRange }
 
     act(frameDuration, currentTime) {
         switch (this.animationDetails.name) {
             case "idle": {
                 this.#attackCooldown = this.#attackCooldown - frameDuration
 
-                const targets = globalThis.game.getEntitiesCloseTo(this.position, this.#attackRange, AbstractUnit)
+                const targets = globalThis.game.getEntitiesCloseTo(this.position, this.projectile.range, AbstractUnit)
                 if (targets.length !== 0) {
                     this.position.rotation = targets[0].position.angleTo(this.position)
 
                     if (this.#attackCooldown <= 0) {
-                        this.#attackCooldown += this.#attackDelay
+                        this.#attackCooldown += this.projectile.cooldown
 
                         targets.forEach(entity => {
-                            const missile = new this.#projectile(new Position(this.position.x, this.position.y - 1));
+                            const missile = new this.projectile(new Position(this.position.x, this.position.y - 1));
                             missile.target = entity
                             globalThis.game.addEntity(missile)
                         })
