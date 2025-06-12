@@ -16,6 +16,7 @@ export const TextureType = {
  */
 
 const DEFAULTS = {
+    partial: false,
     extension: "png",
     angleBetweenRotations: 90,
     isSymmetric: true,
@@ -36,7 +37,7 @@ const DEFAULTS = {
                     timings: [1000],
                     fixedStart: true
                 },
-                sell: {
+                sold: {
                     timings: [1000],
                     fixedStart: true
                 }
@@ -69,6 +70,8 @@ const DEFAULTS = {
 class TextureMeta {
     /** @type {TextureMeta | null} */
     #parent
+    /** @type {boolean} */
+    #partial
     /** @type {string} */
     #extension
     /** @type {number} */
@@ -89,6 +92,7 @@ class TextureMeta {
     #animations
 
     constructor(parent, {
+        partial,
         extension,
         angleBetweenRotations, isSymmetric,
         textureType,
@@ -98,6 +102,7 @@ class TextureMeta {
     }) {
         this.#parent = parent
 
+        this.#partial = partial
         this.#extension = extension
         this.#angleBetweenRotations = angleBetweenRotations
         this.#isSymmetric = isSymmetric
@@ -109,6 +114,8 @@ class TextureMeta {
         this.#animations = animations
     }
 
+    /** @return {boolean} */
+    get partial() { return this.#partial ?? this.#parent.partial }
     /** @return {string} */
     get extension() { return this.#extension ?? this.#parent.extension }
     /** @return {number} */
@@ -127,6 +134,8 @@ class TextureMeta {
     get worldHeight() { return this.#worldHeight ?? this.#parent.worldHeight }
     /** @return {Record<string, AnimationMeta>} */
     get animations() { return this.#animations ?? this.#parent.animations }
+
+
 }
 
 const textureListLeaf = Symbol()
@@ -257,19 +266,38 @@ export default class TexturePack {
                             localDefault = localDefault?.[part]
                             localPackMeta = localPackMeta?.[part]
                         }
+                        const textureMeta = new TextureMeta(localMeta, {...localDefault, ...localPackMeta})
+
                         const texturePromise = isWebkitDirectory ?
-                            Texture.forWebkitDirectory(files, path, this.#name, new TextureMeta(localMeta, {...localDefault, ...localPackMeta})) :
-                            Texture.for(path, this.#name, new TextureMeta(localMeta, {...localDefault, ...localPackMeta}))
+                            Texture.forWebkitDirectory(files, path, this.#name, textureMeta) :
+                            Texture.for(path, this.#name, textureMeta)
+
                         if (path.join("/") === "frame") {
                             const texture = await texturePromise
+                                .catch(() => globalThis.options.defaultTexturePack.getTexture(path.join("/"))
+                                    .then(defaultTexture => Texture.for(path, globalThis.options.defaultTexturePack.name, defaultTexture.meta))
+                                    .then(texture => textures[path.join("/")] = texture)
+                                )
+                                // .catch(() => globalThis.options.defaultTexturePack.getTexture(path.join("/")))
+                                // .then(defaultTexture => Texture.for(path, globalThis.options.defaultTexturePack.name, defaultTexture.meta))
+                                // .then(texture => textures[path.join("/")] = texture)
                             textures[path.join("/")] = texture
                             promises.push(texture.makeFramed(textures.frame, this.#name))
                         } else {
-                            promises.push(
-                                texturePromise
-                                    .then(texture => textures[path.join("/")] = texture )
-                                    .then(texture => texture.makeFramed(textures.frame, this.#name) )
-                            )
+                            let fullPromise = texturePromise
+                                .then(texture => textures[path.join("/")] = texture )
+
+                            if (textureMeta.partial) {
+                                fullPromise = fullPromise
+                                    .catch(() => globalThis.options.defaultTexturePack.getTexture(path.join("/"))
+                                        .then(defaultTexture => Texture.for(path, globalThis.options.defaultTexturePack.name, defaultTexture.meta))
+                                        .then(texture => textures[path.join("/")] = texture)
+                                    )
+                            }
+
+                            fullPromise = fullPromise.then(texture => texture.makeFramed(textures.frame, this.#name) )
+
+                            promises.push(fullPromise)
                         }
                     } else {
                         let localDefault = DEFAULTS
@@ -382,6 +410,8 @@ class Texture {
         this.#meta = Object.freeze(meta)
     }
 
+    get meta() { return this.#meta }
+
     /**
      * @param {number | Symbol} orientation
      * @return {HTMLImageElement}
@@ -440,9 +470,14 @@ class Texture {
     get worldWidth() { return this.#meta.worldWidth }
     get worldHeight() { return this.#meta.worldHeight; }
 
+    /**
+     * @param {Texture} frame
+     * @param {string} texturePackName
+     * @returns {Promise<this>}
+     */
     makeFramed(frame, texturePackName) {
         if (this.#imageElements.has(Texture.#framedMarker)) {
-            return new Promise(() => {})
+            return new Promise(() => this)
         }
 
         // the size of one cell
@@ -503,53 +538,7 @@ class Texture {
         TexturePack.getHtmlTextureContainerFor(texturePackName).appendChild(framedImage)
         this.#imageElements.set(Texture.#framedMarker, framedImage)
         return new Promise((resolve, reject) => {
-            framedImage.onload = resolve
-            framedImage.onerror = reject
-        })
-    }
-
-    /**
-     * @param {Texture} frame
-     * @param {string} texturePackName
-     * @return {Promise<>}
-     */
-    makeFramedLegacy(frame, texturePackName) {
-        if (this.#imageElements.has(Texture.#framedMarker)) {
-            return new Promise(() => {})
-        }
-
-        // get the canvas
-        const canvas = document.getElementById("utilsCanvas")
-        canvas.width = this.#meta.pixelWidth / this.#meta.worldWidth
-        canvas.height = this.#meta.pixelHeight / this.#meta.worldHeight
-
-        const marginLeft = (1 - Texture.#framedScale) / 2
-        const marginTop = marginLeft // this.#meta.worldHeight === 1 ? marginLeft : 0
-        const scale = Texture.#framedScale
-
-        const context = canvas.getContext("2d")
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        if (this.#meta.textureType === TextureType.IMAGE) {
-            context.drawImage(this.getBase(), canvas.width * marginLeft, canvas.height * marginTop, canvas.width * scale, canvas.height * scale)
-        }
-        if (this.#meta.textureType === TextureType.BASE_ONLY || this.#meta.textureType === TextureType.ROTATION_AND_BASE) {
-            context.drawImage(this.getBase(), 0, 0, this.#meta.pixelWidth / this.#meta.worldWidth, this.#meta.pixelHeight, canvas.width * marginLeft, canvas.height * marginTop, canvas.width * scale, this.#meta.pixelHeight * scale)
-        }
-        if (this.#meta.textureType === TextureType.ROTATION_ONLY || this.#meta.textureType === TextureType.ROTATION_AND_BASE) {
-            const framedRotation = Math.ceil(TexturePack.framedRotation / this.#meta.angleBetweenRotations) * this.#meta.angleBetweenRotations
-            context.drawImage(this.getForOrientation(framedRotation), 0, 0, this.#meta.pixelWidth / this.#meta.worldWidth, this.#meta.pixelHeight, canvas.width * marginLeft, canvas.height * marginTop, canvas.width * scale, this.#meta.pixelHeight * scale)
-        }
-        context.drawImage(frame.getBase(), 0, 0, canvas.width, canvas.height)
-
-        // create a new image element with the rotated image
-        const framedImage = document.createElement("img")
-        framedImage.classList.add("framed")
-        framedImage.src = canvas.toDataURL("image/png")
-        framedImage.style.order = this.#id.toString(10)
-        TexturePack.getHtmlTextureContainerFor(texturePackName).appendChild(framedImage)
-        this.#imageElements.set(Texture.#framedMarker, framedImage)
-        return new Promise((resolve, reject) => {
-            framedImage.onload = resolve
+            framedImage.onload = () => resolve(this)
             framedImage.onerror = reject
         })
     }
