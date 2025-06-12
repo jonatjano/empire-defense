@@ -84,7 +84,7 @@ These are the expected animation for each category of texture :
 - `maps` : `idle`
 - `icons` : `idle`, `hover`(optional) and `click`(optional)
 - `entities/units` : `walk` and `dying`(optional)
-- `entities/buildings` : `idle`, `shouting`(optional), `building`(optional, not used for level 1) and `sold`(optional)
+- `entities/buildings` : `idle`, `shooting`(optional), `building`(optional, not used for level 1, total duration must be 1 second) and `sold`(optional)
 - `entities/projectiles` : `idle` and `hit`(optional)
 - `vfx`: `spawnArrow` and `targetArrow`
 
