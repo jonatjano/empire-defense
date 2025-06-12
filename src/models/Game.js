@@ -111,8 +111,16 @@ export default class Game {
     /** @type {{tower: AbstractBuilding, isGhost: boolean, isValid: boolean} | null} */
     set selectedEntity(value) {
         this.#selectedEntity = value
+        const upgradeButton = document.querySelector("#upgradeTower")
+        const sellButton = document.querySelector("#sellTower")
+
         document.querySelector("#towerMenu").classList.toggle("hidden", value?.isGhost ?? true)
-        document.querySelector("#sellTower").onclick = value ? this.#sellTower.bind(this, value.tower) : undefined
+        upgradeButton.classList.toggle("hidden", !value?.tower.upgradesTo)
+
+        sellButton.onclick = value ? this.#sellTower.bind(this, value.tower) : undefined
+        if (value?.tower.upgradesTo) {
+            upgradeButton.onclick = value ? this.#upgradeTower.bind(this, value.tower) : undefined
+        }
     }
 
     #sellTower(tower) {
@@ -121,9 +129,19 @@ export default class Game {
             // if we couldn't set the animation, we need to delete the tower ourselves as it won't delete itself
             if (! success) { this.deleteEntity(tower) }
         })
-        this.money = this.money + 2 // TODO get correct amount of money on sell according to tower type
+        this.money = this.money + tower.sellPrice
         if (this.#selectedEntity.tower === tower) {
             this.selectedEntity = null
+        }
+    }
+
+    #upgradeTower(tower) {
+        if (this.money >= tower.upgradesTo.cost) {
+            const newTower = new tower.upgradesTo(tower.position)
+            this.deleteEntity(tower)
+            this.addEntity(newTower)
+            this.money = this.money - newTower.cost
+            this.selectedEntity = {tower: newTower, isValid: true, isGhost: false}
         }
     }
 

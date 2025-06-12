@@ -20,7 +20,7 @@ button:has(> img:only-child) {
     position: absolute;
     width: var(--tower-width);
     height: var(--tower-height);
-    background: red;
+    background: transparent;
 
     max-width: var(--max-size);
     max-height: var(--max-size);
