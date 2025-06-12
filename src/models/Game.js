@@ -8,8 +8,9 @@ import AbstractUnit from "./entities/AbstractUnit.js";
 import TexturePack from "../utils/TexturePack.js";
 import Vfx from "./entities/Vfx.js";
 
-let lastFrameTiming
-let firstFrameTiming = undefined;
+let realLastFrameTiming
+let frameTimingWithSpeedFactor
+let firstFrameTiming = undefined
 let totalFrameCounter = 0
 let frameCounterSinceLastPause = 0
 
@@ -125,7 +126,7 @@ export default class Game {
 
     #sellTower(tower) {
         // TODO selling crystal loss
-        tower.setAnimation("sell", lastFrameTiming).then(success => {
+        tower.setAnimation("sell", frameTimingWithSpeedFactor).then(success => {
             // if we couldn't set the animation, we need to delete the tower ourselves as it won't delete itself
             if (! success) { this.deleteEntity(tower) }
         })
@@ -155,18 +156,19 @@ export default class Game {
 
     pause() {
         this.#isPaused = true
-        lastFrameTiming = undefined
+        realLastFrameTiming = undefined
     }
 
     step(frameTiming) {
-        if (lastFrameTiming === undefined) {
-            lastFrameTiming = frameTiming
+        if (realLastFrameTiming === undefined) {
+            realLastFrameTiming = frameTiming
+            frameTimingWithSpeedFactor = realLastFrameTiming
             firstFrameTiming = frameTiming
             frameCounterSinceLastPause = 0
             return
         }
-        const frameDuration = frameTiming - lastFrameTiming
-        lastFrameTiming = frameTiming
+        const frameDuration = frameTiming - realLastFrameTiming
+        realLastFrameTiming = frameTiming
         frameCounterSinceLastPause++
 
         document.getElementById("debugTime").textContent = frameTiming
@@ -176,12 +178,13 @@ export default class Game {
         document.getElementById("entityCount").textContent = this.#entities.length.toString()
 
         const durationToSend = frameDuration * globalThis.options.speed
-        this.#spawnNextUnits(durationToSend)
+        frameTimingWithSpeedFactor += durationToSend
+        this.#spawnNextUnits(durationToSend, frameTimingWithSpeedFactor)
         this.#entities.forEach((entity) => {
-            entity.act(durationToSend, lastFrameTiming)
+            entity.act(durationToSend, frameTimingWithSpeedFactor)
         })
 
-        this.#eventListener(frameTiming)
+        this.#eventListener(frameTimingWithSpeedFactor)
     }
 
     play(frameTiming) {
@@ -318,20 +321,22 @@ export default class Game {
         this.waveNumber = this.waveNumber + 1
 
         this.#map.spawns.forEach(pos => {
-            this.addEntity(new Vfx(pos, lastFrameTiming, 5000, "spawnArrow"))
+            this.addEntity(new Vfx(pos, frameTimingWithSpeedFactor, 5000, "spawnArrow"))
         })
-        this.#map.targets.forEach(pos => {
-            this.addEntity(new Vfx(pos, lastFrameTiming, 5000, "targetArrow"))
+        const [firstTarget, ...otherTargets] = this.#map.targets
+        otherTargets.forEach(pos => {
+            this.addEntity(new Vfx(pos, frameTimingWithSpeedFactor, 5000, "targetArrow"))
         })
-
-        setTimeout(() => {
+        // separate the first target so we can use the Vfx inner timing to launch the wave
+        this.addEntity(new Vfx(firstTarget, frameTimingWithSpeedFactor, 5000, "targetArrow", () => {
             this.#unitsToSpawn = this.map.waves[this.waveNumber - 1].map(spawnLists => spawnLists.map(spawn => spawn))
-        }, 5000)
+        }))
+
         console.log(this.waveNumber)
         console.log(this.map.waves)
     }
 
-    #spawnNextUnits(frameDuration) {
+    #spawnNextUnits(frameDuration, frameTiming) {
         this.#spawnCooldown = this.#spawnCooldown - frameDuration
         const callback = this.#waveDeathCallback.bind(this)
 
@@ -347,7 +352,7 @@ export default class Game {
                         const unit = new unitType(spawnPosition, callback, this.waveNumber)
                         this.addEntity(unit)
                         if (Math.random() < 0.5) {
-                            unit.setAnimation("walk", lastFrameTiming)
+                            unit.setAnimation("walk", frameTiming)
                         }
                     }
                 }
