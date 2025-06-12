@@ -79,6 +79,14 @@ You can however remove animations, the game will simply not play them
 | timings       | An array containing the time of each frame in millisecond                                                                 | number[]       |
 | fixedStart    | Whether the animation frame is decided based on the global time (`true`) or the time when the animation was set (`false`) | boolean        |
 
+##### animation expectations
+These are the expected animation for each category of texture :
+- `maps` : `idle`
+- `icons` : `idle`, `hover`(optional) and `click`(optional)
+- `entities/units` : `walk` and `dying`(optional)
+- `entities/buildings` : `idle`, `shooting`(optional), `building`(optional, not used for level 1, total duration must be 1 second) and `sold`(optional)
+- `entities/projectiles` : `idle` and `hit`(optional)
+- `vfx`: `spawnArrow` and `targetArrow`
 
 ### Default values :
 These are the values used when you do not define them in your `pack.json`, defining a value will override it.

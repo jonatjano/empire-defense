@@ -126,7 +126,7 @@ export default class Game {
 
     #sellTower(tower) {
         // TODO selling crystal loss
-        tower.setAnimation("sell", frameTimingWithSpeedFactor).then(success => {
+        tower.setAnimation("sold", frameTimingWithSpeedFactor).then(success => {
             // if we couldn't set the animation, we need to delete the tower ourselves as it won't delete itself
             if (! success) { this.deleteEntity(tower) }
         })

@@ -136,27 +136,6 @@ const textureList = {
 
     vfx: textureListLeaf,
 
-    // {buildings: {archer: textureListLeaf, ...}, ...}
-    // entities: Object.values(entities).reduce(
-    //     (acc, klass) => {
-    //         switch (klass.__proto__) {
-    //             case AbstractBuilding: {
-    //                 acc.buildings[klass.name.toLowerCase()] = textureListLeaf
-    //                 break
-    //             }
-    //             case AbstractProjectile: {
-    //                 acc.projectiles[klass.name.toLowerCase()] = textureListLeaf
-    //                 break
-    //             }
-    //             case AbstractUnit: {
-    //                 acc.units[klass.name.toLowerCase()] = textureListLeaf
-    //                 break
-    //             }
-    //         }
-    //         return acc
-    //     },
-    //     {buildings: {}, projectiles: {}, units: {}}
-    // ),
     entities: (function rec(object) {
         if (object === null) { return [] }
         switch (object.__proto__) {
@@ -194,6 +173,7 @@ const textureList = {
         },
         {buildings: {}, projectiles: {}, units: {}}
     ),
+
     icons: {
         money: textureListLeaf,
         life: textureListLeaf,
