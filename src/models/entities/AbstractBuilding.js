@@ -62,27 +62,40 @@ export default class AbstractBuilding extends AbstractEntity {
     get projectile() { return this.__proto__.constructor.projectile }
 
 
-    act(frameDuration) {
-        this.#attackCooldown = this.#attackCooldown - frameDuration
+    act(frameDuration, currentTime) {
+        switch (this.animationDetails.name) {
+            case "idle": {
+                this.#attackCooldown = this.#attackCooldown - frameDuration
 
-        const targets = globalThis.game.getEntitiesCloseTo(this.position, this.projectile.range, AbstractUnit)
-        if (targets.length !== 0) {
-            this.position.rotation = targets[0].position.angleTo(this.position)
+                const targets = globalThis.game.getEntitiesCloseTo(this.position, this.projectile.range, AbstractUnit)
+                if (targets.length !== 0) {
+                    this.position.rotation = targets[0].position.angleTo(this.position)
 
-            if (this.#attackCooldown <= 0) {
-                this.#attackCooldown += this.projectile.cooldown
+                    if (this.#attackCooldown <= 0) {
+                        this.#attackCooldown += this.projectile.cooldown
 
-                targets.forEach(entity => {
-                    const missile = new this.projectile(new Position(this.position.x, this.position.y - 1));
-                    missile.target = entity
-                    globalThis.game.addEntity(missile)
-                })
+                        targets.forEach(entity => {
+                            const missile = new this.projectile(new Position(this.position.x, this.position.y - 1));
+                            missile.target = entity
+                            globalThis.game.addEntity(missile)
+                        })
+                    }
+                } else {
+                    if (this.#attackCooldown < 0) {
+                        this.#attackCooldown = 0
+                    }
+                }
+                break
             }
-        } else {
-            if (this.#attackCooldown < 0) {
-                this.#attackCooldown = 0
+            case "sell": {
+                if (currentTime > this.animationDetails.end) {
+                    globalThis.game.deleteEntity(this)
+                }
+                break
             }
         }
+
+
     }
 
     get texture() { return globalThis.options.texturePack.getTexture(`entities/buildings/${this.__proto__.constructor.name.toLowerCase()}`) }

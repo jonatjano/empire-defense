@@ -115,7 +115,6 @@ class Options {
         this.#speed = this.#speeds[newIndex]
         const buttonImage = document.querySelector("#speed img")
         buttonImage.dataset.texture = `icons/speed${this.#speed}`
-        this.texturePack.changeElementTexture(buttonImage)
     }
 
     get speed() { return this.#speed }
@@ -137,9 +136,9 @@ class Options {
 
     /** @param {boolean} value */
     set unlimitedMoney(value) {
-        console.log("\n\n\n\n\nggresdgrdgrd\n\n\n\n\n", value)
         this.#unlimitedMoney = value
         if (value) {
+            console.log("\n\n\n\n\nunlimited money activated\n\n\n\n\n")
             document.querySelector("#moneyLabel").textContent = "∞"
         }
     }
@@ -168,8 +167,7 @@ class Options {
         }
         if (texturePack) {
             this.#texturePack = texturePack
-            this.#texturePack.changeDocumentTextures()
-            console.log(texturePack)
+            this.#texturePack.updateDocumentTextures()
         }
     }
 

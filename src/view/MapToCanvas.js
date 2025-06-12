@@ -7,8 +7,10 @@ import {TextureType} from "../utils/TexturePack.js";
 import GameMap from "../models/GameMap.js";
 import Game from "../models/Game.js";
 import AbstractProjectile from "../models/entities/AbstractProjectile.js";
+import Vfx from "../models/entities/Vfx.js";
 
 const TILE_MARGIN = -1
+const ALPHA_VALUE = 0.4
 
 const HP_BAR_STYLE = Object.freeze({
     get WIDTH() { return 0.7 * options.zoom },
@@ -67,10 +69,10 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
 
     // print map base
     await globalThis.options.texturePack.getTexture(`maps/${map.name}`).then(mapTexture => {
+        let mapAnimationFramePosition = mapTexture.getAnimationFramePosition("idle", 0, frameTiming)
         ctx.drawImage(
             mapTexture.getBase(),
-            0, mapTexture.pixelHeight * (Math.floor(frameTiming / mapTexture.animationFrameDuration) % mapTexture.animationFrameCountForBase),
-            mapTexture.pixelWidth, mapTexture.pixelHeight,
+            mapAnimationFramePosition.sx, mapAnimationFramePosition.sy, mapAnimationFramePosition.sw, mapAnimationFramePosition.sh,
             visibleLeftMargin * options.zoom, visibleTopMargin * options.zoom, mapWidth * options.zoom, mapHeight * options.zoom,
         )
     })
@@ -84,7 +86,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
             ctx.fillRect((leftMargin + x) * options.zoom - (gridWeight / 2), topMargin * options.zoom - (gridWeight / 2), gridWeight, map.height * options.zoom + gridWeight);
         }
     } else {
-        if (game.ghostEntity) {
+        if (game.selectedEntity?.isGhost) {
             ctx.fillStyle = "white"
             // draw the grid to the size of the visible map
             for (let y = 0; y <= mapHeight; y++) {
@@ -127,20 +129,20 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
      * @type {AbstractEntity[]}
      */
     const entities = [
+        ...(game.selectedEntity?.isGhost ? [game.selectedEntity.tower] : []),
         ...game.getEntities()
             .sort((a, b) => {
-                if (a instanceof AbstractProjectile || a instanceof FloatingText) { return Infinity }
-                if  (b instanceof AbstractProjectile || b instanceof FloatingText) { return -Infinity }
+                if (a === game.selectedEntity?.tower || a instanceof AbstractProjectile || a instanceof FloatingText) { return Infinity }
+                if  (b === game.selectedEntity?.tower || b instanceof AbstractProjectile || b instanceof FloatingText) { return -Infinity }
                 return (a.position.y + movementTypeDrawPriority(a.movements.movementType)) -
                     (b.position.y + movementTypeDrawPriority(b.movements.movementType))
-            }),
-        ...(game.ghostEntity ? [game.ghostEntity.tower] : [])
+            })
     ]
 
     await Promise.all(
-        entities.map(entity =>
-            entity instanceof FloatingText ?
-                new Promise(resolve => {
+        entities.map(entity => {
+            if (entity instanceof FloatingText) {
+                return new Promise(resolve => {
                     ctx.fillStyle = entity.color
                     ctx.textAlign = "center"
                     ctx.textBaseline = "middle"
@@ -154,26 +156,76 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                     ctx.fillStyle = "black"
                     resolve()
                 })
-                :
-                entity.texture.then(entityTexture => {
+            }
+            else if (entity instanceof Vfx) {
+                return entity.texture.then(async entityTexture => {
+                    const drawImagePosition = {
+                        dx: (leftMargin + entity.position.x - 0.5) * options.zoom,
+                        dy: (topMargin + entity.position.y - 0.5) * options.zoom,
+                        dw: entityTexture.worldWidth * options.zoom,
+                        dh: entityTexture.worldHeight * options.zoom,
+                    }
+                    const animationFramePosition = await entity.getAnimationFramePosition(frameTiming)
+
+                    ctx.drawImage(
+                        entityTexture.getBase(),
+                        animationFramePosition.sx, animationFramePosition.sy, animationFramePosition.sw, animationFramePosition.sh,
+                        drawImagePosition.dx, drawImagePosition.dy, drawImagePosition.dw, drawImagePosition.dh
+                    )
+                })
+            }
+            else {
+                return entity.texture.then(async entityTexture => {
                     const textureHorizontalSpan = entityTexture.worldWidth
                     const textureLeftMargin = -textureHorizontalSpan / 2
 
                     const textureVerticalSpan = entityTexture.worldHeight
                     const textureTopMargin = -textureVerticalSpan + 0.5
 
-                    const drawImageArgs = {
+                    const drawImagePosition = {
                         dx: (leftMargin + entity.position.x + textureLeftMargin) * options.zoom,
                         dy: (topMargin + entity.position.y + textureTopMargin) * options.zoom,
                         dw: entityTexture.worldWidth * options.zoom,
                         dh: entityTexture.worldHeight * options.zoom,
-                        alpha: entity === game.ghostEntity?.tower ? 0.5 : 1
+                        alpha: entity === game.selectedEntity?.tower && game.selectedEntity?.isGhost ? ALPHA_VALUE : 1
                     }
+                    const animationFramePosition = await entity.getAnimationFramePosition(frameTiming)
 
-                    ctx.globalAlpha = drawImageArgs.alpha
+                    if (entity === game.selectedEntity?.tower) {
+                        ctx.globalAlpha = ALPHA_VALUE
+                        const ellipse = new Path2D()
+                        ellipse.ellipse(
+                            drawImagePosition.dx + (entityTexture.worldWidth - 0.5) * options.zoom,
+                            drawImagePosition.dy + (entityTexture.worldHeight - 0.5) * options.zoom,
+                            options.zoom * entity.projectile.range, options.zoom * entity.projectile.range,
+                            0, 0, 2 * Math.PI
+                        )
+
+                        const previousStyle = ctx.fillStyle
+                        ctx.fillStyle = game.selectedEntity.isValid ? "white" : "red";
+                        ctx.fill(ellipse);
+                        ctx.fillStyle = previousStyle
+
+                        const towerMenu = document.querySelector("#towerMenu")
+
+                        const canvasRect = canvas.getBoundingClientRect();
+                        const xFactor = canvasRect.width / canvas.width;
+                        const yFactor = canvasRect.height / canvas.height;
+
+                        const xPos = (leftMargin + game.selectedEntity.tower.position.x - 0.5) * globalThis.options.zoom * xFactor
+                        const yPos = (topMargin + game.selectedEntity.tower.position.y - 1.5) * globalThis.options.zoom * yFactor
+                        const maxHeight = entityTexture.worldHeight * globalThis.options.zoom * yFactor
+                        const maxWidth = entityTexture.worldWidth * globalThis.options.zoom * xFactor
+                        towerMenu.style = `--tower-x: ${xPos}px; --tower-y: ${yPos}px; --tower-height: ${maxHeight}px; --tower-width: ${maxWidth}px;`
+                    }
+                    ctx.globalAlpha = drawImagePosition.alpha
 
                     if (entityTexture.textureType !== TextureType.ROTATION_ONLY) {
-                        ctx.drawImage(entityTexture.getBase(), drawImageArgs.dx, drawImageArgs.dy, drawImageArgs.dw, drawImageArgs.dh)
+                        ctx.drawImage(
+                            entityTexture.getBase(),
+                            animationFramePosition.sx, animationFramePosition.sy, animationFramePosition.sw, animationFramePosition.sh,
+                            drawImagePosition.dx, drawImagePosition.dy, drawImagePosition.dw, drawImagePosition.dh
+                        )
                     }
 
                     if (entityTexture.textureType !== TextureType.BASE_ONLY) {
@@ -183,50 +235,35 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
 
                         ctx.drawImage(
                             entityTexture.getForOrientation(angle),
-                            0, entityTexture.pixelHeight * (Math.floor(frameTiming / entityTexture.animationFrameDuration) % entityTexture.animationFrameCount),
-                            entityTexture.pixelWidth, entityTexture.pixelHeight,
-                            drawImageArgs.dx, drawImageArgs.dy, drawImageArgs.dw, drawImageArgs.dh,
+                            animationFramePosition.sx, animationFramePosition.sy, animationFramePosition.sw, animationFramePosition.sh,
+                            drawImagePosition.dx, drawImagePosition.dy, drawImagePosition.dw, drawImagePosition.dh,
                         )
                     }
-
-                    if (entity === game.ghostEntity?.tower) {
-                        const ellipse = new Path2D()
-                        ellipse.ellipse(
-                            drawImageArgs.dx + (entityTexture.worldWidth - 0.5) * options.zoom,
-                            drawImageArgs.dy + (entityTexture.worldHeight - 0.5) * options.zoom,
-                            options.zoom * entity.projectile.range, options.zoom * entity.projectile.range,
-                            0, 0, 2 * Math.PI
-                        )
-
-                        const previousStyle = ctx.fillStyle
-                        ctx.fillStyle = game.ghostEntity.isValid ? "royalBlue" : "red";
-                        ctx.fill(ellipse);
-                        ctx.fillStyle = previousStyle
-                    }
+                    ctx.globalAlpha = 1
 
                     if (entity.hp !== entity.maxHp) {
                         // HP bar
                         // black border
                         ctx.fillStyle = "black"
                         ctx.fillRect(
-                            drawImageArgs.dx + (options.zoom - HP_BAR_STYLE.WIDTH) / 2,
-                            drawImageArgs.dy - (HP_BAR_STYLE.MARGIN + HP_BAR_STYLE.HEIGHT + 2 * HP_BAR_STYLE.BORDER),
+                            drawImagePosition.dx + (options.zoom - HP_BAR_STYLE.WIDTH) / 2,
+                            drawImagePosition.dy - (HP_BAR_STYLE.MARGIN + HP_BAR_STYLE.HEIGHT + 2 * HP_BAR_STYLE.BORDER),
                             HP_BAR_STYLE.WIDTH + (entityTexture.worldWidth - 1) * options.zoom + 2 * HP_BAR_STYLE.BORDER,
                             HP_BAR_STYLE.HEIGHT + 2 * HP_BAR_STYLE.BORDER
                         )
                         // white background
                         ctx.fillStyle = "white"
                         ctx.fillRect(
-                            drawImageArgs.dx + (options.zoom - HP_BAR_STYLE.WIDTH) / 2 + HP_BAR_STYLE.BORDER,
-                            drawImageArgs.dy - (HP_BAR_STYLE.MARGIN + HP_BAR_STYLE.HEIGHT + HP_BAR_STYLE.BORDER),
+                            drawImagePosition.dx + (options.zoom - HP_BAR_STYLE.WIDTH) / 2 + HP_BAR_STYLE.BORDER,
+                            drawImagePosition.dy - (HP_BAR_STYLE.MARGIN + HP_BAR_STYLE.HEIGHT + HP_BAR_STYLE.BORDER),
                             HP_BAR_STYLE.WIDTH + (entityTexture.worldWidth - 1) * options.zoom,
                             HP_BAR_STYLE.HEIGHT
                         )
                         // content
                         ctx.fillStyle = "red"
                         ctx.fillRect(
-                            drawImageArgs.dx + (options.zoom - HP_BAR_STYLE.WIDTH) / 2 + HP_BAR_STYLE.BORDER,
-                            drawImageArgs.dy - (HP_BAR_STYLE.MARGIN + HP_BAR_STYLE.HEIGHT + HP_BAR_STYLE.BORDER),
+                            drawImagePosition.dx + (options.zoom - HP_BAR_STYLE.WIDTH) / 2 + HP_BAR_STYLE.BORDER,
+                            drawImagePosition.dy - (HP_BAR_STYLE.MARGIN + HP_BAR_STYLE.HEIGHT + HP_BAR_STYLE.BORDER),
                             (HP_BAR_STYLE.WIDTH + (entityTexture.worldWidth - 1) * options.zoom) * entity.hp / entity.maxHp,
                             HP_BAR_STYLE.HEIGHT
                         )
@@ -246,9 +283,9 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                             (topMargin + entity.position.y) * options.zoom + TILE_MARGIN + Math.sin(entity.position.rotation) * 1000 * entity.movements.movementSpeed * options.zoom, 5, 5
                         )
                     }
-                }
-            )
-        )
+                })
+            }
+        })
     )
 
     if (globalThis.options.debug) {

@@ -38,7 +38,7 @@ export default class AbstractProjectile extends AbstractEntity {
     get target() { return this.#target }
     set target(value) { this.#target = value }
 
-    act(frameDuration) {
+    act(frameDuration, currentTime) {
         const ATTACK_RANGE = this.range
         const ATTACK_DAMAGE = this.damage
 

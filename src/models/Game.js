@@ -6,6 +6,7 @@ import {TileOption} from "./GameMap.js";
 import entities from "./entities/entities.js";
 import AbstractUnit from "./entities/AbstractUnit.js";
 import TexturePack from "../utils/TexturePack.js";
+import Vfx from "./entities/Vfx.js";
 
 let lastFrameTiming
 let firstFrameTiming = undefined;
@@ -37,10 +38,10 @@ export default class Game {
     /** @type {number} */
     #spawnCooldown = 0
 
-    /** @type {{tower: AbstractBuilding, isValid: boolean} | null} */
-    #ghostEntity = null
+    /** @type {{tower: AbstractBuilding, isGhost: boolean, isValid: boolean} | null} */
+    #selectedEntity = null
     /** @type {typeof AbstractBuilding | null} */
-    #selectedTower = null
+    #selectedTowerType = null
 
     /**
      * @param {GameMap} map
@@ -54,15 +55,18 @@ export default class Game {
         this.money = 20
         this.crystal = 0
         this.waveNumber = 0
-        this.playableTowers = Object.values(entities).filter(entity => entity.prototype instanceof AbstractBuilding)
+        this.playableTowers = [entities.Archery, entities.Cannon]
     }
 
     addEntity(entity) {
         this.#entities.push(entity)
     }
 
-    deleteEntity(entity) {
+    deleteEntity(entity, skipPathFinder = false) {
         this.#entities = this.#entities.filter(ent => ent !== entity)
+        if (entity instanceof AbstractBuilding && !skipPathFinder) {
+            this.pathFinder.recalculateAll()
+        }
     }
 
     /**
@@ -88,22 +92,39 @@ export default class Game {
         towersContainer.append(
             ...playableTowers.map(towerType => {
                 const element = document.createElement("button")
-                element.innerHTML = `<img data-texture="framed/entities/buildings/${towerType.name}" src="" alt="${towerType.name}">`
+                element.innerHTML = `<img data-framed="true" data-texture="entities/buildings/${towerType.name}" src="" alt="${towerType.name}">`
                 element.onclick = () => {
-                    if (this.#selectedTower === towerType) {
-                         this.#selectedTower = null
+                    if (this.#selectedTowerType === towerType) {
+                         this.#selectedTowerType = null
                     } else {
-                        this.#selectedTower = towerType
+                        this.#selectedTowerType = towerType
                     }
                 }
                 return element
             })
         )
-        globalThis.options.texturePack.changeDocumentTextures()
     }
 
-    get ghostEntity() {
-        return this.#ghostEntity
+    get selectedEntity() {
+        return this.#selectedEntity
+    }
+    /** @type {{tower: AbstractBuilding, isGhost: boolean, isValid: boolean} | null} */
+    set selectedEntity(value) {
+        this.#selectedEntity = value
+        document.querySelector("#towerMenu").classList.toggle("hidden", value?.isGhost ?? true)
+        document.querySelector("#sellTower").onclick = value ? this.#sellTower.bind(this, value.tower) : undefined
+    }
+
+    #sellTower(tower) {
+        // TODO selling crystal loss
+        tower.setAnimation("sell", lastFrameTiming).then(success => {
+            // if we couldn't set the animation, we need to delete the tower ourselves as it won't delete itself
+            if (! success) { this.deleteEntity(tower) }
+        })
+        this.money = this.money + 2 // TODO get correct amount of money on sell according to tower type
+        if (this.#selectedEntity.tower === tower) {
+            this.selectedEntity = null
+        }
     }
 
     /**
@@ -139,7 +160,7 @@ export default class Game {
         const durationToSend = frameDuration * globalThis.options.speed
         this.#spawnNextUnits(durationToSend)
         this.#entities.forEach((entity) => {
-            entity.act(durationToSend)
+            entity.act(durationToSend, lastFrameTiming)
         })
 
         this.#eventListener(frameTiming)
@@ -188,7 +209,7 @@ export default class Game {
     moveOver(x, y) {
         if (this.#isPaused) { return }
 
-        const towerType = this.#selectedTower
+        const towerType = this.#selectedTowerType
         if (towerType === null) {
             return
         }
@@ -197,24 +218,24 @@ export default class Game {
         const towerPosition = new Position(cellPosition.x + 0.5, cellPosition.y + 0.5, TexturePack.framedRotation)
 
         if (! this.#map.positionIsInBoundaries(cellPosition) || ! TileOption.is(this.#map.getTileOption(cellPosition.x, cellPosition.y), TileOption.buildable)) {
-            this.#ghostEntity = null
+            this.selectedEntity = null
             return
         }
         if (this.getEntities(AbstractBuilding).some(building => building.position.equals(towerPosition))) {
-            this.#ghostEntity = null
+            this.selectedEntity = null
             return
         }
 
-        if (this.#ghostEntity?.tower.position.equals(towerPosition)) {
+        if (this.selectedEntity?.tower.position.equals(towerPosition)) {
             return
         }
 
         const tower = new towerType(cellPosition)
         this.addEntity(tower)
         const isValid = this.#pathFinder.recalculateAll()
-        this.deleteEntity(tower)
+        this.deleteEntity(tower, true)
         this.#pathFinder.revertAll()
-        this.#ghostEntity = { tower, isValid }
+        this.selectedEntity = { tower, isValid, isGhost: true }
     }
 
     /**
@@ -224,9 +245,20 @@ export default class Game {
     click(x, y) {
         if (this.#isPaused) { return }
 
-        const towerType = this.#selectedTower
-        // TODO if null but clicking on a tower then select that tower
+        const towerType = this.#selectedTowerType
         if (towerType === null) {
+            const cellPosition = new Position(Math.floor(x), Math.floor(y), 0)
+            const towerPosition = new Position(cellPosition.x + 0.5, cellPosition.y + 0.5, 0)
+
+            /** @type {AbstractBuilding | undefined} */
+            const tower = this.getEntities(AbstractBuilding).find(building => building.position.equals(towerPosition))
+
+            if (tower !== undefined) {
+                this.selectedEntity = {tower, isValid: true, isGhost: false}
+            } else {
+                this.selectedEntity = null
+            }
+
             return
         }
 
@@ -250,7 +282,7 @@ export default class Game {
         const tower = new towerType(towerPosition)
         this.addEntity(tower)
         if (! this.#pathFinder.recalculateAll()) {
-            this.deleteEntity(tower)
+            this.deleteEntity(tower, true)
             this.#pathFinder.revertAll()
             return
         }
@@ -259,15 +291,25 @@ export default class Game {
         if (this.waveNumber === 0) {
             this.#launchNextWave()
         }
-        this.#selectedTower = null
-        this.#ghostEntity = null
+        this.#selectedTowerType = null
+        this.selectedEntity = null
     }
 
     #launchNextWave() {
         console.log("new wave")
         this.waveNumber = this.waveNumber + 1
+
+        this.#map.spawns.forEach(pos => {
+            this.addEntity(new Vfx(pos, lastFrameTiming, 5000, "spawnArrow"))
+        })
+        this.#map.targets.forEach(pos => {
+            this.addEntity(new Vfx(pos, lastFrameTiming, 5000, "targetArrow"))
+        })
+
+        setTimeout(() => {
+            this.#unitsToSpawn = this.map.waves[this.waveNumber - 1].map(spawnLists => spawnLists.map(spawn => spawn))
+        }, 5000)
         console.log(this.waveNumber)
-        this.#unitsToSpawn = this.map.waves[this.waveNumber - 1].map(spawnLists => spawnLists.map(spawn => spawn))
         console.log(this.map.waves)
     }
 
@@ -284,7 +326,11 @@ export default class Game {
                     if (unitList.length !== 0) {
                         const unitType = unitList.shift()
                         console.log("spawning", unitType, spawnPosition)
-                        this.addEntity(new unitType(spawnPosition, callback, this.waveNumber))
+                        const unit = new unitType(spawnPosition, callback, this.waveNumber)
+                        this.addEntity(unit)
+                        if (Math.random() < 0.5) {
+                            unit.setAnimation("walk", lastFrameTiming)
+                        }
                     }
                 }
             }
@@ -298,7 +344,11 @@ export default class Game {
     #waveDeathCallback(unit) {
         this.money += unit.killReward
         this.crystal += unit.killCrystalReward
-        this.addEntity(new FloatingText(unit.killReward.toString(10), "gold", new Position(unit.position.x, unit.position.y - 0.5)))
+        this.addEntity(new FloatingText(
+            unit.killReward.toString(10),
+            "gold",
+            new Position(unit.position.x + Math.random() * 0.3, unit.position.y - 0.5 + Math.random() * 0.3)
+        ))
 
         if (this.#unitsToSpawn.every(spawnList => spawnList.length === 0) && this.getEntities(AbstractUnit).length === 0) {
             if (this.map.waves.length === this.waveNumber) {

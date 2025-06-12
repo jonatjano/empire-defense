@@ -11,17 +11,36 @@ export const TextureType = {
     BASE_ONLY: Symbol("BASE_ONLY")
 }
 
+/**
+ * @typedef {{timings: number[], fixedStart: boolean}} AnimationMeta
+ */
+
 const DEFAULTS = {
     extension: "png",
-    animationFrameDuration: 1000,
     angleBetweenRotations: 90,
     isSymmetric: true,
     textureType: TextureType.IMAGE,
     pixelSize: 128,
     worldSize: 1,
+    animations: {
+        idle: {
+            timings: [1000],
+            fixedStart: true
+        }
+    },
     entities: {
         textureType: TextureType.ROTATION_ONLY,
         buildings: {
+            animations: {
+                idle: {
+                    timings: [1000],
+                    fixedStart: true
+                },
+                sell: {
+                    timings: [1000],
+                    fixedStart: true
+                }
+            },
             textureType: TextureType.ROTATION_AND_BASE,
             pixelHeight: 256,
             worldHeight: 2,
@@ -31,6 +50,19 @@ const DEFAULTS = {
             angleBetweenRotations: 15,
             animationFrameDuration: 500
         }
+    },
+    vfx: {
+        pixelSize: 32,
+        animations: {
+            spawnArrow: {
+                timings: [1000, 1000],
+                fixedStart: true
+            },
+            targetArrow: {
+                timings: [1000, 1000],
+                fixedStart: true
+            }
+        }
     }
 }
 
@@ -39,8 +71,6 @@ class TextureMeta {
     #parent
     /** @type {string} */
     #extension
-    /** @type {number} */
-    #animationFrameDuration
     /** @type {number} */
     #angleBetweenRotations
     /** @type {boolean} */
@@ -55,12 +85,20 @@ class TextureMeta {
     #worldWidth
     /** @type {number} */
     #worldHeight
+    /** @type {Record<string, AnimationMeta>} */
+    #animations
 
-    constructor(parent, {extension, animationFrameDuration, angleBetweenRotations, isSymmetric, textureType, pixelWidth, pixelHeight, pixelSize, worldWidth, worldHeight, worldSize}) {
+    constructor(parent, {
+        extension,
+        angleBetweenRotations, isSymmetric,
+        textureType,
+        pixelWidth, pixelHeight, pixelSize,
+        worldWidth, worldHeight, worldSize,
+        animations
+    }) {
         this.#parent = parent
 
         this.#extension = extension
-        this.#animationFrameDuration = animationFrameDuration
         this.#angleBetweenRotations = angleBetweenRotations
         this.#isSymmetric = isSymmetric
         this.#textureType = typeof textureType === "string" ? TextureType[textureType] : textureType
@@ -68,12 +106,11 @@ class TextureMeta {
         this.#pixelHeight = pixelHeight ?? pixelSize
         this.#worldWidth = worldWidth ?? worldSize
         this.#worldHeight = worldHeight ?? worldSize
+        this.#animations = animations
     }
 
     /** @return {string} */
     get extension() { return this.#extension ?? this.#parent.extension }
-    /** @return {number} */
-    get animationFrameDuration() { return this.#animationFrameDuration ?? this.#parent.animationFrameDuration }
     /** @return {number} */
     get angleBetweenRotations() { return this.#angleBetweenRotations ?? this.#parent.angleBetweenRotations }
     /** @return {TextureType} */
@@ -88,12 +125,16 @@ class TextureMeta {
     get worldWidth() { return this.#worldWidth ?? this.#parent.worldWidth }
     /** @return {number} */
     get worldHeight() { return this.#worldHeight ?? this.#parent.worldHeight }
+    /** @return {Record<string, AnimationMeta>} */
+    get animations() { return this.#animations ?? this.#parent.animations }
 }
 
 const textureListLeaf = Symbol()
 const textureList = {
     // keep first here to ensure it is present when trying to frame other images
     frame: textureListLeaf,
+
+    vfx: textureListLeaf,
 
     // {buildings: {archer: textureListLeaf, ...}, ...}
     // entities: Object.values(entities).reduce(
@@ -173,7 +214,7 @@ const textureList = {
 
 export default class TexturePack {
     /**
-     * the rotation we want portrayed in the framed variant, the closest if not available
+     * the rotation in degree we want portrayed in the framed variant, the closest if not available
      * @type {Number}
      */
     static get framedRotation() {return 60};
@@ -304,18 +345,32 @@ export default class TexturePack {
         return texturePackDetails.querySelector("& > div")
     }
 
-    changeDocumentTextures() {
+    /**
+     * @param {number} currentTime current global time, used to get the correct animation frame
+     */
+    updateDocumentTextures(currentTime = 0) {
         const elements = document.body.querySelectorAll("*[data-texture]")
-        elements.forEach(element => this.changeElementTexture(element))
-    }
+        const canvas = document.getElementById("utilsCanvas")
+        const ctx = canvas.getContext("2d")
 
-    /** @param {HTMLImageElement} element */
-    async changeElementTexture(element) {
-        if (element.dataset.texture.startsWith("framed/")) {
-            element.setAttribute("src", (await this.getTexture(element.dataset.texture.substring("framed/".length))).getFramed().src)
-        } else {
-            element.setAttribute("src", (await this.getTexture(element.dataset.texture)).getBase().src)
-        }
+        elements.forEach(async element => {
+            this.getTexture(element.dataset.texture).then(texture => {
+                const image = element.dataset.framed === "true" ? texture.getFramed() : texture.getBase()
+                const position = element.dataset.framed === "true" ?
+                    texture.getFramedAnimationFramePosition("idle", 0, currentTime) :
+                    texture.getAnimationFramePosition("idle", 0, currentTime)
+                canvas.width = texture.pixelWidth
+                canvas.height = texture.pixelHeight
+
+                ctx.drawImage(
+                    image,
+                    position.sx, position.sy, position.sw, position.sh,
+                    0, 0, canvas.width, canvas.height
+                )
+
+                element.setAttribute("src", canvas.toDataURL("image/png"))
+            })
+        })
     }
 }
 
@@ -333,15 +388,18 @@ class Texture {
      * the scale applied to the image when framed
      * @type {Number}
      */
-    static #frameScale = 75/100;
+    static #framedScale = 75/100;
 
-    /** @type {TextureMeta} */
+    /**
+     * @type {TextureMeta}
+     * @readonly
+     */
     #meta
     /** @type {Map<number | Symbol, HTMLImageElement>} */
     #imageElements = new Map()
 
     constructor(meta) {
-        this.#meta = meta
+        this.#meta = Object.freeze(meta)
     }
 
     /**
@@ -351,12 +409,49 @@ class Texture {
     getForOrientation(orientation) { return this.#imageElements.get(orientation) }
     /** @return {HTMLImageElement} */
     getBase() { return this.getForOrientation(Texture.#baseMarker) }
+
+    /**
+     * get the source values to send to drawImage to get the correct animation frame
+     * @param {string} animationName
+     * @param {number} animationStartTime
+     * @param {number} frameTiming
+     * @returns {{sx: number, sy: number, sw: number, sh: number}}
+     */
+    getAnimationFramePosition(animationName, animationStartTime, frameTiming) {
+        // each line is an animation
+        // each column is a frame of the corresponding animation
+        const totalAnimationTime = this.animations[animationName].timings.reduce((acc, timing) => acc + timing, 0)
+        let currentLoopStart = (frameTiming - animationStartTime) % totalAnimationTime
+        let frame = -1
+        while (currentLoopStart > 0) {
+            currentLoopStart -= this.animations[animationName].timings[++frame]
+        }
+        const animationIndex = Object.keys(this.animations).findIndex(key => key === animationName)
+        return {
+            sx: frame * this.pixelWidth, sy: animationIndex * this.pixelHeight,
+            sw: this.pixelWidth, sh: this.pixelHeight,
+        }
+    }
+
+    /**
+     * get the source values to send to drawImage to get the correct animation frame
+     * this version returns the values for the framed variant specifically
+     * @param {string} animationName
+     * @param {number} animationStartTime
+     * @param {number} frameTiming
+     * @returns {{sx: number, sy: number, sw: number, sh: number}}
+     */
+    getFramedAnimationFramePosition(animationName, animationStartTime, frameTiming) {
+        const basePosition = this.getAnimationFramePosition(animationName, animationStartTime, frameTiming)
+        return {
+            sx: basePosition.sx / this.worldWidth, sy: basePosition.sy / this.worldHeight,
+            sw: basePosition.sw / this.worldWidth, sh: basePosition.sh / this.worldHeight,
+        }
+    }
+
     /** @return {HTMLImageElement} */
     getFramed() { return this.getForOrientation(Texture.#framedMarker) }
-
-    get animationFrameDuration() { return this.#meta.animationFrameDuration }
-    get animationFrameCount() { return this.getForOrientation(0).height / this.pixelHeight }
-    get animationFrameCountForBase() { return this.getForOrientation(Texture.#baseMarker).height / this.pixelHeight }
+    get animations() { return this.#meta.animations }
     get angleBetweenRotations() { return this.#meta.angleBetweenRotations }
     /** @return {TextureType} */
     get textureType() { return this.#meta.textureType }
@@ -365,28 +460,93 @@ class Texture {
     get worldWidth() { return this.#meta.worldWidth }
     get worldHeight() { return this.#meta.worldHeight; }
 
+    makeFramed(frame, texturePackName) {
+        if (this.#imageElements.has(Texture.#framedMarker)) {
+            return new Promise(() => {})
+        }
+
+        // the size of one cell
+        const cellHeight = this.#meta.pixelHeight / this.#meta.worldHeight
+        const cellWidth = this.#meta.pixelWidth / this.#meta.worldWidth
+
+        // the transformation to apply to the image when drawing it on the canvas
+        const marginLeft = (1 - Texture.#framedScale) / 2
+        const marginTop = marginLeft // this.#meta.worldHeight === 1 ? marginLeft : 0
+        const scale = Texture.#framedScale
+
+        // get the canvas
+        const canvas = document.getElementById("utilsCanvas")
+        // 1. make the canvas the correct size
+        const animationCount = Object.keys(this.animations).length
+        const longestAnimationFrameCount = Math.max(...Object.values(this.animations).map(animation => animation.timings.length))
+        // a framed image is one cell regardless of the base image
+        canvas.height = animationCount * cellHeight
+        canvas.width = longestAnimationFrameCount * cellWidth
+
+        const context = canvas.getContext("2d")
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        for (let line = 0; line < animationCount; line++) {
+            const animation = Object.values(this.animations)[line]
+            for (let col = 0; col < animation.timings.length; col++) {
+                // 2. get the images as needed in the canvas
+                if (this.#meta.textureType === TextureType.IMAGE) {
+                    console.log(cellWidth, cellHeight, scale, cellWidth * scale, cellHeight * scale, canvas.width, canvas.height)
+                    context.drawImage(this.getBase(),
+                        col * this.pixelWidth, line * this.pixelHeight, cellWidth, cellHeight,
+                        cellWidth * (col + marginLeft), cellHeight * (line + marginTop), cellWidth * scale, cellHeight * scale
+                    )
+                }
+                if (this.#meta.textureType === TextureType.BASE_ONLY || this.#meta.textureType === TextureType.ROTATION_AND_BASE) {
+                    context.drawImage(this.getBase(),
+                        col * this.pixelWidth, line * this.pixelHeight, cellWidth, cellHeight,
+                        cellWidth * (col + marginLeft), cellHeight * (line + marginTop), cellWidth * scale, cellHeight * scale
+                    )
+                }
+                if (this.#meta.textureType === TextureType.ROTATION_ONLY || this.#meta.textureType === TextureType.ROTATION_AND_BASE) {
+                    const framedRotation = Math.ceil(TexturePack.framedRotation / this.#meta.angleBetweenRotations) * this.#meta.angleBetweenRotations
+                    context.drawImage(this.getForOrientation(framedRotation),
+                        col * this.pixelWidth, line * this.pixelHeight, cellWidth, cellHeight,
+                        cellWidth * (col + marginLeft), cellHeight * (line + marginTop), cellWidth * scale, cellHeight * scale
+                    )
+                }
+
+                // 3. put the frame image on top of each position
+                context.drawImage(frame.getBase(), col * cellWidth, line * cellHeight, cellWidth, cellHeight)
+            }
+        }
+
+        // create a new image element with the rotated image
+        const framedImage = document.createElement("img")
+        framedImage.classList.add("framed")
+        framedImage.src = canvas.toDataURL("image/png")
+        framedImage.style.order = this.#id.toString(10)
+        TexturePack.getHtmlTextureContainerFor(texturePackName).appendChild(framedImage)
+        this.#imageElements.set(Texture.#framedMarker, framedImage)
+        return new Promise((resolve, reject) => {
+            framedImage.onload = resolve
+            framedImage.onerror = reject
+        })
+    }
+
     /**
      * @param {Texture} frame
      * @param {string} texturePackName
      * @return {Promise<>}
      */
-    makeFramed(frame, texturePackName) {
-        // TODO animation
+    makeFramedLegacy(frame, texturePackName) {
         if (this.#imageElements.has(Texture.#framedMarker)) {
             return new Promise(() => {})
         }
-
 
         // get the canvas
         const canvas = document.getElementById("utilsCanvas")
         canvas.width = this.#meta.pixelWidth / this.#meta.worldWidth
         canvas.height = this.#meta.pixelHeight / this.#meta.worldHeight
 
-        const marginLeft = (1 - Texture.#frameScale) / 2
+        const marginLeft = (1 - Texture.#framedScale) / 2
         const marginTop = marginLeft // this.#meta.worldHeight === 1 ? marginLeft : 0
-        const scale = Texture.#frameScale
+        const scale = Texture.#framedScale
 
-        // paste the image reversed left<->right on it
         const context = canvas.getContext("2d")
         context.clearRect(0, 0, canvas.width, canvas.height);
         if (this.#meta.textureType === TextureType.IMAGE) {
@@ -475,7 +635,7 @@ class Texture {
                 promises.push(new Promise((res, err) => {
                     image.onload = () => {
                         if (textureMeta.isSymmetric && hoistedAngle !== 0 && hoistedAngle !== 180) {
-                            const rotatedImage = Texture.#mirrorImage(image)
+                            const rotatedImage = Texture.#mirrorImage(image, textureMeta.pixelWidth)
                             rotatedImage.style.order = result.#id.toString(10)
                             texturesDiv.appendChild(rotatedImage)
                             result.#imageElements.set(360 - hoistedAngle, rotatedImage)
@@ -567,7 +727,7 @@ class Texture {
 
                             if (textureMeta.isSymmetric && hoistedAngle !== 0 && hoistedAngle !== 180) {
                                 image.onload = () => {
-                                    const rotatedImage = Texture.#mirrorImage(image)
+                                    const rotatedImage = Texture.#mirrorImage(image, textureMeta.pixelWidth)
                                     rotatedImage.style.order = result.#id.toString(10)
                                     texturesDiv.appendChild(rotatedImage)
                                     result.#imageElements.set(AngleUtils.clampAngleDeg(360 - hoistedAngle), rotatedImage)
@@ -602,9 +762,10 @@ class Texture {
 
     /**
      * @param {HTMLImageElement} image
+     * @param {number} frameWidth size in pixel of one animation frame
      * @returns {HTMLImageElement}
      */
-    static #mirrorImage(image) {
+    static #mirrorImage(image, frameWidth) {
         // get the canvas
         const canvas = document.getElementById("utilsCanvas")
         canvas.width = image.width
@@ -614,7 +775,10 @@ class Texture {
         const context = canvas.getContext("2d")
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.scale(-1, 1)
-        context.drawImage(image, -canvas.width, 0)
+
+        for (let i = 0; i < image.width / frameWidth; i++) {
+            context.drawImage(image, i * frameWidth, 0, frameWidth, image.height, -(i + 1) * frameWidth, 0, frameWidth, canvas.height)
+        }
 
         // create a new image element with the rotated image
         const rotatedImage = document.createElement("img")

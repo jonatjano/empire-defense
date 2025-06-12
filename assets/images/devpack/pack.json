@@ -1,7 +1,23 @@
 {
 	"entities": {
 		"buildings": {
+			"animations": {
+				"idle": {
+					"timings": [1000],
+					"fixedStart": false
+				}
+			},
 			"archery1": {
+				"animations": {
+					"idle": {
+						"timings": [1000],
+						"fixedStart": false
+					},
+					"sell": {
+						"timings": [1000],
+						"fixedStart": true
+					}
+				},
 				"textureType": "BASE_ONLY"
 			},
 			"cannon1": {
@@ -9,16 +25,58 @@
 			}
 		},
 		"projectiles": {
+			"animations": {
+				"idle": {
+					"timings": [1000, 1000],
+					"fixedStart": false
+				}
+			},
 			"cannonball1": {
 				"textureType": "BASE_ONLY"
+			}
+		},
+		"units": {
+			"animations": {
+				"idle": {
+					"timings": [1000, 1000],
+					"fixedStart": false
+				}
+			},
+			"squire": {
+				"animations": {
+					"idle": {
+						"timings": [4000, 1000],
+						"fixedStart": true
+					},
+					"walk": {
+						"timings": [2000, 2000],
+						"fixedStart": true
+					}
+				}
+			}
+		}
+	},
+	"icons": {
+		"pixelSize": 32,
+		"crystal": {
+			"animations": {
+				"idle": {
+					"timings": [11000, 100, 150, 100],
+					"fixedStart": false
+				}
 			}
 		}
 	},
 	"maps": {
 		"classic": {
-			"animationFrameDuration": 250,
 			"pixelHeight": 1664,
-			"pixelWidth": 2176
+			"pixelWidth": 2168,
+			"animations": {
+				"idle": {
+					"timings": [300, 300],
+					"fixedStart": false
+				}
+			}
 		}
 	}
 }

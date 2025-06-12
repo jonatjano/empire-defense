@@ -25,7 +25,7 @@ export default class AbstractUnit extends AbstractEntity {
         super(position, deathCallback, maxHp);
     }
 
-    act(frameDuration) {
+    act(frameDuration, currentTime) {
         if (this.target === undefined) {
             const pathFinding = globalThis.game.pathFinder.getNextTarget(this.position, this.movements.movementType)
             if (pathFinding === null) {
