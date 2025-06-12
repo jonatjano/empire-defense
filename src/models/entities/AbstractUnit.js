@@ -3,8 +3,8 @@ import Position from "../Position.js";
 
 export function unitFactory(name, movement, killReward, killCrystalReward, hpFunction) {
     return class extends AbstractUnit {
-        static movements = movement
-        static get movements() { return this.movements }
+        static #movements = movement
+        static get movements() { return this.#movements }
         static get name() { return name; }
         static get killReward() { return killReward }
         static get killCrystalReward() { return killCrystalReward }

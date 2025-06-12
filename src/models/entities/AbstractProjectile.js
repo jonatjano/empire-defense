@@ -6,8 +6,8 @@ import AbstractUnit from "./AbstractUnit.js";
 export function projectileFactory(name, speed, damage, range, cooldown) {
     const movement = new MovementCapability(10, 3600, 360, MovementType.Unobstructed)
     return class extends AbstractProjectile {
-        static movements = movement
-        static get movements() { return this.movements }
+        static #movements = movement
+        static get movements() { return this.#movements }
         static get name() { return name }
         static get damage() { return damage }
         static get range() { return range }

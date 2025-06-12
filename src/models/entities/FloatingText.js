@@ -5,7 +5,6 @@ import AbstractEntity from "./AbstractEntity.js"
 export default class FloatingText extends AbstractEntity {
 	static LIFETIME = 1000
 	static #movements = new MovementCapability(0.3, 360, 360, MovementType.Unobstructed)
-
 	/** @return {MovementCapability} */
 	static get movements() { return this.#movements }
 	static get name() { return "FloatingText"; }
