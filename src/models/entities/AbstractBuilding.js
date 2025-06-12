@@ -2,6 +2,7 @@ import AbstractEntity from "./AbstractEntity.js";
 import {projectileFactory} from "./AbstractProjectile.js"
 import AbstractUnit from "./AbstractUnit.js";
 import Position from "../Position.js";
+import {ANIMATIONS} from "./entities.js"
 
 /**
  *
@@ -68,7 +69,7 @@ export default class AbstractBuilding extends AbstractEntity {
 
     act(frameDuration, currentTime) {
         switch (this.animationDetails.name) {
-            case "idle": {
+            case ANIMATIONS.IDLE: {
                 this.#attackCooldown = this.#attackCooldown - frameDuration
 
                 const targets = globalThis.game.getEntitiesCloseTo(this.position, this.projectile.range, AbstractUnit)
@@ -91,7 +92,7 @@ export default class AbstractBuilding extends AbstractEntity {
                 }
                 break
             }
-            case "sell": {
+            case ANIMATIONS.SOLD: {
                 if (currentTime > this.animationDetails.end) {
                     globalThis.game.deleteEntity(this)
                 }

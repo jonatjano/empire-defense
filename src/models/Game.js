@@ -3,7 +3,7 @@ import FloatingText from "./entities/FloatingText.js"
 import Position from "./Position.js";
 import AbstractBuilding from "./entities/AbstractBuilding.js";
 import {TileOption} from "./GameMap.js";
-import entities from "./entities/entities.js";
+import entities, {ANIMATIONS} from "./entities/entities.js"
 import AbstractUnit from "./entities/AbstractUnit.js";
 import TexturePack from "../utils/TexturePack.js";
 import Vfx from "./entities/Vfx.js";
@@ -126,7 +126,7 @@ export default class Game {
 
     #sellTower(tower) {
         // TODO selling crystal loss
-        tower.setAnimation("sold", frameTimingWithSpeedFactor).then(success => {
+        tower.setAnimation(ANIMATIONS.SOLD, frameTimingWithSpeedFactor).then(success => {
             // if we couldn't set the animation, we need to delete the tower ourselves as it won't delete itself
             if (! success) { this.deleteEntity(tower) }
         })
@@ -352,7 +352,7 @@ export default class Game {
                         const unit = new unitType(spawnPosition, callback, this.waveNumber)
                         this.addEntity(unit)
                         if (Math.random() < 0.5) {
-                            unit.setAnimation("walk", frameTiming)
+                            unit.setAnimation(ANIMATIONS.WALK, frameTiming)
                         }
                     }
                 }
