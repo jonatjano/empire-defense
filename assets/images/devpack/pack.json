@@ -14,7 +14,7 @@
 						"fixedStart": false
 					},
 					"sell": {
-						"timings": [1000],
+						"timings": [500, 500],
 						"fixedStart": true
 					}
 				},

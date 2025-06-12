@@ -13,9 +13,10 @@ export default class Vfx extends AbstractEntity {
      * @param {number} start
      * @param {number | typeof Vfx.UNTIL_ANIMATION_END} duration
      * @param {string} animationName
+     * @param {EntityDeathCallback} [deathCallback]
      */
-    constructor(position, start, duration, animationName) {
-        super(position, AbstractEntity.defaultDeathCallback, 1);
+    constructor(position, start, duration, animationName, deathCallback = AbstractEntity.defaultDeathCallback) {
+        super(position, deathCallback, 1);
         this.setAnimation(animationName, start)
         globalThis.options.texturePack.getTexture(`vfx`).then(texture => {
             if (! texture.animations[animationName]) {
