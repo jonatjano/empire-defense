@@ -104,6 +104,9 @@ export default class Game {
                 return element
             })
         )
+        setTimeout(() => {
+            globalThis.options.updateIconsEvents()
+        })
     }
 
     get selectedEntity() {

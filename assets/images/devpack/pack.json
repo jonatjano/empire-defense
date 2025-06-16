@@ -65,6 +65,13 @@
 					"fixedStart": false
 				}
 			}
+		},
+		"life": {
+			"animations": {
+				"idle": {"timings": [1000], "fixedStart": false},
+				"hover": {"timings": [1000], "fixedStart": false},
+				"click": {"timings": [1000], "fixedStart": false}
+			}
 		}
 	},
 	"maps": {
