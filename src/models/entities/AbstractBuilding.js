@@ -48,6 +48,7 @@ export function buildingFactory(name, projectileName, levels) {
 
 export default class AbstractBuilding extends AbstractEntity {
     #attackCooldown = 0
+    static get MAX_BUILD_DURATION() { return 3000 }
 
     /**
      * @param {Position} position
@@ -93,7 +94,7 @@ export default class AbstractBuilding extends AbstractEntity {
                 break
             }
             case ANIMATIONS.SOLD: {
-                if (currentTime > this.animationDetails.end) {
+                if (currentTime > this.animationDetails.end || currentTime > this.animationDetails.start + AbstractBuilding.MAX_BUILD_DURATION) {
                     globalThis.game.deleteEntity(this)
                 }
                 break

@@ -251,6 +251,35 @@ class Options {
         })
         const quitButton = document.querySelector("#quitButton")
         quitButton.addEventListener("click", () => window.location.reload())
+        this.updateIconsEvents()
+
+    }
+
+    updateIconsEvents() {
+        const icons = document.querySelectorAll("[data-texture]")
+        icons.forEach(icon => {
+            icon.onclick = () => {
+                icon.dataset.animation = "click"
+                this.texturePack.getTexture(icon.dataset.texture).then(texture => {
+                    if ("click" in texture.animations) {
+                        setTimeout(() => {
+                            delete icon.dataset.animation
+                        }, texture.animations.click.timings.reduce((acc, frame) => acc + frame, 0))
+                    }
+                })
+            }
+            icon.onmouseenter = () => {
+                if (! icon.dataset.animation) {
+                    icon.dataset.animation = "hover"
+                }
+            }
+            icon.onmouseleave = () => {
+                if (icon.dataset.animation === "hover") {
+                    delete icon.dataset.animation
+                    delete icon.dataset.animationStartTime
+                }
+            }
+        })
     }
 }
 

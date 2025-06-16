@@ -362,11 +362,16 @@ export default class TexturePack {
         const ctx = canvas.getContext("2d")
 
         elements.forEach(async element => {
+            element.style.pointerEvents = "all"
             this.getTexture(element.dataset.texture).then(texture => {
                 const image = element.dataset.framed === "true" ? texture.getFramed() : texture.getBase()
+                let animationName = element.dataset.animation
+                if (! animationName || ! (animationName in texture.animations)) {
+                    animationName = "idle"
+                }
                 const position = element.dataset.framed === "true" ?
-                    texture.getFramedAnimationFramePosition("idle", 0, currentTime) :
-                    texture.getAnimationFramePosition("idle", 0, currentTime)
+                    texture.getFramedAnimationFramePosition(animationName, 0, currentTime) :
+                    texture.getAnimationFramePosition(animationName, 0, currentTime)
                 canvas.width = texture.pixelWidth
                 canvas.height = texture.pixelHeight
 
