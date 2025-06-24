@@ -1,3 +1,4 @@
+import {AnimationKeys} from "../models/entities/AbstractEntity.js"
 import * as AngleUtils from "./AngleUtils.js";
 import entities from "../models/entities/entities.js";
 import AbstractBuilding from "../models/entities/AbstractBuilding.js";
@@ -24,7 +25,7 @@ const DEFAULTS = {
     pixelSize: 128,
     worldSize: 1,
     animations: {
-        idle: {
+        [AnimationKeys.IDLE]: {
             timings: [1000],
             fixedStart: true
         }
@@ -33,11 +34,11 @@ const DEFAULTS = {
         textureType: TextureType.ROTATION_ONLY,
         buildings: {
             animations: {
-                idle: {
+                [AnimationKeys.IDLE]: {
                     timings: [1000],
                     fixedStart: true
                 },
-                sold: {
+                [AnimationKeys.SELL]: {
                     timings: [1000],
                     fixedStart: true
                 }
@@ -55,11 +56,11 @@ const DEFAULTS = {
     vfx: {
         pixelSize: 32,
         animations: {
-            spawnArrow: {
+            [AnimationKeys.SPAWN_ARROW]: {
                 timings: [1000, 1000],
                 fixedStart: true
             },
-            targetArrow: {
+            [AnimationKeys.TARGET_ARROW]: {
                 timings: [1000, 1000],
                 fixedStart: true
             }
@@ -364,12 +365,12 @@ export default class TexturePack {
         elements.forEach(async element => {
             element.style.pointerEvents = "all"
             this.getTexture(element.dataset.texture).then(texture => {
-                const image = element.dataset.framed === "true" ? texture.getFramed() : texture.getBase()
+                const image = element.dataset.framed ? texture.getFramed() : texture.getBase()
                 let animationName = element.dataset.animation
                 if (! animationName || ! (animationName in texture.animations)) {
-                    animationName = "idle"
+                    animationName = AnimationKeys.IDLE
                 }
-                const position = element.dataset.framed === "true" ?
+                const position = element.dataset.framed ?
                     texture.getFramedAnimationFramePosition(animationName, 0, currentTime) :
                     texture.getAnimationFramePosition(animationName, 0, currentTime)
                 canvas.width = texture.pixelWidth

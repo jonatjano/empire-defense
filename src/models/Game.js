@@ -1,9 +1,10 @@
-import AbstractEntity from "./entities/AbstractEntity.js";
+
+import AbstractEntity, {AnimationKeys} from "./entities/AbstractEntity.js"
 import FloatingText from "./entities/FloatingText.js"
 import Position from "./Position.js";
 import AbstractBuilding from "./entities/AbstractBuilding.js";
 import {TileOption} from "./GameMap.js";
-import entities, {ANIMATIONS} from "./entities/entities.js"
+import entities from "./entities/entities.js"
 import AbstractUnit from "./entities/AbstractUnit.js";
 import TexturePack from "../utils/TexturePack.js";
 import Vfx from "./entities/Vfx.js";
@@ -129,7 +130,7 @@ export default class Game {
 
     #sellTower(tower) {
         // TODO selling crystal loss
-        tower.setAnimation(ANIMATIONS.SOLD, frameTimingWithSpeedFactor).then(success => {
+        tower.setAnimation(AnimationKeys.SELL, frameTimingWithSpeedFactor).then(success => {
             // if we couldn't set the animation, we need to delete the tower ourselves as it won't delete itself
             if (! success) { this.deleteEntity(tower) }
         })
@@ -142,6 +143,7 @@ export default class Game {
     #upgradeTower(tower) {
         if (this.money >= tower.upgradesTo.cost) {
             const newTower = new tower.upgradesTo(tower.position)
+            newTower.setAnimation(AnimationKeys.UPGRADE, frameTimingWithSpeedFactor)
             this.deleteEntity(tower)
             this.addEntity(newTower)
             this.money = this.money - newTower.cost
@@ -324,14 +326,14 @@ export default class Game {
         this.waveNumber = this.waveNumber + 1
 
         this.#map.spawns.forEach(pos => {
-            this.addEntity(new Vfx(pos, frameTimingWithSpeedFactor, 5000, "spawnArrow"))
+            this.addEntity(new Vfx(pos, frameTimingWithSpeedFactor, 5000, AnimationKeys.SPAWN_ARROW))
         })
         const [firstTarget, ...otherTargets] = this.#map.targets
         otherTargets.forEach(pos => {
-            this.addEntity(new Vfx(pos, frameTimingWithSpeedFactor, 5000, "targetArrow"))
+            this.addEntity(new Vfx(pos, frameTimingWithSpeedFactor, 5000, AnimationKeys.TARGET_ARROW))
         })
         // separate the first target so we can use the Vfx inner timing to launch the wave
-        this.addEntity(new Vfx(firstTarget, frameTimingWithSpeedFactor, 5000, "targetArrow", () => {
+        this.addEntity(new Vfx(firstTarget, frameTimingWithSpeedFactor, 5000, AnimationKeys.TARGET_ARROW, () => {
             this.#unitsToSpawn = this.map.waves[this.waveNumber - 1].map(spawnLists => spawnLists.map(spawn => spawn))
         }))
 
@@ -355,7 +357,7 @@ export default class Game {
                         const unit = new unitType(spawnPosition, callback, this.waveNumber)
                         this.addEntity(unit)
                         if (Math.random() < 0.5) {
-                            unit.setAnimation(ANIMATIONS.WALK, frameTiming)
+                            unit.setAnimation(AnimationKeys.WALK, frameTiming)
                         }
                     }
                 }
