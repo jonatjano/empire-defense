@@ -29,6 +29,11 @@ class Options {
     #maxZoom = 300
 
     /** @type {number} */
+    #mapXOfsset = 0
+    /** @type {number} */
+    #mapYOffset = 0
+
+    /** @type {number} */
     #speed = 1
     /** @type {number[]} */
     #speeds = Object.freeze([1, 2, 5])
@@ -108,6 +113,11 @@ class Options {
     }
     get zoom() { return this.#zoom }
 
+    changeMapOffset(x, y) {
+        this.#mapXOfsset += x
+        this.#mapYOffset += y
+    }
+    get mapOffset() { return {x: this.#mapXOfsset, y: this.#mapYOffset} }
 
     changeSpeed() {
         let newIndex = this.#speeds.indexOf(this.#speed) + 1
