@@ -32,6 +32,18 @@ const DEFAULTS = {
     },
     entities: {
         textureType: TextureType.ROTATION_ONLY,
+	    units: {
+		    animations: {
+			    [AnimationKeys.WALK]: {
+				    timings: [1000],
+				    fixedStart: true
+			    },
+			    [AnimationKeys.DEAD]: {
+				    timings: [1000],
+				    fixedStart: true
+			    }
+		    },
+	    },
         buildings: {
             animations: {
                 [AnimationKeys.IDLE]: {

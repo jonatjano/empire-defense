@@ -80,11 +80,14 @@ export default class AbstractBuilding extends AbstractEntity {
                     if (this.#attackCooldown <= 0) {
                         this.#attackCooldown += this.projectile.cooldown
 
-                        targets.forEach(entity => {
-                            const missile = new this.projectile(new Position(this.position.x, this.position.y - 1));
-                            missile.target = entity
-                            globalThis.game.addEntity(missile)
-                        })
+	                    for (const entity of targets) {
+							if (entity.animationDetails.name !== AnimationKeys.WALK) {
+								continue
+							}
+		                    const missile = new this.projectile(new Position(this.position.x, this.position.y - 1));
+		                    missile.target = entity
+		                    globalThis.game.addEntity(missile)
+	                    }
                     }
                 } else {
                     if (this.#attackCooldown < 0) {

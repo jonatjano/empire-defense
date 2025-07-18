@@ -78,11 +78,24 @@ export default class AbstractEntity {
         throw new Error("AbstractEntity initialised")
     }
 
-    hit(damage) {
+	callDeathCallback() {
+		this.#deathCallback(this)
+		this.#deathCallback = AbstractEntity.defaultDeathCallback
+	}
+
+	hit(damage) {
+		this.abstractHit(damage, true)
+		if (this.#hp <= 0) {
+			this.callDeathCallback()
+		}
+	}
+
+    abstractHit(damage, deleteEntity = true) {
         this.#hp -= damage
         if (this.#hp <= 0) {
-            globalThis.game.deleteEntity(this)
-            this.#deathCallback(this)
+			if (deleteEntity) {
+				globalThis.game.deleteEntity(this)
+			}
         }
         else if (this.#hp > this.#maxHp) { this.#hp = this.#maxHp }
     }

@@ -36,20 +36,14 @@
 			}
 		},
 		"units": {
-			"animations": {
-				"idle": {
-					"timings": [1000, 1000],
-					"fixedStart": false
-				}
-			},
 			"squire": {
 				"animations": {
-					"idle": {
-						"timings": [4000, 1000],
-						"fixedStart": true
-					},
 					"walk": {
 						"timings": [2000, 2000],
+						"fixedStart": true
+					},
+					"dead": {
+						"timings": [750, 750],
 						"fixedStart": true
 					}
 				}
@@ -68,9 +62,9 @@
 		},
 		"life": {
 			"animations": {
-				"idle": {"timings": [1000], "fixedStart": false},
-				"hover": {"timings": [1000], "fixedStart": false},
-				"click": {"timings": [1000], "fixedStart": false}
+				"idle": {"timings": [11000, 100, 100, 100, 100, 100], "fixedStart": false},
+				"hover": {"timings": [600, 600], "fixedStart": true},
+				"click": {"timings": [200, 200, 200], "fixedStart": true}
 			}
 		}
 	},
