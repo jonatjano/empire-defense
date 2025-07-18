@@ -2,19 +2,7 @@ import {buildingFactory} from "./AbstractBuilding.js"
 import MovementCapability, {MovementType} from "../MovementCapability.js";
 import {unitFactory} from "./AbstractUnit.js"
 
-export const ANIMATIONS = Object.freeze({
-    IDLE: "idle",
-    HOVER: "hover",
-    CLICK: "click",
-    WALK: "walk",
-    DYING: "dying",
-    SHOOTING: "shooting",
-    BUILDING: "building",
-    SOLD: "sold",
-    HIT: "hit",
-    SPAWN_ARROW: "spawnArrow",
-    TARGET_ARROW: "targetArrow"
-})
+
 
 const entities = {
     /*********************

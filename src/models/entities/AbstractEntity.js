@@ -1,5 +1,30 @@
-import Position from "../Position.js";
-import {default as MovementCapability, MovementType} from "../MovementCapability.js";
+import {default as MovementCapability, MovementType} from "../MovementCapability.js"
+import Position from "../Position.js"
+
+export const AnimationKeys = Object.freeze({
+    /* common (except unit) */
+    IDLE: "idle",
+
+    /* icons and buildings */
+    HOVER: "hover",
+    CLICK: "click",
+
+    /* units */
+    WALK: "walk",
+    DEAD: "dead",
+
+    /* buildings */
+    SHOOT: "shoot",
+    UPGRADE: "upgrade",
+    SELL: "sell",
+
+    /* projectiles */
+    HIT: "hit",
+
+    /* VFX */
+    SPAWN_ARROW: "spawnArrow",
+    TARGET_ARROW: "targetArrow"
+})
 
 /**
  * @callback EntityDeathCallback
@@ -16,7 +41,7 @@ export default class AbstractEntity {
     /** @type {Position} */
     #position
     /** @type {string} */
-    #animationName = "idle"
+    #animationName = AnimationKeys.IDLE
     /** @type {number} */
     #animationStartTime = 0
     /** @type {number} */

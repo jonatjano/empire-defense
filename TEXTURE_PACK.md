@@ -83,8 +83,8 @@ You can however remove animations, the game will simply not play them
 These are the expected animation for each category of texture :
 - `maps` : `idle`
 - `icons` : `idle`, `hover`(optional) and `click`(optional)
-- `entities/units` : `walk` and `dying`(optional)
-- `entities/buildings` : `idle`, `shooting`(optional), `building`(optional, not used for level 1, total duration must match tower build duration), `sold`(optional, total duration must be equal or less than 3 seconds), `hover`(optional) and `click`(optional)
+- `entities/units` : `walk` and `dead`(optional)
+- `entities/buildings` : `idle`, `shoot`(optional), `upgrade`(optional, not used for level 1, total duration must match tower build duration), `sell`(optional, total duration must be equal or less than 3 seconds), `hover`(optional) and `click`(optional)
 - `entities/projectiles` : `idle` and `hit`(optional, middle of the texture will be put at the hit point)
 - `vfx`: `spawnArrow` and `targetArrow`
 

@@ -1,3 +1,4 @@
+import {AnimationKeys} from "../models/entities/AbstractEntity.js"
 import FloatingText from "../models/entities/FloatingText.js"
 import options from "../utils/Options.js";
 import Position from "../models/Position.js";
@@ -107,7 +108,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
 
     // print map base
     await globalThis.options.texturePack.getTexture(`maps/${map.name}`).then(mapTexture => {
-        let mapAnimationFramePosition = mapTexture.getAnimationFramePosition("idle", 0, frameTiming)
+        let mapAnimationFramePosition = mapTexture.getAnimationFramePosition(AnimationKeys.IDLE, 0, frameTiming)
         ctx.drawImage(
             mapTexture.getBase(),
             mapAnimationFramePosition.sx, mapAnimationFramePosition.sy, mapAnimationFramePosition.sw, mapAnimationFramePosition.sh,
@@ -330,6 +331,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
         // print pathfinding infos
         ctx.textRendering = "optimizeSpeed"
         ctx.fillStyle = `#000000`
+	    ctx.font = "10px Arial, sans-serif"
 
         for (let y = 0; y < game.map.height; y++) {
             for (let x = 0; x < game.map.width; x++) {

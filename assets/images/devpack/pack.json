@@ -13,7 +13,7 @@
 						"timings": [1000],
 						"fixedStart": false
 					},
-					"sold": {
+					"sell": {
 						"timings": [500, 500],
 						"fixedStart": true
 					}

@@ -1,3 +1,4 @@
+import {AnimationKeys} from "../models/entities/AbstractEntity.js"
 import * as Translator from "./Translator.js";
 import TexturePack from "./TexturePack.js";
 
@@ -269,24 +270,30 @@ class Options {
         const icons = document.querySelectorAll("[data-texture]")
         icons.forEach(icon => {
             icon.onclick = () => {
-                icon.dataset.animation = "click"
+                icon.dataset.animation = AnimationKeys.CLICK
                 this.texturePack.getTexture(icon.dataset.texture).then(texture => {
-                    if ("click" in texture.animations) {
+                    if (AnimationKeys.CLICK in texture.animations) {
                         setTimeout(() => {
-                            delete icon.dataset.animation
+                            if (icon.dataset.hovered) {
+                                icon.dataset.animation = AnimationKeys.HOVER
+                            } else {
+                                delete icon.dataset.animation
+                            }
                         }, texture.animations.click.timings.reduce((acc, frame) => acc + frame, 0))
                     }
                 })
             }
             icon.onmouseenter = () => {
                 if (! icon.dataset.animation) {
-                    icon.dataset.animation = "hover"
+                    icon.dataset.animation = AnimationKeys.HOVER
+                    icon.dataset.hovered = "true"
                 }
             }
             icon.onmouseleave = () => {
-                if (icon.dataset.animation === "hover") {
+                if (icon.dataset.animation === AnimationKeys.HOVER) {
                     delete icon.dataset.animation
                     delete icon.dataset.animationStartTime
+                    delete icon.dataset.hovered
                 }
             }
         })
