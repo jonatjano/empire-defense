@@ -19,6 +19,13 @@ const HP_BAR_STYLE = Object.freeze({
     MARGIN: 8
 })
 
+let mouseData = {
+    clicked: false,
+    dragging: false,
+    x: 0,
+    y: 0
+}
+
 /**
  * @param {HTMLCanvasElement} canvas
  * @param {(x: number, y: number) => undefined} clickListener
@@ -26,8 +33,8 @@ const HP_BAR_STYLE = Object.freeze({
  */
 export function setCanvasEvent(canvas, clickListener, moveListener) {
     const callback = (event, listener) => {
-        const leftMargin = (canvas.width / globalThis.options.zoom - game.map.width) / 2;
-        const topMargin = (canvas.height / globalThis.options.zoom - game.map.height) / 2;
+        const leftMargin = (canvas.width / globalThis.options.zoom - game.map.width) / 2 + (globalThis.options.mapOffset.x / globalThis.options.zoom)
+        const topMargin = (canvas.height / globalThis.options.zoom - game.map.height) / 2 + (globalThis.options.mapOffset.y / globalThis.options.zoom)
 
         const boundingRect = canvas.getBoundingClientRect()
         const xRatio = canvas.width / boundingRect.width
@@ -39,8 +46,39 @@ export function setCanvasEvent(canvas, clickListener, moveListener) {
         listener(mapX, mapY)
     }
 
-    canvas.onmousemove = event => callback(event, moveListener)
-    canvas.onclick = event => callback(event, clickListener)
+    canvas.onmousedown = event => {
+        mouseData = {
+            clicked: true,
+            dragging: false,
+            x: event.x,
+            y: event.y
+        }
+        console.log("down", globalThis.options.mapOffset)
+    }
+    canvas.onmousemove = event => {
+        if (mouseData.clicked) {
+            const xDelta = event.x - mouseData.x
+            const yDelta = event.y - mouseData.y
+            globalThis.options.changeMapOffset(xDelta, yDelta)
+
+            mouseData.dragging = true
+            mouseData.x = event.x
+            mouseData.y = event.y
+        } else {
+            callback(event, moveListener)
+        }
+    }
+    canvas.onmouseup = event => {
+        if (! mouseData.dragging) {
+            callback(event, clickListener)
+        }
+        mouseData.clicked = false
+        mouseData.dragging = false
+    }
+    canvas.ondragstart = () => false
+
+    // canvas.onmousemove = event => callback(event, moveListener)
+    // canvas.onclick = event => callback(event, clickListener)
 }
 
 /**
@@ -58,10 +96,10 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
     const mapWidth = map.effectiveWidth
     const mapHeight = map.effectiveHeight
 
-    const visibleLeftMargin = (canvas.width / options.zoom - mapWidth) / 2
-    const visibleTopMargin = (canvas.height / options.zoom - mapHeight) / 2
-    const leftMargin = (canvas.width / options.zoom - map.width) / 2;
-    const topMargin = (canvas.height / options.zoom - map.height) / 2;
+    const visibleLeftMargin = (canvas.width / options.zoom - mapWidth) / 2 + (globalThis.options.mapOffset.x / globalThis.options.zoom)
+    const visibleTopMargin = (canvas.height / options.zoom - mapHeight) / 2 + (globalThis.options.mapOffset.y / globalThis.options.zoom)
+    const leftMargin = (canvas.width / options.zoom - map.width) / 2 + (globalThis.options.mapOffset.x / globalThis.options.zoom)
+    const topMargin = (canvas.height / options.zoom - map.height) / 2 + (globalThis.options.mapOffset.y / globalThis.options.zoom)
 
     if (game instanceof GameMap) {
         ctx.clearRect(0, 0, canvas.width, canvas.height)
