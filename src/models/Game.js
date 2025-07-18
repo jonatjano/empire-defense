@@ -144,7 +144,7 @@ export default class Game {
         if (this.money >= tower.upgradesTo.cost) {
             const newTower = new tower.upgradesTo(tower.position)
             newTower.setAnimation(AnimationKeys.UPGRADE, frameTimingWithSpeedFactor)
-            this.deleteEntity(tower)
+            this.deleteEntity(tower, true)
             this.addEntity(newTower)
             this.money = this.money - newTower.cost
             this.selectedEntity = {tower: newTower, isValid: true, isGhost: false}

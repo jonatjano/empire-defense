@@ -293,6 +293,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
         // print pathfinding infos
         ctx.textRendering = "optimizeSpeed"
         ctx.fillStyle = `#000000`
+	    ctx.font = "10px Arial, sans-serif"
 
         for (let y = 0; y < game.map.height; y++) {
             for (let x = 0; x < game.map.width; x++) {
