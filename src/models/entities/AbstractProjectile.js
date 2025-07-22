@@ -1,5 +1,5 @@
 import MovementCapability, {MovementType} from "../MovementCapability.js"
-import AbstractEntity from "./AbstractEntity.js";
+import AbstractEntity, {AnimationKeys} from "./AbstractEntity.js"
 import Position from "../Position.js";
 import AbstractUnit from "./AbstractUnit.js";
 
@@ -39,26 +39,37 @@ export default class AbstractProjectile extends AbstractEntity {
     set target(value) { this.#target = value }
 
     act(frameDuration, currentTime) {
-        const ATTACK_RANGE = this.range
-        const ATTACK_DAMAGE = this.damage
+	    switch (this.animationDetails.name) {
+		    case AnimationKeys.IDLE: {
+			    const ATTACK_RANGE = this.range
+			    const ATTACK_DAMAGE = this.damage
 
-        const targetIsEntity = this.target instanceof AbstractEntity
-        const targetPosition = targetIsEntity ? this.target.position : this.position
+			    const targetIsEntity = this.target instanceof AbstractEntity
+			    const targetPosition = targetIsEntity ? this.target.position : this.position
 
-        const moveResult = Position.move(this.position, targetPosition, this.movements, frameDuration)
-        this.position.teleport(moveResult.position)
+			    const moveResult = Position.move(this.position, targetPosition, this.movements, frameDuration)
+			    this.position.teleport(moveResult.position)
 
-        if (this.position.equals(targetPosition)) {
-            if (targetIsEntity) {
-                if (this.target.hp > 0) {
-                    this.target.hit(ATTACK_DAMAGE)
-                }
-            } else {
-                globalThis.game.getEntitiesCloseTo(this.position, ATTACK_RANGE, AbstractUnit)
-                    .forEach(entity => {entity.hit(ATTACK_DAMAGE)})
-            }
-            globalThis.game.deleteEntity(this)
-        }
+			    if (this.position.equals(targetPosition)) {
+				    if (targetIsEntity) {
+					    if (this.target.hp > 0) {
+						    this.target.hit(ATTACK_DAMAGE)
+					    }
+				    } else {
+					    globalThis.game.getEntitiesCloseTo(this.position, ATTACK_RANGE, AbstractUnit)
+						    .forEach(entity => {entity.hit(ATTACK_DAMAGE)})
+				    }
+					this.setAnimation(AnimationKeys.HIT, globalThis.game.currentFrameTiming)
+			    }
+			    break
+		    }
+		    case AnimationKeys.HIT: {
+			    if (currentTime > this.animationDetails.end) {
+				    globalThis.game.deleteEntity(this)
+			    }
+			    break
+		    }
+	    }
     }
 
     get texture() { return globalThis.options.texturePack.getTexture(`entities/projectiles/${this.name.toLowerCase()}`) }

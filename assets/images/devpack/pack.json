@@ -63,6 +63,18 @@
 					"fixedStart": false
 				}
 			},
+			"arrow2": {
+				"animations": {
+					"idle": {
+						"timings": [1000, 1000],
+						"fixedStart": false
+					},
+					"hit": {
+						"timings": [150, 200],
+						"fixedStart": true
+					}
+				}
+			},
 			"cannonball1": {
 				"textureType": "BASE_ONLY"
 			}
