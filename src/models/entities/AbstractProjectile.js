@@ -60,6 +60,11 @@ export default class AbstractProjectile extends AbstractEntity {
 						    .forEach(entity => {entity.hit(ATTACK_DAMAGE)})
 				    }
 					this.setAnimation(AnimationKeys.HIT, globalThis.game.currentFrameTiming)
+						.then(success => {
+							if (! success) {
+								globalThis.game.deleteEntity(this)
+							}
+						})
 			    }
 			    break
 		    }
