@@ -32,6 +32,18 @@ const DEFAULTS = {
     },
     entities: {
         textureType: TextureType.ROTATION_ONLY,
+	    units: {
+		    animations: {
+			    [AnimationKeys.WALK]: {
+				    timings: [1000],
+				    fixedStart: true
+			    },
+			    [AnimationKeys.DEAD]: {
+				    timings: [1000],
+				    fixedStart: true
+			    }
+		    },
+	    },
         buildings: {
             animations: {
                 [AnimationKeys.IDLE]: {
@@ -365,6 +377,9 @@ export default class TexturePack {
         elements.forEach(async element => {
             element.style.pointerEvents = "all"
             this.getTexture(element.dataset.texture).then(texture => {
+				if (texture === undefined) {
+					throw new Error(element.dataset.texture + "is undefined")
+				}
                 const image = element.dataset.framed ? texture.getFramed() : texture.getBase()
                 let animationName = element.dataset.animation
                 if (! animationName || ! (animationName in texture.animations)) {

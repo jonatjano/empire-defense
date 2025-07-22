@@ -120,7 +120,12 @@ export default class Game {
         const sellButton = document.querySelector("#sellTower")
 
         document.querySelector("#towerMenu").classList.toggle("hidden", value?.isGhost ?? true)
-        upgradeButton.classList.toggle("hidden", !value?.tower.upgradesTo)
+	    if (value?.tower.upgradesTo !== undefined && value?.tower.upgradesTo !== null) {
+		    upgradeButton.classList.remove("hidden")
+		    upgradeButton.firstElementChild.dataset.texture = `entities/buildings/${value?.tower.upgradesTo.name}`
+		} else {
+		    upgradeButton.classList.add("hidden")
+	    }
 
         sellButton.onclick = value ? this.#sellTower.bind(this, value.tower) : undefined
         if (value?.tower.upgradesTo) {
@@ -163,6 +168,8 @@ export default class Game {
         this.#isPaused = true
         realLastFrameTiming = undefined
     }
+
+	get currentFrameTiming() { return frameTimingWithSpeedFactor }
 
     step(frameTiming) {
         if (realLastFrameTiming === undefined) {
@@ -356,9 +363,7 @@ export default class Game {
                         console.log("spawning", unitType, spawnPosition)
                         const unit = new unitType(spawnPosition, callback, this.waveNumber)
                         this.addEntity(unit)
-                        if (Math.random() < 0.5) {
-                            unit.setAnimation(AnimationKeys.WALK, frameTiming)
-                        }
+                        unit.setAnimation(AnimationKeys.WALK, frameTiming)
                     }
                 }
             }
@@ -378,7 +383,11 @@ export default class Game {
             new Position(unit.position.x + Math.random() * 0.3, unit.position.y - 0.5 + Math.random() * 0.3)
         ))
 
-        if (this.#unitsToSpawn.every(spawnList => spawnList.length === 0) && this.getEntities(AbstractUnit).length === 0) {
+	    if (this.#unitsToSpawn.every(spawnList => spawnList.length === 0) &&
+            this.getEntities(AbstractUnit)
+                .filter(unit => unit.animationDetails.name === AnimationKeys.WALK)
+                .length === 0
+        ) {
             if (this.map.waves.length === this.waveNumber) {
                 alert("victory")
             } else {

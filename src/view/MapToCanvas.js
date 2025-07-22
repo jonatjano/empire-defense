@@ -280,7 +280,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                     }
                     ctx.globalAlpha = 1
 
-                    if (entity.hp !== entity.maxHp) {
+                    if (entity.hp !== entity.maxHp && entity.hp > 0) {
                         // HP bar
                         // black border
                         ctx.fillStyle = "black"
