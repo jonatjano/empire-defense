@@ -16,9 +16,41 @@
 					"sell": {
 						"timings": [500, 500],
 						"fixedStart": true
+					},
+					"click": {
+						"timings": [500, 500],
+						"fixedStart": true
 					}
 				},
 				"textureType": "BASE_ONLY"
+			},
+			"archery2": {
+				"animations": {
+					"idle": {
+						"timings": [1500, 1500],
+						"fixedStart": true
+					},
+					"shoot": {
+						"timings": [150, 150],
+						"fixedStart": true
+					},
+					"upgrade": {
+						"timings": [1500, 1500],
+						"fixedStart": true
+					},
+					"sell": {
+						"timings": [1500, 1500],
+						"fixedStart": true
+					},
+					"hover": {
+						"timings": [1500, 1500],
+						"fixedStart": true
+					},
+					"click": {
+						"timings": [1500, 1500],
+						"fixedStart": true
+					}
+				}
 			},
 			"cannon1": {
 				"textureType": "ROTATION_ONLY"
@@ -65,6 +97,12 @@
 				"idle": {"timings": [11000, 100, 100, 100, 100, 100], "fixedStart": false},
 				"hover": {"timings": [600, 600], "fixedStart": true},
 				"click": {"timings": [200, 200, 200], "fixedStart": true}
+			}
+		},
+		"money": {
+			"animations": {
+				"idle": {"timings": [1000], "fixedStart": false},
+				"hover": {"timings": [150, 150, 150, 150, 150], "fixedStart": true}
 			}
 		}
 	},

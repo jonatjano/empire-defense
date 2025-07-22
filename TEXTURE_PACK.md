@@ -77,7 +77,7 @@ You can however remove animations, the game will simply not play them
 | property name | description                                                                                                               | expected value |
 |---------------|---------------------------------------------------------------------------------------------------------------------------|----------------|
 | timings       | An array containing the time of each frame in millisecond                                                                 | number[]       |
-| fixedStart    | Whether the animation frame is decided based on the global time (`true`) or the time when the animation was set (`false`) | boolean        |
+| fixedStart    | Whether the animation frame is decided based on the global time (`false`) or the time when the animation was set (`true`) | boolean        |
 
 ##### animation expectations
 These are the expected animation for each category of texture :

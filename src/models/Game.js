@@ -120,7 +120,12 @@ export default class Game {
         const sellButton = document.querySelector("#sellTower")
 
         document.querySelector("#towerMenu").classList.toggle("hidden", value?.isGhost ?? true)
-        upgradeButton.classList.toggle("hidden", !value?.tower.upgradesTo)
+	    if (value?.tower.upgradesTo !== undefined && value?.tower.upgradesTo !== null) {
+		    upgradeButton.classList.remove("hidden")
+		    upgradeButton.firstElementChild.dataset.texture = `entities/buildings/${value?.tower.upgradesTo.name}`
+		} else {
+		    upgradeButton.classList.add("hidden")
+	    }
 
         sellButton.onclick = value ? this.#sellTower.bind(this, value.tower) : undefined
         if (value?.tower.upgradesTo) {

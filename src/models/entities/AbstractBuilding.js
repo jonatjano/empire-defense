@@ -79,15 +79,7 @@ export default class AbstractBuilding extends AbstractEntity {
 
                     if (this.#attackCooldown <= 0) {
                         this.#attackCooldown += this.projectile.cooldown
-
-	                    for (const entity of targets) {
-							if (entity.animationDetails.name !== AnimationKeys.WALK) {
-								continue
-							}
-		                    const missile = new this.projectile(new Position(this.position.x, this.position.y - 1));
-		                    missile.target = entity
-		                    globalThis.game.addEntity(missile)
-	                    }
+	                    this.setAnimation(AnimationKeys.SHOOT, globalThis.game.currentFrameTiming)
                     }
                 } else {
                     if (this.#attackCooldown < 0) {
@@ -96,6 +88,27 @@ export default class AbstractBuilding extends AbstractEntity {
                 }
                 break
             }
+			case AnimationKeys.SHOOT: {
+				if (currentTime > this.animationDetails.end || currentTime > this.animationDetails.start + this.projectile.cooldown) {
+					const targets = globalThis.game.getEntitiesCloseTo(this.position, this.projectile.range, AbstractUnit)
+					for (const entity of targets) {
+						if (entity.animationDetails.name !== AnimationKeys.WALK) {
+							continue
+						}
+						const missile = new this.projectile(new Position(this.position.x, this.position.y - 1));
+						missile.target = entity
+						globalThis.game.addEntity(missile)
+					}
+					this.setAnimation(AnimationKeys.IDLE, globalThis.game.currentFrameTiming)
+				}
+				break
+			}
+	        case AnimationKeys.UPGRADE: {
+		        if (currentTime > this.animationDetails.end || currentTime > this.animationDetails.start + AbstractBuilding.MAX_BUILD_DURATION) {
+			        this.setAnimation(AnimationKeys.IDLE, globalThis.game.currentFrameTiming)
+		        }
+		        break
+	        }
             case AnimationKeys.SELL: {
                 if (currentTime > this.animationDetails.end || currentTime > this.animationDetails.start + AbstractBuilding.MAX_BUILD_DURATION) {
                     globalThis.game.deleteEntity(this)

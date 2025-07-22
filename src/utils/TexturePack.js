@@ -377,6 +377,9 @@ export default class TexturePack {
         elements.forEach(async element => {
             element.style.pointerEvents = "all"
             this.getTexture(element.dataset.texture).then(texture => {
+				if (texture === undefined) {
+					throw new Error(element.dataset.texture + "is undefined")
+				}
                 const image = element.dataset.framed ? texture.getFramed() : texture.getBase()
                 let animationName = element.dataset.animation
                 if (! animationName || ! (animationName in texture.animations)) {
