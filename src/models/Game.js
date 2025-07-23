@@ -121,7 +121,7 @@ export default class Game {
 
         document.querySelector("#towerMenu").classList.toggle("hidden", value?.isGhost ?? true)
 	    if (value?.tower.upgradesTo !== undefined && value?.tower.upgradesTo !== null) {
-		    upgradeButton.classList.remove("hidden")
+		    upgradeButton.classList.toggle("hidden", value?.tower.buildPercent < 100)
 		    upgradeButton.firstElementChild.dataset.texture = `entities/buildings/${value?.tower.upgradesTo.name}`
 		} else {
 		    upgradeButton.classList.add("hidden")
@@ -182,6 +182,10 @@ export default class Game {
         const frameDuration = frameTiming - realLastFrameTiming
         realLastFrameTiming = frameTiming
         frameCounterSinceLastPause++
+
+	    if (! this.#selectedEntity?.isGhost && this.#selectedEntity?.tower.buildPercent > 100) {
+		    document.querySelector("#upgradeTower").classList.remove("hidden")
+	    }
 
         document.getElementById("debugTime").textContent = frameTiming
         document.getElementById("frameCount").textContent = (++totalFrameCounter).toFixed(0)
