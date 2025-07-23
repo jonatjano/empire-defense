@@ -1,3 +1,4 @@
+import AbstractBuilding from "../models/entities/AbstractBuilding.js"
 import {AnimationKeys} from "../models/entities/AbstractEntity.js"
 import FloatingText from "../models/entities/FloatingText.js"
 import options from "../utils/Options.js";
@@ -221,7 +222,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                     const textureVerticalSpan = entityTexture.worldHeight
                     const textureTopMargin = -textureVerticalSpan + 0.5
 
-                    const drawImagePosition = {
+                    const drawImageData = {
                         dx: (leftMargin + entity.position.x + textureLeftMargin) * options.zoom,
                         dy: (topMargin + entity.position.y + textureTopMargin) * options.zoom,
                         dw: entityTexture.worldWidth * options.zoom,
@@ -234,8 +235,8 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                         ctx.globalAlpha = ALPHA_VALUE
                         const ellipse = new Path2D()
                         ellipse.ellipse(
-                            drawImagePosition.dx + (entityTexture.worldWidth - 0.5) * options.zoom,
-                            drawImagePosition.dy + (entityTexture.worldHeight - 0.5) * options.zoom,
+                            drawImageData.dx + (entityTexture.worldWidth - 0.5) * options.zoom,
+                            drawImageData.dy + (entityTexture.worldHeight - 0.5) * options.zoom,
                             options.zoom * entity.projectile.range, options.zoom * entity.projectile.range,
                             0, 0, 2 * Math.PI
                         )
@@ -257,13 +258,13 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                         const maxWidth = entityTexture.worldWidth * globalThis.options.zoom * xFactor
                         towerMenu.style = `--tower-x: ${xPos}px; --tower-y: ${yPos}px; --tower-height: ${maxHeight}px; --tower-width: ${maxWidth}px;`
                     }
-                    ctx.globalAlpha = drawImagePosition.alpha
+                    ctx.globalAlpha = drawImageData.alpha
 
                     if (entityTexture.textureType !== TextureType.ROTATION_ONLY) {
                         ctx.drawImage(
                             entityTexture.getBase(),
                             animationFramePosition.sx, animationFramePosition.sy, animationFramePosition.sw, animationFramePosition.sh,
-                            drawImagePosition.dx, drawImagePosition.dy, drawImagePosition.dw, drawImagePosition.dh
+                            drawImageData.dx, drawImageData.dy, drawImageData.dw, drawImageData.dh
                         )
                     }
 
@@ -275,7 +276,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                         ctx.drawImage(
                             entityTexture.getForOrientation(angle),
                             animationFramePosition.sx, animationFramePosition.sy, animationFramePosition.sw, animationFramePosition.sh,
-                            drawImagePosition.dx, drawImagePosition.dy, drawImagePosition.dw, drawImagePosition.dh,
+                            drawImageData.dx, drawImageData.dy, drawImageData.dw, drawImageData.dh,
                         )
                     }
                     ctx.globalAlpha = 1
@@ -285,29 +286,54 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                         // black border
                         ctx.fillStyle = "black"
                         ctx.fillRect(
-                            drawImagePosition.dx + (options.zoom - HP_BAR_STYLE.WIDTH) / 2,
-                            drawImagePosition.dy - (HP_BAR_STYLE.MARGIN + HP_BAR_STYLE.HEIGHT + 2 * HP_BAR_STYLE.BORDER),
+                            drawImageData.dx + (options.zoom - HP_BAR_STYLE.WIDTH) / 2,
+                            drawImageData.dy - (HP_BAR_STYLE.MARGIN + HP_BAR_STYLE.HEIGHT + 2 * HP_BAR_STYLE.BORDER),
                             HP_BAR_STYLE.WIDTH + (entityTexture.worldWidth - 1) * options.zoom + 2 * HP_BAR_STYLE.BORDER,
                             HP_BAR_STYLE.HEIGHT + 2 * HP_BAR_STYLE.BORDER
                         )
                         // white background
                         ctx.fillStyle = "white"
                         ctx.fillRect(
-                            drawImagePosition.dx + (options.zoom - HP_BAR_STYLE.WIDTH) / 2 + HP_BAR_STYLE.BORDER,
-                            drawImagePosition.dy - (HP_BAR_STYLE.MARGIN + HP_BAR_STYLE.HEIGHT + HP_BAR_STYLE.BORDER),
+                            drawImageData.dx + (options.zoom - HP_BAR_STYLE.WIDTH) / 2 + HP_BAR_STYLE.BORDER,
+                            drawImageData.dy - (HP_BAR_STYLE.MARGIN + HP_BAR_STYLE.HEIGHT + HP_BAR_STYLE.BORDER),
                             HP_BAR_STYLE.WIDTH + (entityTexture.worldWidth - 1) * options.zoom,
                             HP_BAR_STYLE.HEIGHT
                         )
                         // content
                         ctx.fillStyle = "red"
                         ctx.fillRect(
-                            drawImagePosition.dx + (options.zoom - HP_BAR_STYLE.WIDTH) / 2 + HP_BAR_STYLE.BORDER,
-                            drawImagePosition.dy - (HP_BAR_STYLE.MARGIN + HP_BAR_STYLE.HEIGHT + HP_BAR_STYLE.BORDER),
+                            drawImageData.dx + (options.zoom - HP_BAR_STYLE.WIDTH) / 2 + HP_BAR_STYLE.BORDER,
+                            drawImageData.dy - (HP_BAR_STYLE.MARGIN + HP_BAR_STYLE.HEIGHT + HP_BAR_STYLE.BORDER),
                             (HP_BAR_STYLE.WIDTH + (entityTexture.worldWidth - 1) * options.zoom) * entity.hp / entity.maxHp,
                             HP_BAR_STYLE.HEIGHT
                         )
                         ctx.fillStyle = "black"
                     }
+
+					if (entity instanceof AbstractBuilding) {
+						if (entity.animationDetails.name !== AnimationKeys.UPGRADE && entity.buildPercent < 100 &&
+							(entity !== game.selectedEntity?.tower || ! game.selectedEntity?.isGhost)) {
+							ctx.globalAlpha = ALPHA_VALUE
+							const radius = 0.25
+
+							const circle = new Path2D()
+							circle.moveTo(drawImageData.dx + (entityTexture.worldWidth / 2) * options.zoom,
+								drawImageData.dy + (entityTexture.worldHeight / 2) * options.zoom)
+							circle.lineTo(drawImageData.dx + (entityTexture.worldWidth / 2 + radius) * options.zoom,
+								drawImageData.dy + (entityTexture.worldHeight / 2) * options.zoom)
+							circle.arc(
+								drawImageData.dx + (entityTexture.worldWidth / 2) * options.zoom,
+								drawImageData.dy + (entityTexture.worldHeight / 2) * options.zoom,
+								options.zoom * radius, 0, 2 / 100 * entity.buildPercent * Math.PI
+							)
+
+							const previousStyle = ctx.fillStyle
+							ctx.fillStyle = "white";
+							ctx.fill(circle);
+							ctx.fillStyle = previousStyle
+							ctx.globalAlpha = drawImageData.alpha
+						}
+					}
 
                     if (globalThis.options.debug) {
                         ctx.fillStyle = `#000000`

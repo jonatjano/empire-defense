@@ -62,15 +62,15 @@ const entities = {
      *********************/
 
     Archery: buildingFactory("archery", "arrow", [
-        {cost: 5, sellPrice: 2, crystal: 1, projectile: {speed: 10, damage: 50, range: 10, cooldown: 1000}},
-        {cost: 4, sellPrice: 2, crystal: 1, projectile: {speed: 10, damage: 1, range: 10, cooldown: 1000}},
-        // {cost: 4, sellPrice: 2, crystal: 1, projectile: {speed: 10, damage: 1, range: 10, cooldown: 500}},
+        {cost: 5, buildDuration: 3000, sellPrice: 2, crystal: 1, projectile: {speed: 10, damage: 50, range: 10, cooldown: 1000}},
+        {cost: 4, buildDuration: 3000, sellPrice: 2, crystal: 1, projectile: {speed: 10, damage: 1, range: 10, cooldown: 1000}},
+        // {cost: 4, buildDuration: 1000, sellPrice: 2, crystal: 1, projectile: {speed: 10, damage: 1, range: 10, cooldown: 500}},
     ]),
 
     Cannon: buildingFactory("cannon", "cannonball", [
-        {cost: 5, sellPrice: 2, crystal: 2, projectile: {speed: 10, damage: 1, range: 1, cooldown: 1000}},
-        // {cost: 4, sellPrice: 2, crystal: 2, projectile: {speed: 10, damage: 1, range: 1, cooldown: 1000}},
-        // {cost: 4, sellPrice: 2, crystal: 2, projectile: {speed: 10, damage: 1, range: 1, cooldown: 500}},
+        {cost: 5, buildDuration: 1000, sellPrice: 2, crystal: 2, projectile: {speed: 10, damage: 1, range: 1, cooldown: 1000}},
+        // {cost: 4, buildDuration: 1000, sellPrice: 2, crystal: 2, projectile: {speed: 10, damage: 1, range: 1, cooldown: 1000}},
+        // {cost: 4, buildDuration: 1000, sellPrice: 2, crystal: 2, projectile: {speed: 10, damage: 1, range: 1, cooldown: 500}},
     ]),
 }
 
