@@ -8,13 +8,13 @@ import Position from "../Position.js";
  *
  * @param {string} name the tower name
  * @param {string} projectileName the name of the projectile used by the tower
- * @param {{cost: number, sellPrice: number, crystal: number, projectile: {speed: number, damage: number, range: number, cooldown: number}}[]} levels
+ * @param {{cost: number, buildDuration: number, sellPrice: number, crystal: number, projectile: {speed: number, damage: number, range: number, cooldown: number}}[]} levels
  */
 export function buildingFactory(name, projectileName, levels) {
     /**
      * @param {string} name the tower name
      * @param {string} projectileName the name of the projectile used by the tower
-     * @param {{cost: number, sellPrice: number, crystal: number, projectile: {speed: number, damage: number, range: number, cooldown: number}}[]} levels
+     * @param {{cost: number, buildDuration: number, sellPrice: number, crystal: number, projectile: {speed: number, damage: number, range: number, cooldown: number}}[]} levels
      * @param {number} currentLevel
      */
     function innerFactory(name, projectileName, levels, currentLevel) {
@@ -32,6 +32,7 @@ export function buildingFactory(name, projectileName, levels) {
             static get movements() { return AbstractEntity.movements }
             static get name() { return name + levelName }
             static get cost() { return levels[currentLevel].cost }
+	        static get buildDuration() { return levels[currentLevel].buildDuration }
             static get sellPrice() { return levels[currentLevel].sellPrice }
             static get crystalOnBuild() { return levels[currentLevel].crystal }
             /** @return {typeof AbstractBuilding | null} */
@@ -47,7 +48,7 @@ export function buildingFactory(name, projectileName, levels) {
 }
 
 export default class AbstractBuilding extends AbstractEntity {
-	static get MAX_BUILD_DURATION() { return 3000 }
+	static get MAX_SELL_DURATION() { return 3000 }
     #attackCooldown = 0
 	#builtTime = 0
 
@@ -62,6 +63,7 @@ export default class AbstractBuilding extends AbstractEntity {
     static get sellPrice() { return 0 }
 
     get cost() { return this.__proto__.constructor.cost }
+	get buildDuration() { return this.__proto__.constructor.buildDuration }
     get sellPrice() { return this.__proto__.constructor.sellPrice }
     get crystalOnBuild() { return this.__proto__.constructor.crystalOnBuild }
     /** @return {typeof AbstractBuilding | null} */
@@ -69,6 +71,10 @@ export default class AbstractBuilding extends AbstractEntity {
     /** @return {typeof AbstractProjectile} */
     get projectile() { return this.__proto__.constructor.projectile }
 
+	/**
+	 * @returns {number} value is not capped to 100
+	 */
+	get buildPercent() { return (globalThis.game.currentFrameTiming - this.#builtTime) / this.buildDuration * 100 }
 
     act(frameDuration, currentTime) {
         switch (this.animationDetails.name) {
@@ -78,8 +84,9 @@ export default class AbstractBuilding extends AbstractEntity {
 			        this.setAnimation(AnimationKeys.IDLE, globalThis.game.currentFrameTiming)
 		        }
 	        }
-			case AnimationKeys.IDLE: {
-				if (this.#builtTime + AbstractBuilding.MAX_BUILD_DURATION < globalThis.game.currentFrameTiming) {
+	        // fallthrough
+	        case AnimationKeys.IDLE: {
+				if (this.#builtTime + this.buildDuration < globalThis.game.currentFrameTiming) {
 					this.#attackCooldown = this.#attackCooldown - frameDuration
 
 					const targets = globalThis.game.getEntitiesCloseTo(this.position, this.projectile.range, AbstractUnit)
@@ -100,13 +107,13 @@ export default class AbstractBuilding extends AbstractEntity {
                 break
             }
 	        case AnimationKeys.UPGRADE: {
-		        if (currentTime > this.animationDetails.end || currentTime > this.animationDetails.start + AbstractBuilding.MAX_BUILD_DURATION) {
+		        if (currentTime > this.animationDetails.end || currentTime > this.animationDetails.start + this.buildDuration) {
 			        this.setAnimation(AnimationKeys.IDLE, globalThis.game.currentFrameTiming)
 		        }
 		        break
 	        }
             case AnimationKeys.SELL: {
-                if (currentTime > this.animationDetails.end || currentTime > this.animationDetails.start + AbstractBuilding.MAX_BUILD_DURATION) {
+                if (currentTime > this.animationDetails.end || currentTime > this.animationDetails.start + AbstractBuilding.MAX_SELL_DURATION) {
                     globalThis.game.deleteEntity(this)
                 }
                 break
