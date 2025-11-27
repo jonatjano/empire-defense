@@ -1,0 +1,6 @@
+services:
+  empire-defense:
+    image: empire-defense
+    build: .
+    ports:
+      - "3000:80"
