@@ -29,6 +29,7 @@ export const AnimationKeys = Object.freeze({
 /**
  * @callback EntityDeathCallback
  * @param {AbstractEntity} entity
+ * @param {boolean} giveReward
  */
 
 export default class AbstractEntity {
@@ -78,15 +79,15 @@ export default class AbstractEntity {
         throw new Error("AbstractEntity initialised")
     }
 
-	callDeathCallback() {
-		this.#deathCallback(this)
+	callDeathCallback(giveReward) {
+		this.#deathCallback(this, giveReward)
 		this.#deathCallback = AbstractEntity.defaultDeathCallback
 	}
 
 	hit(damage) {
 		this.abstractHit(damage, true)
 		if (this.#hp <= 0) {
-			this.callDeathCallback()
+			this.callDeathCallback(true)
 		}
 	}
 

@@ -30,6 +30,8 @@ export default class Game {
     #pathFinder
 
     /** @type {number} */
+    #life
+    /** @type {number} */
     #money
     /** @type {number} */
     #crystal
@@ -54,6 +56,7 @@ export default class Game {
         this.#map = map
         this.#eventListener = eventListener
         this.#pathFinder = pathFinder
+        this.life = 20
         this.money = 20
         this.crystal = 0
         this.waveNumber = 0
@@ -218,6 +221,18 @@ export default class Game {
 
     get isPaused() { return this.#isPaused }
 
+    get life() { return this.#life }
+    set life(value) {
+        this.#life = value
+        if (! globalThis.options.unlimitedLife) {
+            document.querySelector("#lifeLabel").textContent = value.toString()
+            if (this.life <= 0) {
+                this.pause()
+                alert("game over")
+            }
+        }
+    }
+
     get money() { return this.#money }
     set money(value) {
         this.#money = value
@@ -378,14 +393,17 @@ export default class Game {
         }
     }
 
-    #waveDeathCallback(unit) {
-        this.money += unit.killReward
-        this.crystal += unit.killCrystalReward
-        this.addEntity(new FloatingText(
-            unit.killReward.toString(10),
-            "gold",
-            new Position(unit.position.x + Math.random() * 0.3, unit.position.y - 0.5 + Math.random() * 0.3)
-        ))
+    #waveDeathCallback(unit, giveReward) {
+        console.log("death", unit, giveReward)
+        if (giveReward) {
+            this.money += unit.killReward
+            this.crystal += unit.killCrystalReward
+            this.addEntity(new FloatingText(
+                unit.killReward.toString(10),
+                "gold",
+                new Position(unit.position.x + Math.random() * 0.3, unit.position.y - 0.5 + Math.random() * 0.3)
+            ))
+        }
 
 	    if (this.#unitsToSpawn.every(spawnList => spawnList.length === 0) &&
             this.getEntities(AbstractUnit)

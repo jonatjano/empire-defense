@@ -31,7 +31,7 @@ export default class AbstractUnit extends AbstractEntity {
 			this.setAnimation(AnimationKeys.DEAD, globalThis.game.currentFrameTiming)
 				.catch(() => { this.hit(Infinity) })
 				.finally(() => {
-					this.callDeathCallback()
+					this.callDeathCallback(true)
 				})
 		}
 	}
@@ -54,10 +54,10 @@ export default class AbstractUnit extends AbstractEntity {
 
 				    if (this.target.equals(this.position)) {
 					    if (globalThis.game.map.targets.find(target => this.position.equals(Position.getTileCenterPosition(target)))) {
-						    // TODO
-						    // this.hit(Infinity)
-						    // return
-						    this.position.teleport(Position.getTileCenterPosition(globalThis.game.map.spawns[0]))
+							globalThis.game.life--
+							globalThis.game.deleteEntity(this, true)
+							this.callDeathCallback(false)
+							return
 					    }
 					    const pathFinding = globalThis.game.pathFinder.getNextTarget(this.position, this.movements.movementType)
 					    if (pathFinding === null) {
