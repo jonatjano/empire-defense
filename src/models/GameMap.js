@@ -156,23 +156,26 @@ function developWaveData(waveData) {
         "E": Entities.Elephant,
     }
     let count = 0;
-    return waveData.map(row => [
-        row.split("").reduce((acc, char) => {
-            if (char === " ") {
-                // ignore
-            } else if (char.match(/[0-9]/)) {
-                count = count * 10 + Number.parseInt(char)
-            } else {
-                const entityType = letterToEntityType[char];
-                const spawnedCount = Math.max(count, 1)
-                for (let i = 0; i < spawnedCount; ++i) {
-                    acc.push(entityType)
+    return waveData.map(row => {
+        console.log(row);
+        return [
+            row.split("").reduce((acc, char) => {
+                if (char === " ") {
+                    // ignore
+                } else if (char.match(/[0-9]/)) {
+                    count = count * 10 + Number.parseInt(char)
+                } else {
+                    const entityType = letterToEntityType[char];
+                    const spawnedCount = Math.max(count, 1)
+                    for (let i = 0; i < spawnedCount; ++i) {
+                        acc.push(entityType)
+                    }
+                    count = 0;
                 }
-                count = 0;
-            }
-            return acc
-        }, [])
-    ])
+                return acc
+            }, [])
+        ]
+    })
 }
 
 /** @typedef {unprocessedWaveData[]} unprocessedWaveGroupData */
@@ -208,11 +211,11 @@ export const mapsData = Object.freeze([
         [{x: 21, y: 5}],
         {},
         developWaveData([
-            "S",
+            "1S",
             "3S",
             "4S",
             "5S",
-            "F 5S",
+            "1F 5S",
             "8S",
             "10S",
             "12S",
@@ -222,7 +225,24 @@ export const mapsData = Object.freeze([
             "2C",
             "8F",
             "10F",
-            "18S 2C 5F",
+            "17S 2C 5F",
+            "4C",
+            "10F",
+            "20S",
+            "1K",
+            "2K 10S",
+            "25S",
+            "20F",
+            "1B",
+            "6C",
+            "25S",
+            "20F",
+            "5K",
+            "8C",
+            "2H",
+            "1Y",
+            "1B 4F",
+            "5K",
         ])
     ),
     new GameMap(

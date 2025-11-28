@@ -16,5 +16,6 @@
 	"debug": false,
 	"debugTextures": true,
 	"showStats": true,
-	"unlimitedMoney": true
+	"unlimitedMoney": true,
+	"unlimitedLife": false
 }

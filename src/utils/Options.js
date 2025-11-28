@@ -41,6 +41,8 @@ class Options {
 
     /** @type {boolean} */
     #unlimitedMoney = false
+    /** @type {boolean} */
+    #unlimitedLife = false
 
     // todo stuff with local storage and proxy and stuff
     constructor() {
@@ -63,12 +65,14 @@ class Options {
                  *  debugTextures: ?boolean,
                  *  showStats: ?boolean
                  *  unlimitedMoney: ?boolean,
+                 *  unlimitedLife: ?boolean,
                  * }} meta */
                 meta => {
                 /* debug */
                 this.debug = meta.debug ?? false
                 this.showStats = meta.showStats ?? this.debug
                 this.unlimitedMoney = meta.unlimitedMoney ?? this.debug
+                this.unlimitedLife = meta.unlimitedLife ?? this.debug
 
                 /* languages */
                 this.#knownLanguages = meta.languages.list
@@ -153,8 +157,17 @@ class Options {
             document.querySelector("#moneyLabel").textContent = "∞"
         }
     }
-
     get unlimitedMoney() { return this.#unlimitedMoney }
+
+    /** @param {boolean} value */
+    set unlimitedLife(value) {
+        this.#unlimitedLife = value
+        if (value) {
+            console.log("\n\n\n\n\nunlimited life activated\n\n\n\n\n")
+            document.querySelector("#lifeLabel").textContent = "∞"
+        }
+    }
+    get unlimitedLife() { return this.#unlimitedLife }
 
     /** @param {string} value */
     set language(value) {
