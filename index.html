@@ -43,18 +43,23 @@
 			<div id="towers"></div>
 		</div>
 		<div id="pauseMenu" class="menu">
+			<h1 data-translation="generic.menu">Menu</h1>
 			<button id="resumeButton" data-translation="generic.resume">Resume</button>
 			<button id="quitButton" data-translation="generic.quit">Quit</button>
-			<button id="optionButton" data-translation="generic.option">Option</button>
+			<button id="optionButton" data-translation="generic.options">Options</button>
 		</div>
 		<div id="towerMenu" class="hidden">
 			<button id="upgradeTower"><img data-framed="true" data-texture="entities/buildings/archery1" src="" alt="Upgrade"></button>
 			<button id="sellTower"><img data-framed="true" data-texture="icons/money" src="" alt="Sell"></button>
 		</div>
 		<div id="optionMenu" class="menu hidden">
-			<p>WIP: </p>
-			<p>	volume</p>
-			<p>	resource packs</p>
+			<h1 data-translation="generic.options">Options</h1>
+			<div id="texturePackOption">
+				<h3 data-translation="generic.texturePacks">Texture packs</h3>
+				<select id="texturePackSelect"></select>
+				<input id="texturePackInput" type="file" webkitdirectory onchange="options.uploadTexturePack()"/>
+			</div>
+			<button id="saveOptionButton" data-translation="generic.save">Save</button>
 		</div>
 	</div>
 	<div id="debugOverlay" class="hidden">
@@ -66,12 +71,11 @@
 		<h1>Textures</h1>
 	</div>
 
-	<!-- this canvas is used by background scripts, it should never be shown -->
-	<canvas id="utilsCanvas" class="hidden"></canvas>
+	<!-- TOOO maybe replace by an OffScreenCanvas -->
+	<!-- this canvas is used by background scripts -->
+	<canvas id="utilsCanvas" class="hidden" style="position: absolute; bottom: 0; left: 0"></canvas>
 
-	<!-- for debug purpose, should be removed before release -->
+	<!-- TODO for debug purpose, should be removed before release -->
 	<button style="position: absolute; top: 0; left: 0" onclick="window.location.reload()">reload</button>
-	<input id="texturePackInput" style="position: absolute; top: 0; left: 200px" type="file" webkitdirectory onchange="options.uploadTexturePack()"/>
-	<select id="texturePackSelect"  style="position: absolute; top: 0; left: 100px; width: 100px"></select>
 </body>
 </html>
