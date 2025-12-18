@@ -7,6 +7,11 @@
 					"fixedStart": false
 				}
 			},
+			"debug1": {
+				"textureType": "ROTATION_ONLY",
+				"pixelSize": 128,
+				"worldSize": 1
+			},
 			"archery1": {
 				"animations": {
 					"idle": {
@@ -62,6 +67,9 @@
 					"timings": [1000, 1000],
 					"fixedStart": false
 				}
+			},
+			"debugp1": {
+				"textureType": "BASE_ONLY"
 			},
 			"arrow2": {
 				"animations": {

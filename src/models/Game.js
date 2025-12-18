@@ -60,7 +60,7 @@ export default class Game {
         this.money = 20
         this.crystal = 0
         this.waveNumber = 0
-        this.playableTowers = [entities.Archery, entities.Cannon]
+        this.playableTowers = [entities.Debug, entities.Archery, entities.Cannon/*, entities.Ice*//*, entities.Arbalet*//*, entities.Booster*/]
     }
 
     addEntity(entity) {
@@ -94,6 +94,7 @@ export default class Game {
     set playableTowers(playableTowers) {
         const towersContainer = document.querySelector("#towers")
         towersContainer.innerHTML = ""
+        console.log(playableTowers)
         towersContainer.append(
             ...playableTowers.map(towerType => {
                 const element = document.createElement("button")
@@ -116,24 +117,29 @@ export default class Game {
     get selectedEntity() {
         return this.#selectedEntity
     }
-    /** @type {{tower: AbstractBuilding, isGhost: boolean, isValid: boolean} | null} */
+    /** @param {{tower: AbstractBuilding, isGhost: boolean, isValid: boolean} | null} value */
     set selectedEntity(value) {
         this.#selectedEntity = value
         const upgradeButton = document.querySelector("#upgradeTower")
         const sellButton = document.querySelector("#sellTower")
 
-        document.querySelector("#towerMenu").classList.toggle("hidden", value?.isGhost ?? true)
-	    if (value?.tower.upgradesTo !== undefined && value?.tower.upgradesTo !== null) {
-		    upgradeButton.classList.toggle("hidden", value?.tower.buildPercent < 100)
+        this.toggleTowerMenuVisibility(value)
+	    if (value.tower.upgradesTo) {
 		    upgradeButton.firstElementChild.dataset.texture = `entities/buildings/${value?.tower.upgradesTo.name}`
-		} else {
-		    upgradeButton.classList.add("hidden")
 	    }
 
         sellButton.onclick = value ? this.#sellTower.bind(this, value.tower) : undefined
         if (value?.tower.upgradesTo) {
             upgradeButton.onclick = value ? this.#upgradeTower.bind(this, value.tower) : undefined
         }
+    }
+
+    /** @param {{tower: AbstractBuilding, isGhost: boolean, isValid: boolean} | null} value */
+    toggleTowerMenuVisibility(value) {
+        if (! value) { return }
+        document.querySelector("#towerMenu").classList.toggle("hidden", value.isGhost)
+        document.querySelector("#sellTower").classList.toggle("hidden", value.tower.buildPercent < 100 || value.isGhost)
+        document.querySelector("#upgradeTower").classList.toggle("hidden", value.tower.buildPercent < 100 || value.isGhost || ! value.tower.upgradesTo)
     }
 
     #sellTower(tower) {
@@ -186,9 +192,7 @@ export default class Game {
         realLastFrameTiming = frameTiming
         frameCounterSinceLastPause++
 
-	    if (! this.#selectedEntity?.isGhost && this.#selectedEntity?.tower.buildPercent > 100) {
-		    document.querySelector("#upgradeTower").classList.remove("hidden")
-	    }
+        this.toggleTowerMenuVisibility(this.selectedEntity)
 
         document.getElementById("debugTime").textContent = frameTiming
         document.getElementById("frameCount").textContent = (++totalFrameCounter).toFixed(0)

@@ -253,10 +253,8 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                         const yFactor = canvasRect.height / canvas.height;
 
                         const xPos = (leftMargin + game.selectedEntity.tower.position.x - 0.5) * globalThis.options.zoom * xFactor
-                        const yPos = (topMargin + game.selectedEntity.tower.position.y - 1.5) * globalThis.options.zoom * yFactor
-                        const maxHeight = entityTexture.worldHeight * globalThis.options.zoom * yFactor
-                        const maxWidth = entityTexture.worldWidth * globalThis.options.zoom * xFactor
-                        towerMenu.style = `--tower-x: ${xPos}px; --tower-y: ${yPos}px; --tower-height: ${maxHeight}px; --tower-width: ${maxWidth}px;`
+                        const yPos = (topMargin + game.selectedEntity.tower.position.y - entityTexture.worldHeight + 0.5) * globalThis.options.zoom * yFactor
+                        towerMenu.style = `--tower-x: ${xPos}px;--tower-y: ${yPos}px;--tower-world-height: ${entityTexture.worldHeight};--tower-world-width: ${entityTexture.worldWidth};--zoom-level: ${globalThis.options.zoom}px;--cell-width-factor:${xFactor};--cell-height-factor:${yFactor}`
                     }
                     ctx.globalAlpha = drawImageData.alpha
 
