@@ -93,6 +93,7 @@ button:has(> img:only-child) {
             display: flex;
             justify-content: right;
             align-items: end;
+            gap: var(--space-normal);
         }
 
         /* justification */
@@ -107,9 +108,13 @@ button:has(> img:only-child) {
         & > #money, & > #life, & > #menu, & > #crystal, & > #wave {
             display: flex;
             align-items: center;
+            gap: var(--space-normal);
         }
         & button { font-size: 1em }
-        & img { height: 1.5lh }
+        & img {
+            height: 1.5lh;
+            aspect-ratio: 1;
+        }
 
         & > #menu > *, & > #towers > * {
             pointer-events: all;
