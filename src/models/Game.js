@@ -160,6 +160,7 @@ export default class Game {
     }
 
     #upgradeTower(tower) {
+        console.log("upgrading", tower, this.money, tower.upgradesTo.cost)
         if (this.money >= tower.upgradesTo.cost) {
             const newTower = new tower.upgradesTo(tower.position)
             newTower.setAnimation(AnimationKeys.UPGRADE, frameTimingWithSpeedFactor)
@@ -242,7 +243,7 @@ export default class Game {
         }
     }
 
-    get money() { return this.#money }
+    get money() { return globalThis.options.unlimitedMoney ? Infinity : this.#money }
     set money(value) {
         this.#money = value
         if (! globalThis.options.unlimitedMoney) {
