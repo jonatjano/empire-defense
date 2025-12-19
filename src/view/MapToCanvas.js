@@ -34,7 +34,7 @@ let mouseData = {
  * @param {(x: number, y: number) => undefined} moveListener
  */
 export function setCanvasEvent(canvas, clickListener, moveListener) {
-    const callback = (event, listener) => {
+    const callback = (event, listener, metaKeys) => {
         const leftMargin = (canvas.width / globalThis.options.zoom - game.map.width) / 2 + (globalThis.options.mapOffset.x / globalThis.options.zoom)
         const topMargin = (canvas.height / globalThis.options.zoom - game.map.height) / 2 + (globalThis.options.mapOffset.y / globalThis.options.zoom)
 
@@ -45,7 +45,7 @@ export function setCanvasEvent(canvas, clickListener, moveListener) {
         const canvasY = event.y - boundingRect.top
         const mapX = (canvasX * xRatio) / globalThis.options.zoom - leftMargin
         const mapY = (canvasY * yRatio) / globalThis.options.zoom - topMargin
-        listener(mapX, mapY)
+        listener(mapX, mapY, metaKeys)
     }
 
     canvas.onmousedown = event => {
@@ -67,12 +67,12 @@ export function setCanvasEvent(canvas, clickListener, moveListener) {
             mouseData.x = event.x
             mouseData.y = event.y
         } else {
-            callback(event, moveListener)
+            callback(event, moveListener, {ctrl: event.ctrlKey, shift: event.shiftKey})
         }
     }
     canvas.onmouseup = event => {
         if (! mouseData.dragging) {
-            callback(event, clickListener)
+            callback(event, clickListener, {ctrl: event.ctrlKey, shift: event.shiftKey})
         }
         mouseData.clicked = false
         mouseData.dragging = false

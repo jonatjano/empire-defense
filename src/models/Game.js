@@ -302,8 +302,9 @@ export default class Game {
     /**
      * @param {number} x
      * @param {number} y
+     * @param {{ctrl: boolean, shift: boolean}} metaKeys
      */
-    click(x, y) {
+    click(x, y, metaKeys) {
         if (this.#isPaused) { return }
 
         const towerType = this.#selectedTowerType
@@ -352,8 +353,10 @@ export default class Game {
         if (this.waveNumber === 0) {
             this.#launchNextWave()
         }
-        this.#selectedTowerType = null
-        this.selectedEntity = null
+        if (! metaKeys.shift) {
+            this.#selectedTowerType = null
+            this.selectedEntity = null
+        }
     }
 
     #launchNextWave() {
