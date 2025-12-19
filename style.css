@@ -117,6 +117,29 @@ button:has(> img:only-child) {
     }
 }
 
+button[data-cost] {
+    position: relative;
+    width: 1.5lh;
+    height: 1.5lh;
+    &::after {
+        --font-size: 16px;
+        --padding: 0.2lh;
+        --border: 0.2lh;
+        position: absolute;
+        padding: var(--padding);
+        border-radius: calc(2 * var(--border));
+        border: var(--border) solid green;
+        content: attr(data-cost);
+        background-color: brown;
+        color: white;
+        font-size: var(--font-size);
+        z-index: 1;
+        bottom: 0;
+        left: 50%;
+        translate: -50% calc(var(--font-size) / 2);
+    }
+}
+
 #debugOverlay {
     pointer-events: none;
     position: absolute;

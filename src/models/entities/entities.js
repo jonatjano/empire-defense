@@ -5,6 +5,7 @@ import AbstractUnit, {unitFactory} from "./AbstractUnit.js"
 /**
  * @param {(AbstractUnit) => boolean} customFilter
  * @this AbstractBuilding
+ * TODO replace by a targetUnitWhoWalkedTheMostOfThePath
  */
 function targetClosestUnit(customFilter = () => true) {
     return function() {

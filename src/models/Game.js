@@ -94,11 +94,11 @@ export default class Game {
     set playableTowers(playableTowers) {
         const towersContainer = document.querySelector("#towers")
         towersContainer.innerHTML = ""
-        console.log(playableTowers)
         towersContainer.append(
             ...playableTowers.map(towerType => {
                 const element = document.createElement("button")
                 element.innerHTML = `<img data-framed="true" data-texture="entities/buildings/${towerType.name}" src="" alt="${towerType.name}">`
+                element.dataset.cost = towerType.cost
                 element.onclick = () => {
                     if (this.#selectedTowerType === towerType) {
                          this.#selectedTowerType = null
@@ -124,10 +124,12 @@ export default class Game {
         const sellButton = document.querySelector("#sellTower")
 
         this.toggleTowerMenuVisibility(value)
-	    if (value.tower.upgradesTo) {
-		    upgradeButton.firstElementChild.dataset.texture = `entities/buildings/${value?.tower.upgradesTo.name}`
+	    if (value?.tower.upgradesTo) {
+            upgradeButton.firstElementChild.dataset.texture = `entities/buildings/${value?.tower.upgradesTo.name}`
+            upgradeButton.dataset.cost = value.tower.upgradesTo.cost;
 	    }
 
+        sellButton.dataset.cost = value?.tower.sellPrice ?? "0"
         sellButton.onclick = value ? this.#sellTower.bind(this, value.tower) : undefined
         if (value?.tower.upgradesTo) {
             upgradeButton.onclick = value ? this.#upgradeTower.bind(this, value.tower) : undefined
@@ -136,10 +138,13 @@ export default class Game {
 
     /** @param {{tower: AbstractBuilding, isGhost: boolean, isValid: boolean} | null} value */
     toggleTowerMenuVisibility(value) {
-        if (! value) { return }
-        document.querySelector("#towerMenu").classList.toggle("hidden", value.isGhost)
-        document.querySelector("#sellTower").classList.toggle("hidden", value.tower.buildPercent < 100 || value.isGhost)
-        document.querySelector("#upgradeTower").classList.toggle("hidden", value.tower.buildPercent < 100 || value.isGhost || ! value.tower.upgradesTo)
+        if (value) {
+            document.querySelector("#towerMenu").classList.toggle("hidden", value.isGhost)
+            document.querySelector("#sellTower").classList.toggle("hidden", value.tower.buildPercent < 100 || value.isGhost)
+            document.querySelector("#upgradeTower").classList.toggle("hidden", value.tower.buildPercent < 100 || value.isGhost || !value.tower.upgradesTo)
+        } else {
+            document.querySelector("#towerMenu").classList.add("hidden")
+        }
     }
 
     #sellTower(tower) {
