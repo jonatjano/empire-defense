@@ -94,6 +94,7 @@ button:has(> img:only-child) {
             justify-content: right;
             align-items: end;
             gap: var(--space-normal);
+            padding: var(--space-normal);
         }
 
         /* justification */
