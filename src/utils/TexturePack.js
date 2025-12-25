@@ -526,7 +526,6 @@ class Texture {
             for (let col = 0; col < animation.timings.length; col++) {
                 // 2. get the images as needed in the canvas
                 if (this.#meta.textureType === TextureType.IMAGE) {
-                    console.log(cellWidth, cellHeight, scale, cellWidth * scale, cellHeight * scale, canvas.width, canvas.height)
                     context.drawImage(this.getBase(),
                         col * this.pixelWidth, line * this.pixelHeight, cellWidth, cellHeight,
                         cellWidth * (col + marginLeft), cellHeight * (line + marginTop), cellWidth * scale, cellHeight * scale

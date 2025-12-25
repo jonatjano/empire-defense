@@ -207,14 +207,25 @@ export default class Game {
     }
 
     play(frameTiming) {
+        this.step(frameTiming)
         if (! this.#isPaused) {
-            this.step(frameTiming)
             requestAnimationFrame(this.play.bind(this))
         }
     }
 
+    playOnce() {
+        if (! this.#isPaused) { return}
+        const again = () => {
+            requestAnimationFrame(this.play.bind(this))
+        }
+        realLastFrameTiming = undefined
+        requestAnimationFrame(this.play.bind(this))
+        requestAnimationFrame(again.bind(this))
+    }
+
     resume() {
         if (! this.#isPaused) { return }
+        realLastFrameTiming = undefined
         this.#isPaused = false
         requestAnimationFrame(this.play.bind(this))
     }

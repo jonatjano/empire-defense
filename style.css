@@ -1,5 +1,13 @@
 :root {
     --margin: 5%;
+
+    --background-color: #D3D3D3;
+    --primary-color: beige;
+    --secondary-color: brown;
+    --space-normal: 10px;
+
+    --space-smaller: calc(var(--space-normal) * 0.6);
+    --space-bigger: calc(var(--space-normal) * 1.4);
 }
 
 html, body {
@@ -85,6 +93,8 @@ button:has(> img:only-child) {
             display: flex;
             justify-content: right;
             align-items: end;
+            gap: var(--space-normal);
+            padding: var(--space-normal);
         }
 
         /* justification */
@@ -99,9 +109,13 @@ button:has(> img:only-child) {
         & > #money, & > #life, & > #menu, & > #crystal, & > #wave {
             display: flex;
             align-items: center;
+            gap: var(--space-normal);
         }
         & button { font-size: 1em }
-        & img { height: 1.5lh }
+        & img {
+            height: 1.5lh;
+            aspect-ratio: 1;
+        }
 
         & > #menu > *, & > #towers > * {
             pointer-events: all;
@@ -160,8 +174,39 @@ button:has(> img:only-child) {
     }
 }
 
-#pauseMenu {
+
+.menu {
     position: absolute;
-    top: 300px;
-    left: 300px;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    width: fit-content;
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-smaller);
+    padding: var(--space-normal);
+
+    background-color: var(--background-color);
+    border: 3px solid var(--secondary-color);
+    border-radius: var(--space-normal);
+
+    & > * {
+        margin: 0 var(--margin) 0 var(--margin);
+        width: calc(100% - 2 * var(--margin));
+        min-width: fit-content;
+    }
+
+    & button {
+        background-color: var(--primary-color);
+        border: 1px solid var(--secondary-color);
+        padding: var(--space-smaller);
+
+        cursor: pointer;
+    }
+
+    & .texturePackMenu {
+        display: flex;
+        flex-direction: column;
+    }
 }
