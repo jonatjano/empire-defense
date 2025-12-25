@@ -191,7 +191,7 @@ class Options {
         }
         if (texturePack) {
             this.#texturePack = texturePack
-            this.#texturePack.updateDocumentTextures()
+            globalThis.game?.playOnce?.()
         }
     }
 
@@ -275,8 +275,19 @@ class Options {
         })
         const quitButton = document.querySelector("#quitButton")
         quitButton.addEventListener("click", () => window.location.reload())
-        this.updateIconsEvents()
 
+        const optionButton = document.querySelector("#optionButton")
+        optionButton.addEventListener("click", () => {
+            document.querySelector("#pauseMenu").classList.toggle("hidden", true)
+            document.querySelector("#optionMenu").classList.toggle("hidden", false)
+        })
+        const saveOptionButton = document.querySelector("#saveOptionButton")
+        saveOptionButton.addEventListener("click", () => {
+            document.querySelector("#pauseMenu").classList.toggle("hidden", false)
+            document.querySelector("#optionMenu").classList.toggle("hidden", true)
+        })
+
+        this.updateIconsEvents()
     }
 
     updateIconsEvents() {
