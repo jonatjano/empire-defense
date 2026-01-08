@@ -5,29 +5,21 @@
 				"idle": {
 					"timings": [1000],
 					"fixedStart": false
+				},
+				"sell": {
+					"timings": [500, 500],
+					"fixedStart": true
+				},
+				"click": {
+					"timings": [500, 500],
+					"fixedStart": true
 				}
 			},
+			"textureType": "BASE_ONLY",
 			"debug1": {
 				"textureType": "ROTATION_ONLY",
 				"pixelSize": 128,
 				"worldSize": 1
-			},
-			"archery1": {
-				"animations": {
-					"idle": {
-						"timings": [1000],
-						"fixedStart": false
-					},
-					"sell": {
-						"timings": [500, 500],
-						"fixedStart": true
-					},
-					"click": {
-						"timings": [500, 500],
-						"fixedStart": true
-					}
-				},
-				"textureType": "BASE_ONLY"
 			},
 			"archery2": {
 				"animations": {
@@ -56,32 +48,6 @@
 						"fixedStart": true
 					}
 				}
-			},
-			"archery3": {
-				"animations": {
-					"idle": {
-						"timings": [1000],
-						"fixedStart": false
-					},
-					"sell": {
-						"timings": [500, 500],
-						"fixedStart": true
-					},
-					"click": {
-						"timings": [500, 500],
-						"fixedStart": true
-					}
-				},
-				"textureType": "BASE_ONLY"
-			},
-			"cannon1": {
-				"textureType": "ROTATION_ONLY"
-			},
-			"cannon2": {
-				"textureType": "ROTATION_ONLY"
-			},
-			"cannon3": {
-				"textureType": "ROTATION_ONLY"
 			}
 		},
 		"projectiles": {
@@ -105,15 +71,6 @@
 						"fixedStart": true
 					}
 				}
-			},
-			"cannonball1": {
-				"textureType": "BASE_ONLY"
-			},
-			"cannonball2": {
-				"textureType": "BASE_ONLY"
-			},
-			"cannonball3": {
-				"textureType": "BASE_ONLY"
 			}
 		},
 		"units": {
