@@ -37,6 +37,7 @@ export default class AbstractUnit extends AbstractEntity {
 	}
 
     act(frameDuration, currentTime) {
+		this.slowDuration -= frameDuration
 	    switch (this.animationDetails.name) {
 		    case AnimationKeys.WALK: {
 			    if (this.target === undefined) {
@@ -48,7 +49,8 @@ export default class AbstractUnit extends AbstractEntity {
 			    }
 
 			    while (frameDuration > 0) {
-				    const moveResult = Position.move(this.position, this.target, this.movements, frameDuration)
+					const speedFactor = this.slowDuration > 0 ? 0.5 : 1;
+				    const moveResult = Position.move(this.position, this.target, this.movements, frameDuration * speedFactor)
 				    this.position.teleport(moveResult.position)
 				    frameDuration = moveResult.remainingTime
 

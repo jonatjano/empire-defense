@@ -3,15 +3,17 @@ import AbstractEntity, {AnimationKeys} from "./AbstractEntity.js"
 import Position from "../Position.js";
 import AbstractUnit from "./AbstractUnit.js";
 
-export function projectileFactory(name, speed, damage, range, cooldown) {
+export function projectileFactory(name, speed, damage, range, cooldown, onHitCb) {
     const movement = new MovementCapability(10, 3600, 360, MovementType.Unobstructed)
     return class extends AbstractProjectile {
         static #movements = movement
         static get movements() { return this.#movements }
         static get name() { return name }
         static get damage() { return damage }
-        static get range() { return range }
+        static get range() { return range + 0.5 }
         static get cooldown() { return cooldown }
+		/** @return {(target?: AbstractEntity) => void} */
+		static get onHitCb() { return onHitCb }
 
         constructor(position, target = null) {
             super(position, target)
@@ -26,6 +28,7 @@ export default class AbstractProjectile extends AbstractEntity {
     get damage() { return this.__proto__.constructor.damage }
     get range() { return this.__proto__.constructor.range }
     get cooldown() { return this.__proto__.constructor.cooldown }
+	get onHitCb() { return this.__proto__.constructor.onHitCb }
 
     /** @type {Position | AbstractEntity} */
     #target
@@ -54,10 +57,14 @@ export default class AbstractProjectile extends AbstractEntity {
 				    if (targetIsEntity) {
 					    if (this.target.hp > 0) {
 						    this.target.hit(ATTACK_DAMAGE)
+							this.onHitCb(this.target)
 					    }
 				    } else {
 					    globalThis.game.getEntitiesCloseTo(this.position, ATTACK_RANGE, AbstractUnit)
-						    .forEach(entity => {entity.hit(ATTACK_DAMAGE)})
+						    .forEach(entity => {
+								entity.hit(ATTACK_DAMAGE)
+								this.onHitCb(entity)
+							})
 				    }
 					this.setAnimation(AnimationKeys.HIT, globalThis.game.currentFrameTiming)
 						.then(success => {

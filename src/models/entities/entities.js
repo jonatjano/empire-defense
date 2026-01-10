@@ -80,35 +80,53 @@ const entities = {
      *      TOWERS       *
      *********************/
 
-    Debug: buildingFactory("debug", "debugP", targetAllInRange(AbstractUnit), [
+    Debug: buildingFactory(
+        "debug", "debugP",
+        targetAllInRange(AbstractUnit),
+        () => {}, [
         {cost: 1, buildDuration: 1500, sellPrice: 2, crystal: 10, projectile: {speed: 10, damage: 10000, range: 2, cooldown: 10}},
     ]),
 
-    Archery: buildingFactory("archery", "arrow", targetClosestUnit(), [
+    Archery: buildingFactory(
+        "archery", "arrow",
+        targetClosestUnit(),
+        () => {}, [
         {cost: 5, buildDuration: 3000, sellPrice: 2, crystal: 1, projectile: {speed: 10, damage: 100, range: 10, cooldown: 1000}},
         {cost: 4, buildDuration: 3000, sellPrice: 2, crystal: 1, projectile: {speed: 10, damage: 100, range: 10, cooldown: 1000}},
         {cost: 4, buildDuration: 3000, sellPrice: 2, crystal: 1, projectile: {speed: 10, damage: 100, range: 1, cooldown: 500}},
     ]),
 
-    Cannon: buildingFactory("cannon", "cannonball", targetClosestUnit(unit => unit.movements.movementType === MovementType.Walking), [
+    Cannon: buildingFactory(
+        "cannon", "cannonball",
+        targetClosestUnit(unit => unit.movements.movementType === MovementType.Walking),
+        () => {}, [
         {cost: 20, buildDuration: 3000, sellPrice: 10, crystal: 2, projectile: {speed: 10, damage: 1, range: 2, cooldown: 1000}},
         {cost: 20, buildDuration: 3000, sellPrice: 10, crystal: 2, projectile: {speed: 10, damage: 1, range: 2, cooldown: 1000}},
         {cost: 20, buildDuration: 3000, sellPrice: 10, crystal: 2, projectile: {speed: 10, damage: 1, range: 2, cooldown: 1000}},
     ]),
 
-    Ice: buildingFactory("ice", "icebolt", targetClosestUnit(unit => unit.movements.movementType === MovementType.Walking), [
+    Ice: buildingFactory(
+        "ice", "icebolt",
+        targetClosestUnit(unit => unit.movements.movementType === MovementType.Walking),
+        (target) => { target.slowDuration = 2000 }, [
         {cost: 10, buildDuration: 3000, sellPrice: 5, crystal: 2, projectile: {speed: 10, damage: 0, range: 1, cooldown: 1000}},
         {cost: 8, buildDuration: 3000, sellPrice: 5, crystal: 2, projectile: {speed: 10, damage: 0, range: 1, cooldown: 1000}},
         {cost: 8, buildDuration: 3000, sellPrice: 5, crystal: 2, projectile: {speed: 10, damage: 0, range: 1, cooldown: 1000}},
     ]),
 
-    Ballista: buildingFactory("ballista", "bolt", targetClosestUnit(unit => unit.movements.movementType === MovementType.Flying), [
-        {cost: 25, buildDuration: 3000, sellPrice: 10, crystal: 2, projectile: {speed: 10, damage: 0, range: 1, cooldown: 1000}},
-        {cost: 20, buildDuration: 3000, sellPrice: 10, crystal: 2, projectile: {speed: 10, damage: 0, range: 1, cooldown: 1000}},
-        {cost: 20, buildDuration: 3000, sellPrice: 10, crystal: 2, projectile: {speed: 10, damage: 0, range: 2, cooldown: 1000}},
+    Ballista: buildingFactory(
+        "ballista", "bolt",
+        targetClosestUnit(unit => unit.movements.movementType === MovementType.Flying),
+        () => {}, [
+        {cost: 25, buildDuration: 3000, sellPrice: 10, crystal: 2, projectile: {speed: 10, damage: 1, range: 1, cooldown: 1000}},
+        {cost: 20, buildDuration: 3000, sellPrice: 10, crystal: 2, projectile: {speed: 10, damage: 1, range: 1, cooldown: 1000}},
+        {cost: 20, buildDuration: 3000, sellPrice: 10, crystal: 2, projectile: {speed: 10, damage: 1, range: 2, cooldown: 1000}},
     ]),
 
-    Booster: buildingFactory("booster", "boostAura", targetAllInRange(AbstractBuilding), [
+    Booster: buildingFactory(
+        "booster", "boostAura",
+        targetAllInRange(AbstractBuilding),
+        () => {}, [
         {cost: 50, buildDuration: 3000, sellPrice: 10, crystal: 2, projectile: {speed: 10, damage: 0, range: 1, cooldown: 1000}},
         {cost: 50, buildDuration: 3000, sellPrice: 10, crystal: 2, projectile: {speed: 10, damage: 0, range: 1, cooldown: 1000}},
     ]),

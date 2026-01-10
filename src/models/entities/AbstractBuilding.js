@@ -1,7 +1,6 @@
 
 import AbstractEntity, {AnimationKeys} from "./AbstractEntity.js"
 import {projectileFactory} from "./AbstractProjectile.js"
-import AbstractUnit from "./AbstractUnit.js";
 import Position from "../Position.js";
 
 /**
@@ -9,9 +8,10 @@ import Position from "../Position.js";
  * @param {string} name the tower name
  * @param {string} projectileName the name of the projectile used by the tower
  * @param {() => AbstractEntity[]} targetingFunction
+ * @param {(target?: AbstractEntity) => void} onHitCb
  * @param {{cost: number, buildDuration: number, sellPrice: number, crystal: number, projectile: {speed: number, damage: number, range: number, cooldown: number}}[]} levels
  */
-export function buildingFactory(name, projectileName, targetingFunction, levels) {
+export function buildingFactory(name, projectileName, targetingFunction, onHitCb, levels) {
     /**
      * @param {string} name the tower name
      * @param {string} projectileName the name of the projectile used by the tower
@@ -27,7 +27,7 @@ export function buildingFactory(name, projectileName, targetingFunction, levels)
         const levelName = currentLevel + 1
 
         const upgradesTo = innerFactory(name, projectileName, targetingFunction, levels, currentLevel + 1)
-        const projectile = projectileFactory(projectileName + levelName, levels[currentLevel].projectile.speed, levels[currentLevel].projectile.damage, levels[currentLevel].projectile.range, levels[currentLevel].projectile.cooldown)
+        const projectile = projectileFactory(projectileName + levelName, levels[currentLevel].projectile.speed, levels[currentLevel].projectile.damage, levels[currentLevel].projectile.range, levels[currentLevel].projectile.cooldown, onHitCb)
 
         return class extends AbstractBuilding {
             /** @return {MovementCapability} */
