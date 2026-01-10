@@ -9,23 +9,21 @@
 	<title data-translation="generic.title">Title</title>
 	<script type="module">
 		import "/src/utils/Options.js"
-		import {mainMenu} from "/src/view/Menu.js"
+		import {lobby} from "/src/view/Menu.js"
 		screen.orientation.lock('landscape').catch(() => {})
-		mainMenu()
+		lobby()
 	</script>
 </head>
 <body>
-	<div id="mainMenu" class="hidden">
-		<h1 data-translation="generic.title">Title</h1>
-		<button id="mainMenuPlayButton" data-translation="generic.play">Play</button>
-	</div>
 	<div id="lobby" class="hidden">
-		<h2 data-translation="menu.lobby">lobby</h2>
-		<canvas id="mapPreview" height="900" width="1600"></canvas>
+		<h1 style="grid-area: title" data-translation="generic.title">Title</h1>
 		<h2 id="mapName"></h2>
-		<button id="lobbyPrevMapButton">&lt;</button>
-		<button id="lobbyNextMapButton">&gt;</button>
-		<button id="lobbyStartButton" data-translation="generic.play">Play</button>
+		<canvas id="mapPreview" height="900" width="1600"></canvas>
+		<div id="buttons">
+			<button id="lobbyPrevMapButton">&lt;</button>
+			<button id="lobbyNextMapButton">&gt;</button>
+			<button id="lobbyStartButton" data-translation="generic.play">Play</button>
+		</div>
 	</div>
 	<div id="game" class="hidden">
 		<canvas id="gameCanvas" height="900" width="1600"></canvas>
@@ -45,8 +43,9 @@
 		<div id="pauseMenu" class="menu">
 			<h1 data-translation="generic.menu">Menu</h1>
 			<button id="resumeButton" data-translation="generic.resume">Resume</button>
-			<button id="quitButton" data-translation="generic.quit">Quit</button>
 			<button id="optionButton" data-translation="generic.options">Options</button>
+			<button id="creditsButton" data-translation="generic.credits">Credits</button>
+			<button id="quitButton" data-translation="generic.quit">Quit</button>
 		</div>
 		<div id="towerMenu" class="hidden">
 			<button id="upgradeTower"><img data-framed="true" data-texture="entities/buildings/archery1" src="" alt="Upgrade"></button>
@@ -60,6 +59,18 @@
 				<input id="texturePackInput" type="file" webkitdirectory onchange="options.uploadTexturePack()"/>
 			</div>
 			<button id="saveOptionButton" data-translation="generic.save">Save</button>
+		</div>
+		<div id="creditsMenu" class="menu hidden">
+			<h1 data-translation="generic.credits">Credits</h1>
+			<h2 data-translation="credits.programmation">Programmation</h2>
+			<h4>Jonathan Selle</h4>
+			<h2 data-translation="credits.arts">Arts</h2>
+			<h4>Tom Hequet</h4>
+			<h4>Jonathan Selle</h4>
+			<h2 data-translation="credits.goodgamestudio1">All reserved rights to GoodGame Studio</h2>
+			<h4 data-translation="credits.goodgamestudio2">Special thanks for creating the base game</h4>
+			<a href="https://github.com/jonatjano/empire-defense" target="_blank"><h4 data-translation="credits.github">Game code is available on GitHub</h4></a>
+			<button id="leaveCreditsButton" data-translation="generic.quit">Quit</button>
 		</div>
 	</div>
 	<div id="debugOverlay" class="hidden">
