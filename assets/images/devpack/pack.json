@@ -123,5 +123,25 @@
 				}
 			}
 		}
+	},
+	"vfx": {
+		"animations": {
+			"spawnArrow": {
+				"timings": [1000, 1000],
+				"fixedStart": true
+			},
+			"targetArrow": {
+				"timings": [1000, 1000],
+				"fixedStart": true
+			},
+			"slowedDown": {
+				"timings": [1000],
+				"fixedStart": true
+			},
+			"boostedUp": {
+				"timings": [250, 250, 250, 250],
+				"fixedStart": true
+			}
+		}
 	}
 }

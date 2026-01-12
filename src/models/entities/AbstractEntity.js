@@ -23,7 +23,9 @@ export const AnimationKeys = Object.freeze({
 
     /* VFX */
     SPAWN_ARROW: "spawnArrow",
-    TARGET_ARROW: "targetArrow"
+    TARGET_ARROW: "targetArrow",
+    SLOWED_DOWN: "slowedDown",
+    BOOSTED_UP: "boostedUp"
 })
 
 /**

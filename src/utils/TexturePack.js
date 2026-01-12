@@ -75,6 +75,14 @@ const DEFAULTS = {
             [AnimationKeys.TARGET_ARROW]: {
                 timings: [1000, 1000],
                 fixedStart: true
+            },
+            [AnimationKeys.SLOWED_DOWN]: {
+                timings: [1000, 1000],
+                fixedStart: true
+            },
+            [AnimationKeys.BOOSTED_UP]: {
+                timings: [1000, 1000],
+                fixedStart: true
             }
         }
     }
