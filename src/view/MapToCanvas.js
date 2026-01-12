@@ -258,6 +258,8 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                     }
                     ctx.globalAlpha = drawImageData.alpha
 
+                    // TODO draw entity frozen vfx if slowed down
+
                     if (entityTexture.textureType !== TextureType.ROTATION_ONLY) {
                         ctx.drawImage(
                             entityTexture.getBase(),
@@ -331,6 +333,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
 							ctx.fillStyle = previousStyle
 							ctx.globalAlpha = drawImageData.alpha
 						}
+                        // TODO draw entity speed up vfx if boosted up
 					}
 
                     if (globalThis.options.debug) {

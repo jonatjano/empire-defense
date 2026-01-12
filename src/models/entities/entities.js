@@ -1,6 +1,7 @@
 import AbstractBuilding, {buildingFactory} from "./AbstractBuilding.js"
 import MovementCapability, {MovementType} from "../MovementCapability.js";
 import AbstractUnit, {unitFactory} from "./AbstractUnit.js"
+import {AnimationKeys} from "./AbstractEntity.js";
 
 /**
  * @param {(AbstractUnit) => boolean} customFilter
@@ -10,7 +11,7 @@ import AbstractUnit, {unitFactory} from "./AbstractUnit.js"
 function targetClosestUnit(customFilter = () => true) {
     return function() {
         return globalThis.game.getEntitiesCloseTo(this.position, this.projectile.range, AbstractUnit)
-            .filter(customFilter)
+            .filter(unit => unit.animationDetails.name !== AnimationKeys.DEAD && customFilter(unit))
             .sort((a, b) =>
                 a.position.distanceFrom(this.position) - b.position.distanceFrom(this.position)
             )
@@ -20,7 +21,11 @@ function targetClosestUnit(customFilter = () => true) {
 }
 
 function targetAllInRange(targetType) {
-    return function() { return globalThis.game.getEntitiesCloseTo(this.position, this.projectile.range, targetType) }
+    const deadAnimation = targetType === AbstractBuilding ? AnimationKeys.SELL : AnimationKeys.DEAD;
+    return function() {
+        return globalThis.game.getEntitiesCloseTo(this.position, this.projectile.range, targetType)
+            .filter(target => target.animationDetails.name !== deadAnimation)
+    }
 }
 
 const entities = {
@@ -126,9 +131,9 @@ const entities = {
     Booster: buildingFactory(
         "booster", "boostAura",
         targetAllInRange(AbstractBuilding),
-        () => {}, [
-        {cost: 50, buildDuration: 3000, sellPrice: 10, crystal: 2, projectile: {speed: 10, damage: 0, range: 1, cooldown: 1000}},
-        {cost: 50, buildDuration: 3000, sellPrice: 10, crystal: 2, projectile: {speed: 10, damage: 0, range: 1, cooldown: 1000}},
+        (target) => { target.slowDuration = 200 }, [
+        {cost: 50, buildDuration: 3000, sellPrice: 10, crystal: 2, projectile: {speed: 10, damage: 0, range: 1, cooldown: 100}},
+        {cost: 50, buildDuration: 3000, sellPrice: 10, crystal: 2, projectile: {speed: 10, damage: 0, range: 1, cooldown: 100}},
     ]),
 }
 

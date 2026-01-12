@@ -83,7 +83,6 @@ export default class AbstractBuilding extends AbstractEntity {
 
     act(frameDuration, currentTime) {
         switch (this.animationDetails.name) {
-
 	        case AnimationKeys.SHOOT: {
 		        if (currentTime > this.animationDetails.end || currentTime > this.animationDetails.start + this.projectile.cooldown) {
 			        this.setAnimation(AnimationKeys.IDLE, globalThis.game.currentFrameTiming)
@@ -92,7 +91,8 @@ export default class AbstractBuilding extends AbstractEntity {
 	        // fallthrough
 	        case AnimationKeys.IDLE: {
 				if (this.#builtTime + this.buildDuration < globalThis.game.currentFrameTiming) {
-					this.#attackCooldown = this.#attackCooldown - frameDuration
+                    const speedFactor = this.slowDuration > 0 ? 1 : 1;
+					this.#attackCooldown = this.#attackCooldown - frameDuration * speedFactor
 
 					const targets = this.#targetingFunction.call(this)
 					if (targets.length !== 0) {
@@ -124,8 +124,7 @@ export default class AbstractBuilding extends AbstractEntity {
                 break
             }
         }
-
-
+        this.slowDuration -= frameDuration
     }
 
 	/**
@@ -133,9 +132,6 @@ export default class AbstractBuilding extends AbstractEntity {
 	 */
 	#shootAtTargets(targets) {
 		for (const entity of targets) {
-			if (entity.animationDetails.name !== AnimationKeys.WALK) {
-				continue
-			}
 			const missile = new this.projectile(new Position(this.position.x, this.position.y - 1));
 			missile.target = entity
 			globalThis.game.addEntity(missile)
