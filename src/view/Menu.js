@@ -1,37 +1,32 @@
 import {mapsData} from "../models/GameMap.js";
 import {drawMap, setCanvasEvent} from "./MapToCanvas.js";
-import {translate} from "../utils/Translator.js";
+import {translateDocument} from "../utils/Translator.js";
 import Game from "../models/Game.js";
 import PathFinder from "../utils/PathFinder.js";
 
-export function mainMenu() {
-    const menu = document.getElementById("mainMenu")
-    menu.classList.remove("hidden")
+let currentMap = undefined
+let lobbyPreview = false
 
-    if (! menu.classList.contains("ready")) {
-        menu.classList.add("ready")
-
-        const playButton = document.getElementById("mainMenuPlayButton")
-        playButton.addEventListener("click", () => {
-            menu.classList.add("hidden")
-            document.querySelector("#textures").classList.add("hidden")
-            lobby()
-        })
-    }
-}
-
-function lobby() {
+export function lobby() {
     const lobby = document.getElementById("lobby")
     lobby.classList.remove("hidden")
 
     let selectedMapId = 0
-    updateMapPreview(mapsData[selectedMapId])
+    lobbyPreview = true
+    currentMap = mapsData[selectedMapId]
+    document.getElementById("mapName").dataset.translation = `map.${currentMap.name}.name`
+    // document.getElementById("mapName").textContent = translate(`map.${currentMap.name}.name`)
 
-    function updateMapPreview(map) {
-        document.getElementById("mapName").textContent = translate(`map.${map.name}.name`)
-        const canvas = document.getElementById("mapPreview")
-        drawMap(canvas, canvas.getContext("2d"), map, 0)
+    function updateMapPreview(timing) {
+        if (currentMap) {
+            const canvas = document.getElementById("mapPreview")
+            drawMap(canvas, canvas.getContext("2d"), currentMap, timing)
+        }
+        if (lobbyPreview) {
+            requestAnimationFrame(updateMapPreview)
+        }
     }
+    requestAnimationFrame(updateMapPreview)
 
     if (! lobby.classList.contains("ready")) {
         lobby.classList.add("ready")
@@ -40,19 +35,24 @@ function lobby() {
         prevMapButton.addEventListener("click", () => {
             selectedMapId -= 1
             if (selectedMapId === -1) { selectedMapId = mapsData.length - 1 }
-            updateMapPreview(mapsData[selectedMapId])
+            currentMap = mapsData[selectedMapId]
+            document.getElementById("mapName").dataset.translation = `map.${currentMap.name}.name`
+            translateDocument()
         })
 
         const nextMapButton = document.getElementById("lobbyNextMapButton")
         nextMapButton.addEventListener("click", () => {
             selectedMapId += 1
             if (selectedMapId === mapsData.length) { selectedMapId = 0 }
-            updateMapPreview(mapsData[selectedMapId])
+            currentMap = mapsData[selectedMapId]
+            document.getElementById("mapName").dataset.translation = `map.${currentMap.name}.name`
+            translateDocument()
         })
 
         const startGameButton = document.getElementById("lobbyStartButton")
         startGameButton.addEventListener("click", () => {
             lobby.classList.add("hidden")
+            lobbyPreview = false
             game(mapsData[selectedMapId])
         })
     }

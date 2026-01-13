@@ -8,6 +8,8 @@
 
     --space-smaller: calc(var(--space-normal) * 0.6);
     --space-bigger: calc(var(--space-normal) * 1.4);
+
+    --border-radius: 3px;
 }
 
 html, body {
@@ -15,6 +17,7 @@ html, body {
     width: 100%;
     margin: 0;
     padding: 0;
+    background-color: var(--primary-color);
 }
 
 .hidden {
@@ -22,25 +25,47 @@ html, body {
 }
 
 #lobby {
-    width: 100%;
-    height: 100%;
+    --header-footer-height: max(10vh, 4em);
+
+    width: calc(100% - 2 * var(--space-smaller));
+    height: calc(100% - 2 * var(--space-smaller));
+
+    background-color: var(--primary-color);
+    border: var(--space-smaller) solid var(--secondary-color);
+    border-radius: var(--space-bigger);
+
+    box-shadow: 0 0 0 9001px var(--secondary-color);
 
     display: grid;
     grid-template:
-        "title mapName mapName" fit-content(4em)
-        "mapPreview mapPreview mapPreview" 1fr
-        "prevMapButton nextMapButton startButton" max(4em, 10%) / 1fr 1fr 1fr;
+        "title mapName mapName" var(--header-footer-height)
+        "mapPreview mapPreview mapPreview" calc(100% - 2 * var(--header-footer-height))
+        "empty empty buttons" var(--header-footer-height) / 1fr 1fr 1fr;
 
     & > * {
         max-width: 100%;
         max-height: 100%;
     }
     & > h2 { grid-area: title; justify-self: left; margin-left: var(--margin)}
-    & > #mapPreview { grid-area: mapPreview; justify-self: center; }
+    & > #mapPreview { grid-area: mapPreview; justify-self: center }
     & > #mapName { grid-area: mapName; justify-self: right; margin-right: var(--margin); }
-    & > #lobbyPrevMapButton { grid-area: prevMapButton;}
-    & > #lobbyNextMapButton { grid-area: nextMapButton;}
-    & > #lobbyStartButton { grid-area: startButton;}
+    & > #buttons {
+        grid-area: buttons;
+        display: flex;
+        gap: var(--space-normal);
+        justify-content: right;
+        align-content: center;
+        padding: var(--space-smaller);
+
+        & > * {
+            aspect-ratio: 1;
+            height: 100%;
+
+            background-color: var(--primary-color);
+            border: var(--border-radius) solid var(--secondary-color);
+            border-radius: var(--space-normal);
+        }
+    }
 }
 
 #textures > img {
@@ -159,7 +184,9 @@ button[data-cost] {
     z-index: 10000;
     width: fit-content;
     height: fit-content;
-    background-color: rgba(0, 0, 0, 0.3);
+    background-color: rgba(255, 255, 255, 0.5);
+    padding: var(--space-normal);
+    border-bottom-left-radius: var(--space-smaller);
 }
 
 #towerMenu {
@@ -213,7 +240,7 @@ button[data-cost] {
     padding: var(--space-normal);
 
     background-color: var(--background-color);
-    border: 3px solid var(--secondary-color);
+    border: var(--border-radius) solid var(--secondary-color);
     border-radius: var(--space-normal);
 
     & > * {

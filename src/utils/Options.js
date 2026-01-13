@@ -62,7 +62,6 @@ class Options {
                  *  texturePacks: {default: string, list: string[]},
                  *  speeds: number[]
                  *  debug: ?boolean,
-                 *  debugTextures: ?boolean,
                  *  showStats: ?boolean
                  *  unlimitedMoney: ?boolean,
                  *  unlimitedLife: ?boolean,
@@ -93,9 +92,6 @@ class Options {
                 })
                 texturePackSelect.onchange = () => { this.texturePack = texturePackSelect.value }
 
-                if (meta.debugTextures) {
-                    document.querySelector("#textures").classList.remove("hidden")
-                }
                 if (this.debug) { console.log(this) }
             })
     }
@@ -285,6 +281,16 @@ class Options {
         saveOptionButton.addEventListener("click", () => {
             document.querySelector("#pauseMenu").classList.toggle("hidden", false)
             document.querySelector("#optionMenu").classList.toggle("hidden", true)
+        })
+        const creditsButton = document.querySelector("#creditsButton")
+        creditsButton.addEventListener("click", () => {
+            document.querySelector("#pauseMenu").classList.toggle("hidden", true)
+            document.querySelector("#creditsMenu").classList.toggle("hidden", false)
+        })
+        const leaveCreditsButton = document.querySelector("#leaveCreditsButton")
+        leaveCreditsButton.addEventListener("click", () => {
+            document.querySelector("#pauseMenu").classList.toggle("hidden", false)
+            document.querySelector("#creditsMenu").classList.toggle("hidden", true)
         })
 
         this.updateIconsEvents()

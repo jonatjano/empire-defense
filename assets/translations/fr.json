@@ -6,11 +6,25 @@
 	},
 	"generic": {
 		"title": "Empire Defense",
-		"play": "Jouer"
+		"play": "Jouer",
+		"menu": "Menu",
+		"resume": "Reprendre",
+		"quit": "Quitter",
+		"options": "Options",
+		"save": "Sauvegarder",
+		"texturePacks": "Packs de textures",
+		"credits": "Crédits"
 	},
 	"map": {
-		"classic": {
-			"name": "Classique"
-		}
+		"classic": { "name": "Classique" },
+		"test": { "name": "Test" }
+	},
+	"credits": {
+		"programmation": "Programmation",
+		"arts": "Arts",
+		"goodgamestudio1": "Tous les droits réservés à GoodGame Studio",
+		"goodgamestudio2": "Remerciements spéciaux pour la création du jeu de base",
+		"github": "Le code du jeu est disponible sur GitHub"
 	}
 }
+
