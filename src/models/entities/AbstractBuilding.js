@@ -1,31 +1,33 @@
 
 import AbstractEntity, {AnimationKeys} from "./AbstractEntity.js"
 import {projectileFactory} from "./AbstractProjectile.js"
-import AbstractUnit from "./AbstractUnit.js";
 import Position from "../Position.js";
 
 /**
  *
  * @param {string} name the tower name
  * @param {string} projectileName the name of the projectile used by the tower
+ * @param {() => AbstractEntity[]} targetingFunction
+ * @param {(target?: AbstractEntity) => void} onHitCb
  * @param {{cost: number, buildDuration: number, sellPrice: number, crystal: number, projectile: {speed: number, damage: number, range: number, cooldown: number}}[]} levels
  */
-export function buildingFactory(name, projectileName, levels) {
+export function buildingFactory(name, projectileName, targetingFunction, onHitCb, levels) {
     /**
      * @param {string} name the tower name
      * @param {string} projectileName the name of the projectile used by the tower
+     * @param {() => AbstractEntity[]} targetingFunction
      * @param {{cost: number, buildDuration: number, sellPrice: number, crystal: number, projectile: {speed: number, damage: number, range: number, cooldown: number}}[]} levels
      * @param {number} currentLevel
      */
-    function innerFactory(name, projectileName, levels, currentLevel) {
+    function innerFactory(name, projectileName, targetingFunction, levels, currentLevel) {
         if (! levels[currentLevel]) {
             return null
         }
 
         const levelName = currentLevel + 1
 
-        const upgradesTo = innerFactory(name, projectileName, levels, currentLevel + 1)
-        const projectile = projectileFactory(projectileName + levelName, levels[currentLevel].projectile.speed, levels[currentLevel].projectile.damage, levels[currentLevel].projectile.range, levels[currentLevel].projectile.cooldown)
+        const upgradesTo = innerFactory(name, projectileName, targetingFunction, levels, currentLevel + 1)
+        const projectile = projectileFactory(projectileName + levelName, levels[currentLevel].projectile.speed, levels[currentLevel].projectile.damage, levels[currentLevel].projectile.range, levels[currentLevel].projectile.cooldown, onHitCb)
 
         return class extends AbstractBuilding {
             /** @return {MovementCapability} */
@@ -40,24 +42,27 @@ export function buildingFactory(name, projectileName, levels) {
             static get projectile() { return projectile }
 
             constructor(position) {
-                super(position)
+                super(position, targetingFunction)
             }
         }
     }
-    return innerFactory(name, projectileName, levels, 0);
+    return innerFactory(name, projectileName, targetingFunction, levels, 0);
 }
 
 export default class AbstractBuilding extends AbstractEntity {
 	static get MAX_SELL_DURATION() { return 3000 }
     #attackCooldown = 0
 	#builtTime = 0
+    #targetingFunction
 
     /**
      * @param {Position} position
+     * @param {() => AbstractEntity[]} targetingFunction
      */
-    constructor(position) {
+    constructor(position, targetingFunction) {
         super(position);
 		this.#builtTime = globalThis.game.currentFrameTiming
+        this.#targetingFunction = targetingFunction
     }
 
     static get sellPrice() { return 0 }
@@ -78,7 +83,6 @@ export default class AbstractBuilding extends AbstractEntity {
 
     act(frameDuration, currentTime) {
         switch (this.animationDetails.name) {
-
 	        case AnimationKeys.SHOOT: {
 		        if (currentTime > this.animationDetails.end || currentTime > this.animationDetails.start + this.projectile.cooldown) {
 			        this.setAnimation(AnimationKeys.IDLE, globalThis.game.currentFrameTiming)
@@ -87,9 +91,10 @@ export default class AbstractBuilding extends AbstractEntity {
 	        // fallthrough
 	        case AnimationKeys.IDLE: {
 				if (this.#builtTime + this.buildDuration < globalThis.game.currentFrameTiming) {
-					this.#attackCooldown = this.#attackCooldown - frameDuration
+                    const speedFactor = this.slowDuration > 0 ? 2 : 1;
+					this.#attackCooldown = this.#attackCooldown - frameDuration * speedFactor
 
-					const targets = globalThis.game.getEntitiesCloseTo(this.position, this.projectile.range, AbstractUnit)
+					const targets = this.#targetingFunction.call(this)
 					if (targets.length !== 0) {
 						this.position.rotation = targets[0].position.angleTo(this.position)
 
@@ -119,8 +124,7 @@ export default class AbstractBuilding extends AbstractEntity {
                 break
             }
         }
-
-
+        this.slowDuration -= frameDuration
     }
 
 	/**
@@ -128,9 +132,6 @@ export default class AbstractBuilding extends AbstractEntity {
 	 */
 	#shootAtTargets(targets) {
 		for (const entity of targets) {
-			if (entity.animationDetails.name !== AnimationKeys.WALK) {
-				continue
-			}
 			const missile = new this.projectile(new Position(this.position.x, this.position.y - 1));
 			missile.target = entity
 			globalThis.game.addEntity(missile)

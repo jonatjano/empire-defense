@@ -39,26 +39,39 @@ export default class AbstractUnit extends AbstractEntity {
     act(frameDuration, currentTime) {
 	    switch (this.animationDetails.name) {
 		    case AnimationKeys.WALK: {
+				// if there are no targets, find one
 			    if (this.target === undefined) {
 				    const pathFinding = globalThis.game.pathFinder.getNextTarget(this.position, this.movements.movementType)
+					// if there are still no targets, skip the frame
 				    if (pathFinding === null) {
 					    return
 				    }
+					// correct the target to the center of the tile
 				    this.target = Position.getTileCenterPosition(pathFinding.target)
 			    }
 
+				// while the unit can still act
 			    while (frameDuration > 0) {
-				    const moveResult = Position.move(this.position, this.target, this.movements, frameDuration)
+					// if we are slowed, reduce the speed by half
+					const speedFactor = this.slowDuration > 0 ? 0.5 : 1;
+					const actionTime = this.slowDuration > 0 ? Math.min(this.slowDuration, frameDuration) : frameDuration;
+				    const moveResult = Position.move(this.position, this.target, this.movements, actionTime * speedFactor)
+					// move the unit to the position
 				    this.position.teleport(moveResult.position)
+					// reduce the remaining time by the time we used
 				    frameDuration = moveResult.remainingTime
+					this.slowDuration -= actionTime - moveResult.remainingTime
 
+					// if we reached the target, find a new one
 				    if (this.target.equals(this.position)) {
+						// if the target is the end of the map, kill the unit and remove a life from the player
 					    if (globalThis.game.map.targets.find(target => this.position.equals(Position.getTileCenterPosition(target)))) {
 							globalThis.game.life--
 							globalThis.game.deleteEntity(this, true)
 							this.callDeathCallback(false)
 							return
 					    }
+						// else find a new target
 					    const pathFinding = globalThis.game.pathFinder.getNextTarget(this.position, this.movements.movementType)
 					    if (pathFinding === null) {
 						    return

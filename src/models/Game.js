@@ -60,7 +60,7 @@ export default class Game {
         this.money = 20
         this.crystal = 0
         this.waveNumber = 0
-        this.playableTowers = [entities.Archery, entities.Cannon]
+        this.playableTowers = [entities.Debug, entities.Archery, entities.Cannon, entities.Ice, entities.Ballista, entities.Booster]
     }
 
     addEntity(entity) {
@@ -98,6 +98,7 @@ export default class Game {
             ...playableTowers.map(towerType => {
                 const element = document.createElement("button")
                 element.innerHTML = `<img data-framed="true" data-texture="entities/buildings/${towerType.name}" src="" alt="${towerType.name}">`
+                element.dataset.cost = towerType.cost
                 element.onclick = () => {
                     if (this.#selectedTowerType === towerType) {
                          this.#selectedTowerType = null
@@ -116,23 +117,33 @@ export default class Game {
     get selectedEntity() {
         return this.#selectedEntity
     }
-    /** @type {{tower: AbstractBuilding, isGhost: boolean, isValid: boolean} | null} */
+    /** @param {{tower: AbstractBuilding, isGhost: boolean, isValid: boolean} | null} value */
     set selectedEntity(value) {
         this.#selectedEntity = value
         const upgradeButton = document.querySelector("#upgradeTower")
         const sellButton = document.querySelector("#sellTower")
 
-        document.querySelector("#towerMenu").classList.toggle("hidden", value?.isGhost ?? true)
-	    if (value?.tower.upgradesTo !== undefined && value?.tower.upgradesTo !== null) {
-		    upgradeButton.classList.toggle("hidden", value?.tower.buildPercent < 100)
-		    upgradeButton.firstElementChild.dataset.texture = `entities/buildings/${value?.tower.upgradesTo.name}`
-		} else {
-		    upgradeButton.classList.add("hidden")
+        this.toggleTowerMenuVisibility(value)
+	    if (value?.tower.upgradesTo) {
+            upgradeButton.firstElementChild.dataset.texture = `entities/buildings/${value?.tower.upgradesTo.name}`
+            upgradeButton.dataset.cost = value.tower.upgradesTo.cost;
 	    }
 
+        sellButton.dataset.cost = value?.tower.sellPrice ?? "0"
         sellButton.onclick = value ? this.#sellTower.bind(this, value.tower) : undefined
         if (value?.tower.upgradesTo) {
             upgradeButton.onclick = value ? this.#upgradeTower.bind(this, value.tower) : undefined
+        }
+    }
+
+    /** @param {{tower: AbstractBuilding, isGhost: boolean, isValid: boolean} | null} value */
+    toggleTowerMenuVisibility(value) {
+        if (value) {
+            document.querySelector("#towerMenu").classList.toggle("hidden", value.isGhost)
+            document.querySelector("#sellTower").classList.toggle("hidden", value.tower.buildPercent < 100 || value.isGhost)
+            document.querySelector("#upgradeTower").classList.toggle("hidden", value.tower.buildPercent < 100 || value.isGhost || !value.tower.upgradesTo)
+        } else {
+            document.querySelector("#towerMenu").classList.add("hidden")
         }
     }
 
@@ -149,6 +160,7 @@ export default class Game {
     }
 
     #upgradeTower(tower) {
+        console.log("upgrading", tower, this.money, tower.upgradesTo.cost)
         if (this.money >= tower.upgradesTo.cost) {
             const newTower = new tower.upgradesTo(tower.position)
             newTower.setAnimation(AnimationKeys.UPGRADE, frameTimingWithSpeedFactor)
@@ -186,9 +198,7 @@ export default class Game {
         realLastFrameTiming = frameTiming
         frameCounterSinceLastPause++
 
-	    if (! this.#selectedEntity?.isGhost && this.#selectedEntity?.tower.buildPercent > 100) {
-		    document.querySelector("#upgradeTower").classList.remove("hidden")
-	    }
+        this.toggleTowerMenuVisibility(this.selectedEntity)
 
         document.getElementById("debugTime").textContent = frameTiming
         document.getElementById("frameCount").textContent = (++totalFrameCounter).toFixed(0)
@@ -244,7 +254,7 @@ export default class Game {
         }
     }
 
-    get money() { return this.#money }
+    get money() { return globalThis.options.unlimitedMoney ? Infinity : this.#money }
     set money(value) {
         this.#money = value
         if (! globalThis.options.unlimitedMoney) {
@@ -304,8 +314,9 @@ export default class Game {
     /**
      * @param {number} x
      * @param {number} y
+     * @param {{ctrl: boolean, shift: boolean}} metaKeys
      */
-    click(x, y) {
+    click(x, y, metaKeys) {
         if (this.#isPaused) { return }
 
         const towerType = this.#selectedTowerType
@@ -354,8 +365,10 @@ export default class Game {
         if (this.waveNumber === 0) {
             this.#launchNextWave()
         }
-        this.#selectedTowerType = null
-        this.selectedEntity = null
+        if (! metaKeys.shift) {
+            this.#selectedTowerType = null
+            this.selectedEntity = null
+        }
     }
 
     #launchNextWave() {

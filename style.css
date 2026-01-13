@@ -153,6 +153,29 @@ button:has(> img:only-child) {
     }
 }
 
+button[data-cost] {
+    position: relative;
+    width: 1.5lh;
+    height: 1.5lh;
+    &::after {
+        --font-size: 16px;
+        --padding: 0.2lh;
+        --border: 0.2lh;
+        position: absolute;
+        padding: var(--padding);
+        border-radius: calc(2 * var(--border));
+        border: var(--border) solid green;
+        content: attr(data-cost);
+        background-color: brown;
+        color: white;
+        font-size: var(--font-size);
+        z-index: 1;
+        bottom: 0;
+        left: 50%;
+        translate: -50% calc(var(--font-size) / 2);
+    }
+}
+
 #debugOverlay {
     pointer-events: none;
     position: absolute;
@@ -168,36 +191,38 @@ button:has(> img:only-child) {
 
 #towerMenu {
     position: absolute;
-    width: var(--tower-width);
-    height: var(--tower-height);
+    width: var(--tower-pixel-width);
+    height: var(--tower-pixel-height);
     background: transparent;
 
-    max-width: var(--max-size);
-    max-height: var(--max-size);
-    left: var(--tower-x);
-    top: var(--tower-y);
+    left: calc(var(--tower-x));
+    top: calc(var(--tower-y));
 
     /* these are set in the javascript */
     --tower-x: 0;
     --tower-y: 0;
-    --tower-width: 0;
-    --tower-height: 0;
+    --tower-world-width: 0;
+    --tower-world-height: 0;
+    --zoom-level: 0;
+    --cell-width-factor: 0;
+    --cell-height-factor: 0;
 
-    /* there are calcul done here */
-    --max-size: max(var(--tower-width), var(--tower-height));
-    --min-size: min(var(--tower-width), var(--tower-height));
-    --additional-translation: calc(0.25 * var(--min-size));
+    /* calculated variables */
+    --button-width: calc(var(--zoom-level) * var(--cell-width-factor));
+    --button-height: calc(var(--zoom-level) * var(--cell-height-factor));
+    --tower-pixel-width: calc(var(--tower-world-width) * var(--zoom-level) * var(--cell-width-factor));
+    --tower-pixel-height: calc(var(--tower-world-height) * var(--zoom-level) * var(--cell-height-factor));
 
     & #sellTower, & #upgradeTower {
         position: absolute;
-        width: calc(0.5 * var(--tower-height));
-        height: calc(0.5 * var(--tower-height));
+        width: var(--button-width);
+        height: var(--button-height);
     }
     & #sellTower {
-        translate: calc(calc(0px - calc(0.5 * var(--tower-height))) - var(--additional-translation)) calc(0.25 * var(--tower-height));
+        translate: calc(0px - var(--button-width)) calc(calc(var(--tower-world-height) / 2 + 0.5) * var(--zoom-level) - var(--button-height));
     }
     & #upgradeTower {
-        translate: calc(calc(0px + var(--tower-width)) + var(--additional-translation)) calc(0.25 * var(--tower-height));
+        translate: calc(0px + var(--tower-pixel-width)) calc(calc(var(--tower-world-height) / 2 + 0.5) * var(--zoom-level) - var(--button-height));
     }
 }
 

@@ -10,6 +10,7 @@ import GameMap from "../models/GameMap.js";
 import Game from "../models/Game.js";
 import AbstractProjectile from "../models/entities/AbstractProjectile.js";
 import Vfx from "../models/entities/Vfx.js";
+import AbstractUnit from "../models/entities/AbstractUnit.js";
 
 const TILE_MARGIN = -1
 const ALPHA_VALUE = 0.4
@@ -34,7 +35,7 @@ let mouseData = {
  * @param {(x: number, y: number) => undefined} moveListener
  */
 export function setCanvasEvent(canvas, clickListener, moveListener) {
-    const callback = (event, listener) => {
+    const callback = (event, listener, metaKeys) => {
         const leftMargin = (canvas.width / globalThis.options.zoom - game.map.width) / 2 + (globalThis.options.mapOffset.x / globalThis.options.zoom)
         const topMargin = (canvas.height / globalThis.options.zoom - game.map.height) / 2 + (globalThis.options.mapOffset.y / globalThis.options.zoom)
 
@@ -45,7 +46,7 @@ export function setCanvasEvent(canvas, clickListener, moveListener) {
         const canvasY = event.y - boundingRect.top
         const mapX = (canvasX * xRatio) / globalThis.options.zoom - leftMargin
         const mapY = (canvasY * yRatio) / globalThis.options.zoom - topMargin
-        listener(mapX, mapY)
+        listener(mapX, mapY, metaKeys)
     }
 
     canvas.onmousedown = event => {
@@ -67,12 +68,12 @@ export function setCanvasEvent(canvas, clickListener, moveListener) {
             mouseData.x = event.x
             mouseData.y = event.y
         } else {
-            callback(event, moveListener)
+            callback(event, moveListener, {ctrl: event.ctrlKey, shift: event.shiftKey})
         }
     }
     canvas.onmouseup = event => {
         if (! mouseData.dragging) {
-            callback(event, clickListener)
+            callback(event, clickListener, {ctrl: event.ctrlKey, shift: event.shiftKey})
         }
         mouseData.clicked = false
         mouseData.dragging = false
@@ -253,12 +254,22 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                         const yFactor = canvasRect.height / canvas.height;
 
                         const xPos = (leftMargin + game.selectedEntity.tower.position.x - 0.5) * globalThis.options.zoom * xFactor
-                        const yPos = (topMargin + game.selectedEntity.tower.position.y - 1.5) * globalThis.options.zoom * yFactor
-                        const maxHeight = entityTexture.worldHeight * globalThis.options.zoom * yFactor
-                        const maxWidth = entityTexture.worldWidth * globalThis.options.zoom * xFactor
-                        towerMenu.style = `--tower-x: ${xPos}px; --tower-y: ${yPos}px; --tower-height: ${maxHeight}px; --tower-width: ${maxWidth}px;`
+                        const yPos = (topMargin + game.selectedEntity.tower.position.y - entityTexture.worldHeight + 0.5) * globalThis.options.zoom * yFactor
+                        towerMenu.style = `--tower-x: ${xPos}px;--tower-y: ${yPos}px;--tower-world-height: ${entityTexture.worldHeight};--tower-world-width: ${entityTexture.worldWidth};--zoom-level: ${globalThis.options.zoom}px;--cell-width-factor:${xFactor};--cell-height-factor:${yFactor}`
                     }
                     ctx.globalAlpha = drawImageData.alpha
+
+                    if (entity instanceof AbstractUnit && entity.slowDuration > 0) {
+                        globalThis.options.texturePack.getTexture(`vfx`).then(vfxTexture => {
+                            const drawRect = vfxTexture.getAnimationFramePosition(AnimationKeys.SLOWED_DOWN, 0, frameTiming)
+
+                            ctx.drawImage(
+                                vfxTexture.getBase(),
+                                drawRect.sx, drawRect.sy, drawRect.sw, drawRect.sh,
+                                drawImageData.dx + 0.1 * options.zoom, drawImageData.dy + 0.3 * options.zoom, 0.8 * options.zoom, 0.8 * options.zoom
+                            )
+                        })
+                    }
 
                     if (entityTexture.textureType !== TextureType.ROTATION_ONLY) {
                         ctx.drawImage(
@@ -333,6 +344,19 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
 							ctx.fillStyle = previousStyle
 							ctx.globalAlpha = drawImageData.alpha
 						}
+
+
+                        if (entity.slowDuration > 0) {
+                            globalThis.options.texturePack.getTexture(`vfx`).then(vfxTexture => {
+                                const drawRect = vfxTexture.getAnimationFramePosition(AnimationKeys.BOOSTED_UP, 0, frameTiming)
+
+                                ctx.drawImage(
+                                    vfxTexture.getBase(),
+                                    drawRect.sx, drawRect.sy, drawRect.sw, drawRect.sh,
+                                    drawImageData.dx + 0.25 * options.zoom, drawImageData.dy - 0.25 * options.zoom, 0.5 * options.zoom, 0.5 * options.zoom
+                                )
+                            })
+                        }
 					}
 
                     if (globalThis.options.debug) {

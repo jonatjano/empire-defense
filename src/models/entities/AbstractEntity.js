@@ -23,7 +23,9 @@ export const AnimationKeys = Object.freeze({
 
     /* VFX */
     SPAWN_ARROW: "spawnArrow",
-    TARGET_ARROW: "targetArrow"
+    TARGET_ARROW: "targetArrow",
+    SLOWED_DOWN: "slowedDown",
+    BOOSTED_UP: "boostedUp"
 })
 
 /**
@@ -49,6 +51,8 @@ export default class AbstractEntity {
     #animationEndTime = 0
     /** @type {number} */
     #id = AbstractEntity.#idGenerator++
+    /** @type {number} */
+    slowDuration = 0
     /** @type {number} */
     static #idGenerator = 0
 
