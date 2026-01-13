@@ -91,7 +91,7 @@ export default class AbstractBuilding extends AbstractEntity {
 	        // fallthrough
 	        case AnimationKeys.IDLE: {
 				if (this.#builtTime + this.buildDuration < globalThis.game.currentFrameTiming) {
-                    const speedFactor = this.slowDuration > 0 ? 1 : 1;
+                    const speedFactor = this.slowDuration > 0 ? 2 : 1;
 					this.#attackCooldown = this.#attackCooldown - frameDuration * speedFactor
 
 					const targets = this.#targetingFunction.call(this)

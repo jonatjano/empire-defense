@@ -10,6 +10,7 @@ import GameMap from "../models/GameMap.js";
 import Game from "../models/Game.js";
 import AbstractProjectile from "../models/entities/AbstractProjectile.js";
 import Vfx from "../models/entities/Vfx.js";
+import AbstractUnit from "../models/entities/AbstractUnit.js";
 
 const TILE_MARGIN = -1
 const ALPHA_VALUE = 0.4
@@ -258,7 +259,17 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                     }
                     ctx.globalAlpha = drawImageData.alpha
 
-                    // TODO draw entity frozen vfx if slowed down
+                    if (entity instanceof AbstractUnit && entity.slowDuration > 0) {
+                        globalThis.options.texturePack.getTexture(`vfx`).then(vfxTexture => {
+                            const drawRect = vfxTexture.getAnimationFramePosition(AnimationKeys.SLOWED_DOWN, 0, frameTiming)
+
+                            ctx.drawImage(
+                                vfxTexture.getBase(),
+                                drawRect.sx, drawRect.sy, drawRect.sw, drawRect.sh,
+                                drawImageData.dx + 0.1 * options.zoom, drawImageData.dy + 0.3 * options.zoom, 0.8 * options.zoom, 0.8 * options.zoom
+                            )
+                        })
+                    }
 
                     if (entityTexture.textureType !== TextureType.ROTATION_ONLY) {
                         ctx.drawImage(
@@ -333,7 +344,19 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
 							ctx.fillStyle = previousStyle
 							ctx.globalAlpha = drawImageData.alpha
 						}
-                        // TODO draw entity speed up vfx if boosted up
+
+
+                        if (entity.slowDuration > 0) {
+                            globalThis.options.texturePack.getTexture(`vfx`).then(vfxTexture => {
+                                const drawRect = vfxTexture.getAnimationFramePosition(AnimationKeys.BOOSTED_UP, 0, frameTiming)
+
+                                ctx.drawImage(
+                                    vfxTexture.getBase(),
+                                    drawRect.sx, drawRect.sy, drawRect.sw, drawRect.sh,
+                                    drawImageData.dx + 0.25 * options.zoom, drawImageData.dy - 0.25 * options.zoom, 0.5 * options.zoom, 0.5 * options.zoom
+                                )
+                            })
+                        }
 					}
 
                     if (globalThis.options.debug) {
