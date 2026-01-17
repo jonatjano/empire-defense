@@ -60,7 +60,7 @@ export default class Game {
         this.money = 20
         this.crystal = 0
         this.waveNumber = 0
-        this.playableTowers = [entities.Debug, entities.Archery, entities.Cannon, entities.Ice, entities.Ballista, entities.Booster]
+        this.playableTowers = [...(globalThis.options.anyDebug ? [entities.Debug] : []), entities.Archery, entities.Cannon, entities.Ice, entities.Ballista, entities.Booster]
     }
 
     addEntity(entity) {
