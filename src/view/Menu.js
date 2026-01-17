@@ -62,6 +62,8 @@ export function lobby() {
  * @param {GameMap} map
  */
 function game(map) {
+    document.documentElement.requestFullscreen()
+
     const game = document.getElementById("game")
     game.classList.remove("hidden")
 

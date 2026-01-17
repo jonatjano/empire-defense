@@ -127,7 +127,7 @@ button:has(> img:only-child) {
         & > #crystal { justify-self: center }
         & > #wave, & > #entityActions { justify-self: end }
 
-        /* alignement */
+        /* alignment */
         & > #money, & > #life, & > #crystal, & > #wave { align-self: start }
         & > #menu, & > #entityActions { align-self: end }
 
@@ -158,9 +158,9 @@ button[data-cost] {
     width: 1.5lh;
     height: 1.5lh;
     &::after {
-        --font-size: 16px;
-        --padding: 0.2lh;
-        --border: 0.2lh;
+        --font-size: 2vh;
+        --padding: 2px;
+        --border: 2px;
         position: absolute;
         padding: var(--padding);
         border-radius: calc(2 * var(--border));
@@ -191,8 +191,8 @@ button[data-cost] {
 
 #towerMenu {
     position: absolute;
-    width: var(--tower-pixel-width);
-    height: var(--tower-pixel-height);
+    width: 0;
+    height: 0;
     background: transparent;
 
     left: calc(var(--tower-x));
@@ -208,8 +208,8 @@ button[data-cost] {
     --cell-height-factor: 0;
 
     /* calculated variables */
-    --button-width: calc(var(--zoom-level) * var(--cell-width-factor));
-    --button-height: calc(var(--zoom-level) * var(--cell-height-factor));
+    --button-width: 9vh;
+    --button-height: 9vh;
     --tower-pixel-width: calc(var(--tower-world-width) * var(--zoom-level) * var(--cell-width-factor));
     --tower-pixel-height: calc(var(--tower-world-height) * var(--zoom-level) * var(--cell-height-factor));
 
@@ -219,10 +219,10 @@ button[data-cost] {
         height: var(--button-height);
     }
     & #sellTower {
-        translate: calc(0px - var(--button-width)) calc(calc(var(--tower-world-height) / 2 + 0.5) * var(--zoom-level) - var(--button-height));
+        translate: calc(0px - var(--button-width)) calc(calc(var(--tower-pixel-height) - var(--button-height)) / 2);
     }
     & #upgradeTower {
-        translate: calc(0px + var(--tower-pixel-width)) calc(calc(var(--tower-world-height) / 2 + 0.5) * var(--zoom-level) - var(--button-height));
+        translate: calc(0px + var(--tower-pixel-width)) calc(calc(var(--tower-pixel-height) - var(--button-height)) / 2);
     }
 }
 
@@ -233,6 +233,7 @@ button[data-cost] {
     left: 50%;
     translate: -50% -50%;
     width: fit-content;
+    max-height: 90vh;
 
     display: flex;
     flex-direction: column;

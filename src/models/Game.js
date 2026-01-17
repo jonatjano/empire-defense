@@ -114,6 +114,8 @@ export default class Game {
         })
     }
 
+    get selectedTowerType() { return this.#selectedTowerType }
+
     get selectedEntity() {
         return this.#selectedEntity
     }

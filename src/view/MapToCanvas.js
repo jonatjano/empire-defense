@@ -22,11 +22,15 @@ const HP_BAR_STYLE = Object.freeze({
     MARGIN: 8
 })
 
+/**
+ * @type {{pressed: boolean, dragging: boolean, x: number, y: number, type: string}}
+ */
 let mouseData = {
-    clicked: false,
+    pressed: false,
     dragging: false,
     x: 0,
-    y: 0
+    y: 0,
+    type: ""
 }
 
 /**
@@ -35,47 +39,62 @@ let mouseData = {
  * @param {(x: number, y: number) => undefined} moveListener
  */
 export function setCanvasEvent(canvas, clickListener, moveListener) {
-    const callback = (event, listener, metaKeys) => {
+    const callback = (eventX, eventY, listener, metaKeys) => {
         const leftMargin = (canvas.width / globalThis.options.zoom - game.map.width) / 2 + (globalThis.options.mapOffset.x / globalThis.options.zoom)
         const topMargin = (canvas.height / globalThis.options.zoom - game.map.height) / 2 + (globalThis.options.mapOffset.y / globalThis.options.zoom)
 
         const boundingRect = canvas.getBoundingClientRect()
         const xRatio = canvas.width / boundingRect.width
         const yRatio = canvas.height / boundingRect.height
-        const canvasX = event.x - boundingRect.left
-        const canvasY = event.y - boundingRect.top
+        const canvasX = eventX - boundingRect.left
+        const canvasY = eventY - boundingRect.top
         const mapX = (canvasX * xRatio) / globalThis.options.zoom - leftMargin
         const mapY = (canvasY * yRatio) / globalThis.options.zoom - topMargin
         listener(mapX, mapY, metaKeys)
     }
 
-    canvas.onmousedown = event => {
+    canvas.onpointerdown = event => {
+        let x = event.x
+        let y = event.y
         mouseData = {
-            clicked: true,
+            pressed: true,
             dragging: false,
-            x: event.x,
-            y: event.y
+            x, y,
+            type: event.pointerType
         }
-        console.log("down", globalThis.options.mapOffset)
     }
-    canvas.onmousemove = event => {
-        if (mouseData.clicked) {
-            const xDelta = event.x - mouseData.x
-            const yDelta = event.y - mouseData.y
+    canvas.onpointermove = event => {
+        let x = event.x
+        let y = event.y
+        mouseData.type = event.pointerType
+        if (mouseData.type === "touch" && game.selectedTowerType !== null) {
+            x -= options.zoom / 2
+            y -= options.zoom / 2
+            mouseData.dragging = true
+        }
+        if (mouseData.pressed && game.selectedTowerType === null) {
+            const xDelta = x - mouseData.x
+            const yDelta = y - mouseData.y
             globalThis.options.changeMapOffset(xDelta, yDelta)
 
             mouseData.dragging = true
-            mouseData.x = event.x
-            mouseData.y = event.y
+            mouseData.x = x
+            mouseData.y = y
         } else {
-            callback(event, moveListener, {ctrl: event.ctrlKey, shift: event.shiftKey})
+            callback(x, y, moveListener, {ctrl: event.ctrlKey, shift: event.shiftKey})
         }
     }
-    canvas.onmouseup = event => {
-        if (! mouseData.dragging) {
-            callback(event, clickListener, {ctrl: event.ctrlKey, shift: event.shiftKey})
+    canvas.onpointerup = event => {
+        let x = event.x
+        let y = event.y
+        if (mouseData.type === "touch" && mouseData.dragging && game.selectedTowerType !== null) {
+            x -= options.zoom / 2
+            y -= options.zoom / 2
         }
-        mouseData.clicked = false
+        if (! mouseData.dragging || (mouseData.type === "touch" && mouseData.dragging && game.selectedTowerType !== null)) {
+            callback(x, y, clickListener, {ctrl: event.ctrlKey, shift: event.shiftKey})
+        }
+        mouseData.pressed = false
         mouseData.dragging = false
     }
     canvas.ondragstart = () => false
