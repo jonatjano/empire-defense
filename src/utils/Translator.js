@@ -40,13 +40,13 @@ export function translate(key) {
     let translations = globalTranslations
     let fallbackTranslations = globalFallbackTranslations
     const split = key.split(".")
-    while (split.length !== 0) {
+    while (split.length !== 0 && !! translations) {
         const part = split.shift()
         translations = translations?.[part]
         fallbackTranslations = fallbackTranslations?.[part]
     }
-    return translations ??
-        fallbackTranslations ?
-            (console.error(`missing translation in ${globalTranslations.language.name} (${globalTranslations.language.code}) for ${key}`), fallbackTranslations) :
-            (console.error(`missing translation for ${key}`), key)
+    if (translations) { return translations }
+    return fallbackTranslations ?
+        (console.error(`missing translation in ${globalTranslations.language.name} (${globalTranslations.language.code}) for ${key}`), fallbackTranslations) :
+        (console.error(`missing translation for ${key}`), key)
 }

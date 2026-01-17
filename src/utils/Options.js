@@ -9,7 +9,7 @@ class Options {
     #debug
 
     /** @type {string[]} */
-    #knownLanguages
+    #knownLanguageCodes
     /** @type {string} */
     #language
     /** @type {string} */
@@ -67,16 +67,19 @@ class Options {
                  *  unlimitedLife: ?boolean,
                  * }} meta */
                 meta => {
+
                 /* debug */
                 this.debug = meta.debug ?? false
-                this.showStats = meta.showStats ?? this.debug
+                const showStat = meta.showStats ?? this.debug
+                this.showStats = showStat
                 this.unlimitedMoney = meta.unlimitedMoney ?? this.debug
                 this.unlimitedLife = meta.unlimitedLife ?? this.debug
 
                 /* languages */
-                this.#knownLanguages = meta.languages.list
+                this.#knownLanguageCodes = meta.languages.list
                 this.#fallbackLanguage = meta.languages.default
-                this.language = window.navigator.languages.find(language => this.#knownLanguages.includes(language)) ?? this.#fallbackLanguage
+                this.language = window.navigator.languages.find(language => this.#knownLanguageCodes.includes(language)) ?? this.#fallbackLanguage
+
 
                 /* texture pack */
                 this.#knownTexturePacks = meta.texturePacks.list.map(name => new TexturePack(name))
@@ -91,6 +94,28 @@ class Options {
                     texturePackSelect.append(option)
                 })
                 texturePackSelect.onchange = () => { this.texturePack = texturePackSelect.value }
+
+                const languageSelect = document.querySelector("#languageSelect")
+                Promise.all(
+                    this.#knownLanguageCodes.map(code =>
+                        fetch(`/assets/translations/${code}.json`)
+                            .then(result => result.text())
+                            .then(data => Object.freeze(JSON.parse(data)).language.localName)
+                    )
+                ).then(localNames => {
+                    localNames.forEach((langLocalName, langIndex) => {
+                        const option = document.createElement("option")
+                        option.value = this.#knownLanguageCodes[langIndex]
+                        option.textContent = langLocalName
+                        if (option.value === this.language) { option.selected = true }
+                        languageSelect.append(option)
+                    })
+                })
+                languageSelect.onchange = () => { this.language = languageSelect.value }
+
+                const showStatsCheckbox = document.querySelector("#showStatsCheckbox")
+                showStatsCheckbox.checked = showStat
+                showStatsCheckbox.onchange = () => { this.showStats = showStatsCheckbox.checked }
 
                 if (this.debug) { console.log(this) }
             })
@@ -165,10 +190,12 @@ class Options {
     }
     get unlimitedLife() { return this.#unlimitedLife }
 
+    get anyDebug() { return this.debug || this.unlimitedMoney || this.unlimitedLife }
+
     /** @param {string} value */
     set language(value) {
         if (this.language === value) { return }
-	    if (! this.#knownLanguages.includes(value)) {
+	    if (! this.#knownLanguageCodes.includes(value)) {
             console.warn(`Language "${value}" is not supported, defaulting to ${this.#fallbackLanguage}`)
             value = this.#fallbackLanguage
         }
