@@ -3,6 +3,15 @@ import AbstractEntity, {AnimationKeys} from "./AbstractEntity.js"
 import Position from "../Position.js";
 import AbstractUnit from "./AbstractUnit.js";
 
+/**
+ * @param {string} name
+ * @param {number} speed
+ * @param {number} damage
+ * @param {number} range
+ * @param {number} cooldown
+ * @param {(target?: AbstractEntity) => void} onHitCb
+ * @return {typeof AbstractProjectile}
+ */
 export function projectileFactory(name, speed, damage, range, cooldown, onHitCb) {
     const movement = new MovementCapability(10, 3600, 360, MovementType.Unobstructed)
     return class extends AbstractProjectile {
@@ -10,7 +19,7 @@ export function projectileFactory(name, speed, damage, range, cooldown, onHitCb)
         static get movements() { return this.#movements }
         static get name() { return name }
         static get damage() { return damage }
-        static get range() { return range + 0.5 }
+        static get range() { return range }
         static get cooldown() { return cooldown }
 		/** @return {(target?: AbstractEntity) => void} */
 		static get onHitCb() { return onHitCb }

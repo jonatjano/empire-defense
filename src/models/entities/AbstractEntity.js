@@ -52,8 +52,6 @@ export default class AbstractEntity {
     /** @type {number} */
     #id = AbstractEntity.#idGenerator++
     /** @type {number} */
-    slowDuration = 0
-    /** @type {number} */
     static #idGenerator = 0
 
     static defaultDeathCallback = () => {}
