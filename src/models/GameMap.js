@@ -154,6 +154,7 @@ function developWaveData(waveData) {
         "H": Entities.Champion,
         "Y": Entities.Harpy,
         "E": Entities.Elephant,
+        "A": Entities.Airship
     }
     let count = 0;
     return waveData.map(row => {

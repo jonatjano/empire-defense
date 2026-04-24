@@ -83,7 +83,13 @@ const entities = {
     Elephant: unitFactory(
         "elephant",
         new MovementCapability(0.25, 3600, 60, MovementType.Walking),
-        6, 5,
+        100, 5,
+        wave => 1000 + wave - wave
+    ),
+    Airship: unitFactory(
+        "airship",
+        new MovementCapability(0.25, 3600, 60, MovementType.Flying),
+        100, 5,
         wave => 1000 + wave - wave
     ),
 
