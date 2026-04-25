@@ -1,6 +1,15 @@
 import AbstractEntity, {AnimationKeys} from "./AbstractEntity.js"
 import Position from "../Position.js";
 
+/**
+ * create a unit class with the given parameters
+ * @param {string} name
+ * @param {MovementCapability} movement
+ * @param {number} killReward
+ * @param {number} killCrystalReward
+ * @param {(wave: number) => number} hpFunction
+ * @return {class extends AbstractUnit}
+ */
 export function unitFactory(name, movement, killReward, killCrystalReward, hpFunction) {
     return class extends AbstractUnit {
         static #movements = movement
@@ -15,6 +24,9 @@ export function unitFactory(name, movement, killReward, killCrystalReward, hpFun
     }
 }
 
+/**
+ * an enemy
+ */
 export default class AbstractUnit extends AbstractEntity {
     static get killReward() { return 0 }
     get killReward() { return this.__proto__.constructor.killReward }
@@ -25,6 +37,10 @@ export default class AbstractUnit extends AbstractEntity {
         super(position, deathCallback, maxHp);
     }
 
+	/**
+	 * called when the unit is hit by an attack
+	 * @param {number} damage
+	 */
 	hit(damage) {
 		this.abstractHit(damage, false)
 		if (this.hp <= 0) {
@@ -36,6 +52,11 @@ export default class AbstractUnit extends AbstractEntity {
 		}
 	}
 
+	/**
+	 * Executes the actions for the current frame
+	 * @param {number} frameDuration time since last frame
+	 * @param {number} currentTime
+	 */
     act(frameDuration, currentTime) {
 	    switch (this.animationDetails.name) {
 		    case AnimationKeys.WALK: {

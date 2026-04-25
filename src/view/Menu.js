@@ -7,6 +7,9 @@ import PathFinder from "../utils/PathFinder.js";
 let currentMap = undefined
 let lobbyPreview = false
 
+/**
+ * Displays the lobby menu and initializes map preview
+ */
 export function lobby() {
     const lobby = document.getElementById("lobby")
     lobby.classList.remove("hidden")
@@ -59,6 +62,7 @@ export function lobby() {
 }
 
 /**
+ * Initializes the game with the provided map
  * @param {GameMap} map
  */
 function game(map) {

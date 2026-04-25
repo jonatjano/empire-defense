@@ -1,6 +1,7 @@
 import Position from "./Position.js";
 import Entities from "./entities/entities.js";
 
+/** bit set of what can and can't be done on a tile */
 export const TileOption = {
     walkable: 1 << 0,
     flyable: 1 << 1,
@@ -15,7 +16,13 @@ export const TileOption = {
         return (value & option) !== 0;
     },
 
+    /**
+     * @param {number} value
+     * @return {TileOption}
+     */
     from(value) {
+        // the typing is not happy here, because the return type is inferred as number
+        // but a bitset is in fact a number, so it's ok
         return parseInt(value, 32)
     }
 }
@@ -23,7 +30,7 @@ export const TileOption = {
 export default class GameMap {
     /** @type {string} */
     #name
-    /** @type {Array<Array<number>>} */
+    /** @type {Array<Array<TileOption>>} */
     #mapData
     /** @type {Readonly<Position[]>} */
     #spawns
@@ -37,7 +44,7 @@ export default class GameMap {
 
     /**
      * @param {string} name
-     * @param {Array<Array<number>>} mapData
+     * @param {Array<Array<TileOption>>} mapData
      * @param {{x: number, y: number}[]} spawns
      * @param {{x: number, y: number}[]} targets
      * @param {{[top]: number, [right]: number, [bottom]: number, [left]: number}} borders
@@ -77,6 +84,11 @@ export default class GameMap {
         return this.#borders;
     }
 
+    /**
+     * @param {number} x
+     * @param {number} y
+     * @return {TileOption}
+     */
     getTileOption(x, y) {
         return this.#mapData[y][x];
     }
@@ -110,8 +122,9 @@ export default class GameMap {
 }
 
 /**
+ * create tile options from a string template
  * @param {string} template
- * @return {number[][]}
+ * @return {TileOption[][]}
  */
 function mapDataFromString(template) {
     const width = template.split("\n")
@@ -134,13 +147,13 @@ function mapDataFromString(template) {
 
     return new Array(height).fill(0).map((_, y) =>
         new Array(width).fill(0).map((_, x) => {
-            // todo view if there isn't an inversion between x and y (again T_T)
             return TileOption.from(template[y * width + x])
         })
     )
 }
 
 /**
+ * make a waveGroupData object from an array of strings
  * @param {string[]} waveData
  * @return {waveGroupData}
  */
@@ -157,7 +170,6 @@ function developWaveData(waveData) {
     }
     let count = 0;
     return waveData.map(row => {
-        console.log(row);
         return [
             row.split("").reduce((acc, char) => {
                 if (char === " ") {

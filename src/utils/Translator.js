@@ -32,7 +32,7 @@ export function loadTranslation() {
 }
 
 /**
- * return the value for the given translation key in loaded language
+ * return the value for the given translation key in the loaded language
  * @param {string} key
  * @return {string}
  */

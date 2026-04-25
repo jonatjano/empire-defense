@@ -12,9 +12,12 @@ import AbstractProjectile from "../models/entities/AbstractProjectile.js";
 import Vfx from "../models/entities/Vfx.js";
 import AbstractUnit from "../models/entities/AbstractUnit.js";
 
+
 const TILE_MARGIN = -1
+/** alpha value for transparent drawing */
 const ALPHA_VALUE = 0.4
 
+/** style for the HP bars in px */
 const HP_BAR_STYLE = Object.freeze({
     get WIDTH() { return 0.7 * options.zoom },
     HEIGHT: 4,
@@ -23,6 +26,20 @@ const HP_BAR_STYLE = Object.freeze({
 })
 
 /**
+ * get the z-index of an entity according to its movement type
+ * @param {MovementType} type
+ * @return {number}
+ */
+const movementTypeDrawPriority = type => {
+    switch (type) {
+        case MovementType.Unobstructed: return 10
+        case MovementType.Walking: return 0
+        case MovementType.Flying: return 1
+    }
+}
+
+/**
+ * current state of the mouse according to last event
  * @type {{pressed: boolean, dragging: boolean, x: number, y: number, type: string}}
  */
 let mouseData = {
@@ -34,6 +51,7 @@ let mouseData = {
 }
 
 /**
+ * add events on the canvas
  * @param {HTMLCanvasElement} canvas
  * @param {(x: number, y: number) => undefined} clickListener
  * @param {(x: number, y: number) => undefined} moveListener
@@ -104,6 +122,7 @@ export function setCanvasEvent(canvas, clickListener, moveListener) {
 }
 
 /**
+ * draw the map background, entities and eventual debug data on the canvas
  * @param {HTMLCanvasElement} canvas
  * @param {CanvasRenderingContext2D} ctx
  * @param {Game | GameMap} game
@@ -136,9 +155,11 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
             visibleLeftMargin * options.zoom, visibleTopMargin * options.zoom, mapWidth * options.zoom, mapHeight * options.zoom,
         )
     })
+
+    // draw the grid
     const gridWeight = Math.max(1, Math.abs(TILE_MARGIN))
     if (globalThis.options.debug) {
-        // draw the whole grid
+        // draw the whole grid when debug is activated
         for (let y = 0; y <= map.height; y++) {
             ctx.fillRect(leftMargin * options.zoom - (gridWeight / 2), (topMargin + y) * options.zoom - (gridWeight / 2), map.width * options.zoom + gridWeight, gridWeight);
         }
@@ -148,7 +169,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
     } else {
         if (game.selectedEntity?.isGhost) {
             ctx.fillStyle = "white"
-            // draw the grid to the size of the visible map
+            // draw the grid to the size of the visible map when the player is placing a tower
             for (let y = 0; y <= mapHeight; y++) {
                 ctx.fillRect(visibleLeftMargin * options.zoom - (gridWeight / 2), (visibleTopMargin + y) * options.zoom - (gridWeight / 2), mapWidth * options.zoom + gridWeight, gridWeight)
             }
@@ -161,8 +182,10 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
 
     if (game instanceof GameMap) {
         if (globalThis.options.debug) {
+            // write on each tile its position and its options
             for (let y = 0; y < map.height; y++) {
                 for (let x = 0; x < map.width; x++) {
+                    /** @type {TileOption} */
                     const tileOption = map.getTileOption(x, y)
                     ctx.fillText(`x: ${x}, y: ${y}, o: ${tileOption}`,
                         (leftMargin + x + 0.5) * options.zoom + TILE_MARGIN,
@@ -173,19 +196,9 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
         }
         return
     }
-    /**
-     * @param {MovementType} type
-     * @return {number}
-     */
-    const movementTypeDrawPriority = type => {
-        switch (type) {
-            case MovementType.Unobstructed: return 10
-            case MovementType.Walking: return 0
-            case MovementType.Flying: return 1
-        }
-    }
 
     /**
+     * the entities to draw
      * @type {AbstractEntity[]}
      */
     const entities = [
@@ -199,9 +212,12 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
             })
     ]
 
+    // we're forced to use promises as textures use promises,
+    // but it's not an issue because texture promises are resolved instantly once they are loaded
     await Promise.all(
         entities.map(entity => {
             if (entity instanceof FloatingText) {
+                // there is no texture to load, but we still need a promise
                 return new Promise(resolve => {
                     ctx.fillStyle = entity.color
                     ctx.textAlign = "center"
@@ -235,6 +251,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                 })
             }
             else {
+                // towers and units
                 return entity.texture.then(async entityTexture => {
                     const textureHorizontalSpan = entityTexture.worldWidth
                     const textureLeftMargin = -textureHorizontalSpan / 2
@@ -252,20 +269,26 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                     const animationFramePosition = await entity.getAnimationFramePosition(frameTiming)
 
                     if (entity === game.selectedEntity?.tower) {
+                        // if the entity is the selected tower, draw its range radius and move the tower menu at its position
+                        /** @type {AbstractBuilding} */
+                        const towerEntity = entity
+
                         ctx.globalAlpha = ALPHA_VALUE
                         const ellipse = new Path2D()
                         ellipse.ellipse(
                             drawImageData.dx + (entityTexture.worldWidth - 0.5) * options.zoom,
                             drawImageData.dy + (entityTexture.worldHeight - 0.5) * options.zoom,
-                            options.zoom * entity.projectile.range, options.zoom * entity.projectile.range,
+                            options.zoom * towerEntity.projectile.range, options.zoom * towerEntity.projectile.range,
                             0, 0, 2 * Math.PI
                         )
 
+                        // this is used by the ghost tower when building one
                         const previousStyle = ctx.fillStyle
                         ctx.fillStyle = game.selectedEntity.isValid ? "white" : "red";
                         ctx.fill(ellipse);
                         ctx.fillStyle = previousStyle
 
+                        // moving the tower menu to the correct position
                         const towerMenu = document.querySelector("#towerMenu")
 
                         const canvasRect = canvas.getBoundingClientRect();
@@ -278,6 +301,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                     }
                     ctx.globalAlpha = drawImageData.alpha
 
+                    // draw the slowed sfx on the unit if needed
                     if (entity instanceof AbstractUnit && entity.slowDuration > 0) {
                         globalThis.options.texturePack.getTexture(`vfx`).then(vfxTexture => {
                             const drawRect = vfxTexture.getAnimationFramePosition(AnimationKeys.SLOWED_DOWN, 0, frameTiming)
@@ -290,6 +314,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                         })
                     }
 
+                    // draw the static base texture if needed
                     if (entityTexture.textureType !== TextureType.ROTATION_ONLY) {
                         ctx.drawImage(
                             entityTexture.getBase(),
@@ -298,6 +323,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                         )
                     }
 
+                    // draw the rotation-dependent texture if needed
                     if (entityTexture.textureType !== TextureType.BASE_ONLY) {
                         let angle = AngleUtils.rad2deg(AngleUtils.clampAngleRad(entity.position.rotation))
                         angle = angle + (entityTexture.angleBetweenRotations / 2)
@@ -311,6 +337,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                     }
                     ctx.globalAlpha = 1
 
+                    // draw the HP bar if needed
                     if (entity.hp !== entity.maxHp && entity.hp > 0) {
                         // HP bar
                         // black border
@@ -341,6 +368,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                     }
 
 					if (entity instanceof AbstractBuilding) {
+                        // draw the upgrade timer if applicable
 						if (entity.animationDetails.name !== AnimationKeys.UPGRADE && entity.buildPercent < 100 &&
 							(entity !== game.selectedEntity?.tower || ! game.selectedEntity?.isGhost)) {
 							ctx.globalAlpha = ALPHA_VALUE
@@ -364,7 +392,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
 							ctx.globalAlpha = drawImageData.alpha
 						}
 
-
+                        // draw the boosted up sfx on the building if needed
                         if (entity.slowDuration > 0) {
                             globalThis.options.texturePack.getTexture(`vfx`).then(vfxTexture => {
                                 const drawRect = vfxTexture.getAnimationFramePosition(AnimationKeys.BOOSTED_UP, 0, frameTiming)
@@ -378,6 +406,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                         }
 					}
 
+                    // write the position debug data on units as well as the position where they are expected to be next second (doesn't take future turn into account)
                     if (globalThis.options.debug) {
                         ctx.fillStyle = `#000000`
                         // position text
@@ -397,7 +426,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
     )
 
     if (globalThis.options.debug) {
-        // print pathfinding infos
+        // print pathfinding infos for each movement type
         ctx.textRendering = "optimizeSpeed"
         ctx.fillStyle = `#000000`
 	    ctx.font = "10px Arial, sans-serif"
@@ -453,6 +482,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
             }
         })
     } else {
+        // clear the borders of the map to avoid artifacts
         ctx.clearRect(0, 0, canvas.width, visibleTopMargin * options.zoom)
         ctx.clearRect(0, 0, visibleLeftMargin * options.zoom, canvas.height)
         ctx.clearRect(0, (visibleTopMargin + mapHeight) * options.zoom, canvas.width, canvas.height)
