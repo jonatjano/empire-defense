@@ -2,6 +2,9 @@ import MovementCapability, {MovementType} from "../MovementCapability.js"
 import Position from "../Position.js"
 import AbstractEntity from "./AbstractEntity.js"
 
+/**
+ * a floating text entity that displays a message for a short time
+ */
 export default class FloatingText extends AbstractEntity {
 	static LIFETIME = 1000
 	static #movements = new MovementCapability(0.3, 360, 360, MovementType.Unobstructed)

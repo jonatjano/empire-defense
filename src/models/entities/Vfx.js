@@ -1,8 +1,14 @@
 import AbstractEntity from "./AbstractEntity.js";
 import MovementCapability, {MovementType} from "../MovementCapability.js";
 
+/**
+ * an entity with no interaction used to play an animation of the vfx image
+ */
 export default class Vfx extends AbstractEntity {
-    /** @type {typeof Vfx.UNTIL_ANIMATION_END} */
+    /**
+     * used as a duration parameter to indicate that the vfx should play the full animation once
+     * @type {typeof Vfx.UNTIL_ANIMATION_END}
+     */
     static UNTIL_ANIMATION_END = Symbol("Vfx.UNTIL_ANIMATION_END");
     static #movements = new MovementCapability(0.3, 360, 360, MovementType.Unobstructed)
     static get movements() { return this.#movements }
@@ -13,7 +19,7 @@ export default class Vfx extends AbstractEntity {
      * @param {number} start
      * @param {number | typeof Vfx.UNTIL_ANIMATION_END} duration
      * @param {string} animationName
-     * @param {EntityDeathCallback} [deathCallback]
+     * @param {EntityDeathCallback} [deathCallback] a callback to be called when the vfx is done playing
      */
     constructor(position, start, duration, animationName, deathCallback = AbstractEntity.defaultDeathCallback) {
         super(position, deathCallback, 1);
@@ -31,6 +37,11 @@ export default class Vfx extends AbstractEntity {
         })
     }
 
+    /**
+     * once the lifetime is reached, the vfx removes itself from the game
+     * @param {number} frameDuration
+     * @param {number} currentTime
+     */
     act(frameDuration, currentTime) {
         this.#lifetime -= frameDuration
         if (this.#lifetime <= 0) {

@@ -4,6 +4,9 @@ import TexturePack from "./TexturePack.js";
 
 const BUTTON_INTERVAL_TIME = 100
 
+/**
+ * options for the game
+ */
 class Options {
     /** @type {boolean} */
     #debug
@@ -53,6 +56,10 @@ class Options {
         this.addEventsToDom();
     }
 
+    /**
+     * load the meta.json file
+     * @return {Promise}
+     */
     loadMeta() {
         return fetch("/assets/meta.json")
             .then(res => res.json())
@@ -86,6 +93,7 @@ class Options {
                 this.texturePack = this.#knownTexturePacks.find(pack => pack.name === meta.texturePacks.default) ?? this.#knownTexturePacks[0]
                 this.#defaultTexturePack = this.texturePack
 
+                /* build the texture pack select options */
                 const texturePackSelect = document.querySelector("#texturePackSelect")
                 this.#knownTexturePacks.forEach(pack => {
                     const option = document.createElement("option")
@@ -95,6 +103,7 @@ class Options {
                 })
                 texturePackSelect.onchange = () => { this.texturePack = texturePackSelect.value }
 
+                /* build the language select options */
                 const languageSelect = document.querySelector("#languageSelect")
                 Promise.all(
                     this.#knownLanguageCodes.map(code =>
@@ -121,6 +130,9 @@ class Options {
             })
     }
 
+    //******//
+    // zoom //
+    //******//
     reduceZoom() {
         this.#zoom *= 0.9
         document.querySelector("#zoomIn").style.visibility = "visible"
@@ -139,12 +151,18 @@ class Options {
     }
     get zoom() { return this.#zoom }
 
+    //************//
+    // map offset //
+    //************//
     changeMapOffset(x, y) {
         this.#mapXOfsset += x
         this.#mapYOffset += y
     }
     get mapOffset() { return {x: this.#mapXOfsset, y: this.#mapYOffset} }
 
+    //************//
+    // game speed //
+    //************//
     changeSpeed() {
         let newIndex = this.#speeds.indexOf(this.#speed) + 1
         if (newIndex === this.#speeds.length) { newIndex = 0 }
@@ -323,6 +341,10 @@ class Options {
         this.updateIconsEvents()
     }
 
+
+    /**
+     * add event to the image elements to animate the textures
+     */
     updateIconsEvents() {
         const icons = document.querySelectorAll("[data-texture]")
         icons.forEach(icon => {

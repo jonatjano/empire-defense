@@ -5,8 +5,15 @@ import AbstractBuilding from "../models/entities/AbstractBuilding.js";
 import AbstractProjectile from "../models/entities/AbstractProjectile.js";
 import AbstractUnit from "../models/entities/AbstractUnit.js";
 
+/**
+ * what kind of texture is used for the entity
+ * @type {{IMAGE: symbol, ROTATION_AND_BASE: symbol, ROTATION_ONLY: symbol, BASE_ONLY: symbol}}
+ */
 export const TextureType = {
+    // used for icons and stuff
     IMAGE: Symbol("IMAGE"),
+    // BASE means there is an image to draw before the rotation specific images
+    // ROTATION means there is an image for different rotations
     ROTATION_AND_BASE: Symbol("ROTATION_AND_BASE"),
     ROTATION_ONLY: Symbol("ROTATION_ONLY"),
     BASE_ONLY: Symbol("BASE_ONLY")
@@ -16,6 +23,9 @@ export const TextureType = {
  * @typedef {{timings: number[], fixedStart: boolean}} AnimationMeta
  */
 
+/**
+ * default values for texture packs pack.json
+ */
 const DEFAULTS = {
     partial: false,
     extension: "png",
@@ -88,16 +98,32 @@ const DEFAULTS = {
     }
 }
 
+/**
+ * metadata for a texture
+ * applying the parent value recursively if missing
+ */
 class TextureMeta {
     /** @type {TextureMeta | null} */
     #parent
-    /** @type {boolean} */
+    /**
+     * whether the texture pack can fallback to the default texture pack for missing textures or should fail
+     * @type {boolean}
+     */
     #partial
-    /** @type {string} */
+    /**
+     * the file extension of the texture
+     * @type {string}
+     */
     #extension
-    /** @type {number} */
+    /**
+     * the angle between rotations of the texture in degrees
+     * @type {number}
+     */
     #angleBetweenRotations
-    /** @type {boolean} */
+    /**
+     * whether to generate or load the left-looking images for the texture
+     * @type {boolean}
+     */
     #isSymmetric
     /** @type {TextureType} */
     #textureType
@@ -155,11 +181,15 @@ class TextureMeta {
     get worldHeight() { return this.#worldHeight ?? this.#parent.worldHeight }
     /** @return {Record<string, AnimationMeta>} */
     get animations() { return this.#animations ?? this.#parent.animations }
-
-
 }
 
+/**
+ * symbol used in textureList to indicate the position of an image to load
+ */
 const textureListLeaf = Symbol()
+/**
+ * directory structure for texture packs
+ */
 const textureList = {
     // keep first here to ensure it is present when trying to frame other images
     frame: textureListLeaf,
@@ -222,6 +252,9 @@ const textureList = {
     },
 }
 
+/**
+ * loads the Texture so we can get them easily later
+ */
 export default class TexturePack {
     /**
      * the rotation in degree we want portrayed in the framed variant, the closest if not available
@@ -231,9 +264,15 @@ export default class TexturePack {
 
     /** @type {string} */
     #name
-    /** @type {Map<string, Texture>} */
+    /**
+     * map linking the path to the textures
+     * @type {Map<string, Texture>}
+     */
     #textures
-    /** @type {Promise} */
+    /**
+     * once this promise is resolved, the textures are loaded
+     * @type {Promise}
+     */
     #initPromise
     /** @type {TextureMeta} */
     #packMeta
@@ -248,6 +287,7 @@ export default class TexturePack {
     get packMeta() { return this.#packMeta }
 
     /**
+     * get one texture by its path, if the pack was not loaded yet, it will be loaded
      * @param {string} path
      * @return {Promise<Texture>}
      */
@@ -262,8 +302,9 @@ export default class TexturePack {
     }
 
     /**
+     * initializes the texture pack by loading the pack.json and all textures
      * @param {Blob} packJsonBlob
-     * @param {File[]} [files] only used for webkitDirectory
+     * @param {File[]} [files] only used for webkitDirectory (drag and drop imports)
      * @return {Promise}
      */
     init(packJsonBlob, files) {
@@ -272,14 +313,21 @@ export default class TexturePack {
             .then(async content => {
                 const packMeta = JSON.parse(content)
 
-                /** @type {[string[], TextureMeta, (Object<string, Object | symbol> | symbol)][]}  */
+                /**
+                 * 0: current path relative to pack root,
+                 * 1: local meta for the current path
+                 * 2: the current item in the texture list
+                 * @type {[string[], TextureMeta, (Object<string, Object | symbol> | symbol)][]}
+                 */
                 const toGet = [[[], null, textureList]]
                 /** @type {{[key: string]: Texture}} */
                 const textures = {}
                 const promises = []
 
+                // while there are still textures to get
                 while(toGet.length !== 0) {
                     const [path, localMeta, item] = toGet.shift()
+                    // if the item is a leaf, it means we have reached a texture to load
                     if (item === textureListLeaf) {
                         let localDefault = DEFAULTS
                         let localPackMeta = packMeta
@@ -287,27 +335,32 @@ export default class TexturePack {
                             localDefault = localDefault?.[part]
                             localPackMeta = localPackMeta?.[part]
                         }
+                        // texture meta local to this directory
                         const textureMeta = new TextureMeta(localMeta, {...localDefault, ...localPackMeta})
 
+                        // the actual image loading promise
                         const texturePromise = isWebkitDirectory ?
                             Texture.forWebkitDirectory(files, path, this.#name, textureMeta) :
                             Texture.for(path, this.#name, textureMeta)
 
                         if (path.join("/") === "frame") {
+                            // if the texture is the frame, await the promise directly because we need it to frame the textures
                             const texture = await texturePromise
+                                // if the texture is missing, fallback to default texture pack
                                 .catch(() => globalThis.options.defaultTexturePack.getTexture(path.join("/"))
                                     .then(defaultTexture => Texture.for(path, globalThis.options.defaultTexturePack.name, defaultTexture.meta))
                                     .then(texture => textures[path.join("/")] = texture)
                                 )
-                                // .catch(() => globalThis.options.defaultTexturePack.getTexture(path.join("/")))
-                                // .then(defaultTexture => Texture.for(path, globalThis.options.defaultTexturePack.name, defaultTexture.meta))
-                                // .then(texture => textures[path.join("/")] = texture)
+                            // place the texture at its position
                             textures[path.join("/")] = texture
+                            // create the framed variant of the texture
                             promises.push(texture.makeFramed(textures.frame, this.#name))
                         } else {
+                            // if the texture is not the frame, there is no need to await it directly
                             let fullPromise = texturePromise
                                 .then(texture => textures[path.join("/")] = texture )
 
+                            // if the texture is partial, allow fallback to default texture pack
                             if (textureMeta.partial) {
                                 fullPromise = fullPromise
                                     .catch(() => globalThis.options.defaultTexturePack.getTexture(path.join("/"))
@@ -316,11 +369,14 @@ export default class TexturePack {
                                     )
                             }
 
+                            // also make the framed variant of the texture
                             fullPromise = fullPromise.then(texture => texture.makeFramed(textures.frame, this.#name) )
 
+                            // push the promise to the list of promises
                             promises.push(fullPromise)
                         }
                     } else {
+                        // directory
                         let localDefault = DEFAULTS
                         let localPackMeta = packMeta
                         for (const part of path) {
@@ -329,6 +385,7 @@ export default class TexturePack {
                         }
                         const textureMeta = new TextureMeta(localMeta, {...localDefault, ...localPackMeta})
                         if (localMeta === null) { this.#packMeta  = textureMeta }
+                        // add each child to the list of textures to get
                         Object.keys(item).forEach(key => {
                             toGet.push(
                                 [
@@ -340,7 +397,9 @@ export default class TexturePack {
                         })
                     }
                 }
+                // wait for all the promises to be resolved
                 await Promise.all(promises)
+                // set the map of path to textures
                 this.#textures = new Map()
                 ;[...Object.entries(textures)].forEach(([key, item]) => this.#textures.set(key, item))
             })
@@ -348,18 +407,28 @@ export default class TexturePack {
         return this.#initPromise
     }
 
+    /**
+     * get or create the html element containing the textures for the texture pack
+     * @param {string} texturePackName
+     * @param {boolean} closeOthers
+     * @return {Element}
+     */
     static getHtmlTextureContainerFor(texturePackName, closeOthers = true) {
+        // get the textures div
         let texturesDiv = document.getElementById("textures")
         let texturePackDetails = texturesDiv.querySelector(`#${texturePackName}`)
         if (texturePackDetails === null) {
+            // if there is no element specific to the texture pack
             if (closeOthers) {
                 texturesDiv.querySelectorAll("details").forEach(detail => detail.open = false)
             }
 
+            // create a detail element
             texturePackDetails = document.createElement("details")
             texturePackDetails.id = texturePackName
             texturePackDetails.open = true
 
+            // set the texture pack name as summary
             const texturePackSummary = document.createElement("summary")
             texturePackSummary.textContent = texturePackName
             texturePackDetails.append(texturePackSummary)
@@ -375,13 +444,17 @@ export default class TexturePack {
     }
 
     /**
+     * update all the textures in the document
+     * this apply to the textures in the DOM
      * @param {number} currentTime current global time, used to get the correct animation frame
      */
     updateDocumentTextures(currentTime = 0) {
+        // find the elements
         const elements = document.body.querySelectorAll("*[data-texture]")
         const canvas = document.getElementById("utilsCanvas")
         const ctx = canvas.getContext("2d")
 
+        // for each element get the correct texture and update the image src
         elements.forEach(async element => {
             element.style.pointerEvents = "all"
             this.getTexture(element.dataset.texture).then(texture => {
@@ -411,14 +484,22 @@ export default class TexturePack {
     }
 }
 
-
+/**
+ * Texture class represents a group of texture in the same directory
+ */
 class Texture {
     static #idGenerator = 0;
     #id = Texture.#idGenerator++;
 
-    /** @type {Symbol} */
+    /**
+     * a marker to identify the base texture
+     * @type {Symbol}
+     */
     static #baseMarker = Symbol("Texture.baseMarker")
-    /** @type {Symbol} */
+    /**
+     * a marker to identify the framed texture
+     * @type {Symbol}
+     */
     static #framedMarker = Symbol("Texture.framedMarker")
 
     /**
@@ -432,7 +513,11 @@ class Texture {
      * @readonly
      */
     #meta
-    /** @type {Map<number | Symbol, HTMLImageElement>} */
+    /**
+     * a map of an image element by orientation
+     * #baseMarker and #framedMarker can be used as keys
+     * @type {Map<number | Symbol, HTMLImageElement>}
+     */
     #imageElements = new Map()
 
     constructor(meta) {
@@ -500,11 +585,13 @@ class Texture {
     get worldHeight() { return this.#meta.worldHeight; }
 
     /**
+     * create the framed variant of this texture
      * @param {Texture} frame
      * @param {string} texturePackName
      * @returns {Promise<this>}
      */
     makeFramed(frame, texturePackName) {
+        // if it already exists, return instantly
         if (this.#imageElements.has(Texture.#framedMarker)) {
             return new Promise(() => this)
         }
@@ -572,6 +659,7 @@ class Texture {
     }
 
     /**
+     * load images whose path is in the assets directory
      * @param {string[]} path
      * @param {string} texturePackName
      * @param {TextureMeta} textureMeta
@@ -583,6 +671,7 @@ class Texture {
         /** @type {Promise[]} */
         const promises = []
 
+        // if the image is an icon, there is only one image to load
         if (textureMeta.textureType === TextureType.IMAGE) {
             const image = document.createElement("img")
             image.src = `/assets/images/${texturePackName}/${path.join("/")}.${textureMeta.extension}`
@@ -595,11 +684,13 @@ class Texture {
             })
         }
 
+        // assert that the given angle permits a full turn
         if (textureMeta.textureType !== TextureType.BASE_ONLY && (360 % textureMeta.angleBetweenRotations) !== 0) {
             console.error("Given textureMeta angle isn't valid", textureMeta)
             throw new TypeError("Given textureMeta angle isn't valid")
         }
 
+        // load the base image
         if (textureMeta.textureType !== TextureType.ROTATION_ONLY) {
             const image = document.createElement("img")
             image.src = `/assets/images/${texturePackName}/${path.join("/")}/base.${textureMeta.extension}`
@@ -612,10 +703,12 @@ class Texture {
             }))
         }
 
+        // if we don't need rotation image, there is nothing more to do
         if (textureMeta.textureType === TextureType.BASE_ONLY) {
             return Promise.all(promises).then(() => result)
         }
 
+        // load the rotation image for each required angle
         let angle = 0
         while (angle < 360) {
             if (angle <= 180 || (angle > 180 && ! textureMeta.isSymmetric)) {
@@ -629,8 +722,10 @@ class Texture {
                     result.#imageElements.set(360, image);
                 }
 
+
                 promises.push(new Promise((res, err) => {
                     image.onload = () => {
+                        // create a rotated copy of the image if requested
                         if (textureMeta.isSymmetric && hoistedAngle !== 0 && hoistedAngle !== 180) {
                             const rotatedImage = Texture.#mirrorImage(image, textureMeta.pixelWidth)
                             rotatedImage.style.order = result.#id.toString(10)
@@ -654,6 +749,7 @@ class Texture {
     }
 
     /**
+     * load images for texture packs inputted by the user
      * @param {File[]} files
      * @param {string[]} path
      * @param {string} texturePackName
@@ -666,6 +762,7 @@ class Texture {
         /** @type {Promise[]} */
         const promises = []
 
+        // if the image is an icon, there is only one image to load
         if (textureMeta.textureType === TextureType.IMAGE) {
             const file = files.find(({webkitRelativePath}) => webkitRelativePath === `${texturePackName}/${path.join("/")}.${textureMeta.extension}`)
             if (file !== undefined) {
@@ -683,11 +780,13 @@ class Texture {
             }
         }
 
+        // assert that the given angle permits a full turn
         if (textureMeta.textureType !== TextureType.BASE_ONLY && (360 % textureMeta.angleBetweenRotations) !== 0) {
             console.error("Given textureMeta angle isn't valid", textureMeta)
             throw new TypeError("Given textureMeta angle isn't valid")
         }
 
+        // load the base image
         if (textureMeta.textureType !== TextureType.ROTATION_ONLY) {
             const file = files.find(({webkitRelativePath}) => webkitRelativePath === `${texturePackName}/${path.join("/")}/base.${textureMeta.extension}`)
             if (file !== undefined) {
@@ -704,10 +803,12 @@ class Texture {
             }
         }
 
+        // if we don't need rotation image, there is nothing more to do
         if (textureMeta.textureType === TextureType.BASE_ONLY) {
             return Promise.all(promises).then(() => result)
         }
 
+        // load the rotation image for each required angle
         let angle = 0
         while (angle < 360) {
             if (angle <= 180 || (angle > 180 && ! textureMeta.isSymmetric)) {
@@ -722,6 +823,7 @@ class Texture {
                             texturesDiv.appendChild(image)
                             result.#imageElements.set(AngleUtils.clampAngleDeg(hoistedAngle), image)
 
+                            // create a rotated copy of the image if requested
                             if (textureMeta.isSymmetric && hoistedAngle !== 0 && hoistedAngle !== 180) {
                                 image.onload = () => {
                                     const rotatedImage = Texture.#mirrorImage(image, textureMeta.pixelWidth)
@@ -745,6 +847,7 @@ class Texture {
     }
 
     /**
+     * transform a file into a data url
      * @param {File} file
      * @return {Promise<string>}
      */
@@ -758,6 +861,7 @@ class Texture {
     }
 
     /**
+     * create a mirrored copy of an image
      * @param {HTMLImageElement} image
      * @param {number} frameWidth size in pixel of one animation frame
      * @returns {HTMLImageElement}
@@ -773,6 +877,7 @@ class Texture {
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.scale(-1, 1)
 
+        // create copy for each frame
         for (let i = 0; i < image.width / frameWidth; i++) {
             context.drawImage(image, i * frameWidth, 0, frameWidth, image.height, -(i + 1) * frameWidth, 0, frameWidth, canvas.height)
         }
