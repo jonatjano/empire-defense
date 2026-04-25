@@ -4,12 +4,15 @@ import TexturePack from "./TexturePack.js";
 
 const BUTTON_INTERVAL_TIME = 100
 
+/**
+ * options for the game
+ */
 class Options {
     /** @type {boolean} */
     #debug
 
     /** @type {string[]} */
-    #knownLanguages
+    #knownLanguageCodes
     /** @type {string} */
     #language
     /** @type {string} */
@@ -53,6 +56,10 @@ class Options {
         this.addEventsToDom();
     }
 
+    /**
+     * load the meta.json file
+     * @return {Promise}
+     */
     loadMeta() {
         return fetch("/assets/meta.json")
             .then(res => res.json())
@@ -67,22 +74,26 @@ class Options {
                  *  unlimitedLife: ?boolean,
                  * }} meta */
                 meta => {
+
                 /* debug */
                 this.debug = meta.debug ?? false
-                this.showStats = meta.showStats ?? this.debug
+                const showStat = meta.showStats ?? this.debug
+                this.showStats = showStat
                 this.unlimitedMoney = meta.unlimitedMoney ?? this.debug
                 this.unlimitedLife = meta.unlimitedLife ?? this.debug
 
                 /* languages */
-                this.#knownLanguages = meta.languages.list
+                this.#knownLanguageCodes = meta.languages.list
                 this.#fallbackLanguage = meta.languages.default
-                this.language = window.navigator.languages.find(language => this.#knownLanguages.includes(language)) ?? this.#fallbackLanguage
+                this.language = window.navigator.languages.find(language => this.#knownLanguageCodes.includes(language)) ?? this.#fallbackLanguage
+
 
                 /* texture pack */
                 this.#knownTexturePacks = meta.texturePacks.list.map(name => new TexturePack(name))
                 this.texturePack = this.#knownTexturePacks.find(pack => pack.name === meta.texturePacks.default) ?? this.#knownTexturePacks[0]
                 this.#defaultTexturePack = this.texturePack
 
+                /* build the texture pack select options */
                 const texturePackSelect = document.querySelector("#texturePackSelect")
                 this.#knownTexturePacks.forEach(pack => {
                     const option = document.createElement("option")
@@ -92,10 +103,36 @@ class Options {
                 })
                 texturePackSelect.onchange = () => { this.texturePack = texturePackSelect.value }
 
+                /* build the language select options */
+                const languageSelect = document.querySelector("#languageSelect")
+                Promise.all(
+                    this.#knownLanguageCodes.map(code =>
+                        fetch(`/assets/translations/${code}.json`)
+                            .then(result => result.text())
+                            .then(data => Object.freeze(JSON.parse(data)).language.localName)
+                    )
+                ).then(localNames => {
+                    localNames.forEach((langLocalName, langIndex) => {
+                        const option = document.createElement("option")
+                        option.value = this.#knownLanguageCodes[langIndex]
+                        option.textContent = langLocalName
+                        if (option.value === this.language) { option.selected = true }
+                        languageSelect.append(option)
+                    })
+                })
+                languageSelect.onchange = () => { this.language = languageSelect.value }
+
+                const showStatsCheckbox = document.querySelector("#showStatsCheckbox")
+                showStatsCheckbox.checked = showStat
+                showStatsCheckbox.onchange = () => { this.showStats = showStatsCheckbox.checked }
+
                 if (this.debug) { console.log(this) }
             })
     }
 
+    //******//
+    // zoom //
+    //******//
     reduceZoom() {
         this.#zoom *= 0.9
         document.querySelector("#zoomIn").style.visibility = "visible"
@@ -114,12 +151,18 @@ class Options {
     }
     get zoom() { return this.#zoom }
 
+    //************//
+    // map offset //
+    //************//
     changeMapOffset(x, y) {
         this.#mapXOfsset += x
         this.#mapYOffset += y
     }
     get mapOffset() { return {x: this.#mapXOfsset, y: this.#mapYOffset} }
 
+    //************//
+    // game speed //
+    //************//
     changeSpeed() {
         let newIndex = this.#speeds.indexOf(this.#speed) + 1
         if (newIndex === this.#speeds.length) { newIndex = 0 }
@@ -165,10 +208,12 @@ class Options {
     }
     get unlimitedLife() { return this.#unlimitedLife }
 
+    get anyDebug() { return this.debug || this.unlimitedMoney || this.unlimitedLife }
+
     /** @param {string} value */
     set language(value) {
         if (this.language === value) { return }
-	    if (! this.#knownLanguages.includes(value)) {
+	    if (! this.#knownLanguageCodes.includes(value)) {
             console.warn(`Language "${value}" is not supported, defaulting to ${this.#fallbackLanguage}`)
             value = this.#fallbackLanguage
         }
@@ -296,6 +341,10 @@ class Options {
         this.updateIconsEvents()
     }
 
+
+    /**
+     * add event to the image elements to animate the textures
+     */
     updateIconsEvents() {
         const icons = document.querySelectorAll("[data-texture]")
         icons.forEach(icon => {

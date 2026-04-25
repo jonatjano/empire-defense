@@ -127,7 +127,7 @@ export default class Position {
             duration -= neededTime
         }
 
-        // FIXME currently have a kind of ease out at the end of the rotation, doesn't affect movement speed
+        // FIXME currently have a kind of unintentional ease out at the end of the rotation, doesn't affect movement speed
 
         // get the new rotation delta in [-pi; pi] to avoid doing a full turn
         rotationDelta = result.#rotation - movementAngle

@@ -8,6 +8,9 @@ export const MovementType = Object.freeze({
     Flying: 2
 })
 
+/**
+ * the movement capability of an entity
+ */
 export default class MovementCapability {
     /** @type {MovementType} */
     #movementType

@@ -19,6 +19,10 @@
 		"classic": { "name": "Classique" },
 		"test": { "name": "Test" }
 	},
+	"option": {
+		"language": "Langue",
+		"showStats": "Afficher les statistiques"
+	},
 	"credits": {
 		"programmation": "Programmation",
 		"arts": "Arts",

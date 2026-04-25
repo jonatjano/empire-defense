@@ -60,13 +60,22 @@ export default class Game {
         this.money = 20
         this.crystal = 0
         this.waveNumber = 0
-        this.playableTowers = [entities.Debug, entities.Archery, entities.Cannon, entities.Ice, entities.Ballista, entities.Booster]
+        this.playableTowers = [...(globalThis.options.anyDebug ? [entities.Debug] : []), entities.Archery, entities.Cannon, entities.Ice, entities.Ballista, entities.Booster]
     }
 
+    /**
+     * add an entity to the game
+     * @param {AbstractEntity} entity
+     */
     addEntity(entity) {
         this.#entities.push(entity)
     }
 
+    /**
+     * remove an entity from the game
+     * @param {AbstractEntity} entity
+     * @param {boolean} [skipPathFinder=false] - whether to skip recalculating pathfinding after entity removal
+     */
     deleteEntity(entity, skipPathFinder = false) {
         this.#entities = this.#entities.filter(ent => ent !== entity)
         if (entity instanceof AbstractBuilding && !skipPathFinder) {
@@ -75,20 +84,21 @@ export default class Game {
     }
 
     /**
-     * @param {typeof AbstractEntity} [type=Entity]
+     * @param {typeof AbstractEntity} [type=AbstractEntity]
      * @return {AbstractEntity[]}
      */
     getEntities(type = AbstractEntity) { return type === AbstractEntity ? this.#entities : this.#entities.filter(entity => entity instanceof type) }
 
     /**
      * @param {(AbstractEntity) => boolean} condition
-     * @param {typeof AbstractEntity} [type=Entity]
+     * @param {typeof AbstractEntity} [type=AbstractEntity]
      * @return {AbstractEntity[]}
      */
     getEntitiesWithCondition(condition, type = AbstractEntity) { return this.#entities.filter(entity => entity instanceof type && condition(entity)) }
     getEntitiesCloseTo(position, range, type = AbstractEntity) { return this.#entities.filter(entity => entity instanceof type && entity.position.distanceFrom(position) < range) }
 
     /**
+     * set the list of playable towers, rebuild the DOM accordingly
      * @param {AbstractBuilding[]} playableTowers
      */
     set playableTowers(playableTowers) {
@@ -114,16 +124,24 @@ export default class Game {
         })
     }
 
+    get selectedTowerType() { return this.#selectedTowerType }
+
     get selectedEntity() {
         return this.#selectedEntity
     }
-    /** @param {{tower: AbstractBuilding, isGhost: boolean, isValid: boolean} | null} value */
+    /**
+     * set the currently selected entity
+     * @param {{tower: AbstractBuilding, isGhost: boolean, isValid: boolean} | null} value
+     */
     set selectedEntity(value) {
         this.#selectedEntity = value
         const upgradeButton = document.querySelector("#upgradeTower")
         const sellButton = document.querySelector("#sellTower")
 
+        // toggle the menu as needed
         this.toggleTowerMenuVisibility(value)
+
+        // update the tower menu to the selected tower
 	    if (value?.tower.upgradesTo) {
             upgradeButton.firstElementChild.dataset.texture = `entities/buildings/${value?.tower.upgradesTo.name}`
             upgradeButton.dataset.cost = value.tower.upgradesTo.cost;
@@ -136,7 +154,10 @@ export default class Game {
         }
     }
 
-    /** @param {{tower: AbstractBuilding, isGhost: boolean, isValid: boolean} | null} value */
+    /**
+     * set the visibility of the tower menu based on the selected entity
+     * @param {{tower: AbstractBuilding, isGhost: boolean, isValid: boolean} | null} value
+     */
     toggleTowerMenuVisibility(value) {
         if (value) {
             document.querySelector("#towerMenu").classList.toggle("hidden", value.isGhost)
@@ -147,6 +168,10 @@ export default class Game {
         }
     }
 
+    /**
+     * sell the given tower
+     * @param {AbstractBuilding} tower
+     */
     #sellTower(tower) {
         // TODO selling crystal loss
         tower.setAnimation(AnimationKeys.SELL, frameTimingWithSpeedFactor).then(success => {
@@ -159,6 +184,10 @@ export default class Game {
         }
     }
 
+    /**
+     * upgrade the given tower
+     * @param {AbstractBuilding} tower
+     */
     #upgradeTower(tower) {
         console.log("upgrading", tower, this.money, tower.upgradesTo.cost)
         if (this.money >= tower.upgradesTo.cost) {
@@ -179,6 +208,9 @@ export default class Game {
     /** @return {PathFinder} */
     get pathFinder() { return this.#pathFinder }
 
+    /**
+     * pause the game
+     */
     pause() {
         this.#isPaused = true
         realLastFrameTiming = undefined
@@ -186,6 +218,10 @@ export default class Game {
 
 	get currentFrameTiming() { return frameTimingWithSpeedFactor }
 
+    /**
+     * step the game forward by one frame
+     * @param frameTiming
+     */
     step(frameTiming) {
         if (realLastFrameTiming === undefined) {
             realLastFrameTiming = frameTiming
@@ -216,6 +252,10 @@ export default class Game {
         this.#eventListener(frameTimingWithSpeedFactor)
     }
 
+    /**
+     * play the game
+     * @param {number} frameTiming
+     */
     play(frameTiming) {
         this.step(frameTiming)
         if (! this.#isPaused) {
@@ -223,6 +263,9 @@ export default class Game {
         }
     }
 
+    /**
+     * play one frame
+     */
     playOnce() {
         if (! this.#isPaused) { return}
         const again = () => {
@@ -233,6 +276,9 @@ export default class Game {
         requestAnimationFrame(again.bind(this))
     }
 
+    /**
+     * resume the game after a pause
+     */
     resume() {
         if (! this.#isPaused) { return }
         realLastFrameTiming = undefined
@@ -243,6 +289,10 @@ export default class Game {
     get isPaused() { return this.#isPaused }
 
     get life() { return this.#life }
+    /**
+     * set the life and apply the changes to the UI and the game over condition
+     * @param {number} value
+     */
     set life(value) {
         this.#life = value
         if (! globalThis.options.unlimitedLife) {
@@ -255,6 +305,10 @@ export default class Game {
     }
 
     get money() { return globalThis.options.unlimitedMoney ? Infinity : this.#money }
+    /**
+     * set the money and update the UI
+     * @param {number} value
+     */
     set money(value) {
         this.#money = value
         if (! globalThis.options.unlimitedMoney) {
@@ -263,12 +317,20 @@ export default class Game {
     }
 
     get crystal() { return this.#crystal }
+    /**
+     * set the crystal count and update the UI
+     * @param {number} value
+     */
     set crystal(value) {
         this.#crystal = value
         document.querySelector("#crystalLabel").textContent = value.toString()
     }
 
     get waveNumber() { return this.#waveNumber }
+    /**
+     * set the wave number and update the UI
+     * @param {number} value
+     */
     set waveNumber(value) {
         this.#waveNumber = value
         document.querySelector("#waveLabel").textContent = value.toString()
@@ -276,6 +338,8 @@ export default class Game {
 
 
     /**
+     * event listener for mouse over event,
+     * show a ghost tower if applicable
      * @param {number} x
      * @param {number} y
      */
@@ -283,6 +347,7 @@ export default class Game {
         if (this.#isPaused) { return }
 
         const towerType = this.#selectedTowerType
+        // no tower type selected, there is nothing more to do
         if (towerType === null) {
             return
         }
@@ -290,6 +355,7 @@ export default class Game {
         const cellPosition = new Position(Math.floor(x), Math.floor(y), 0)
         const towerPosition = new Position(cellPosition.x + 0.5, cellPosition.y + 0.5, TexturePack.framedRotation)
 
+        // if position is not valid, or already taken, remove the ghost
         if (! this.#map.positionIsInBoundaries(cellPosition) || ! TileOption.is(this.#map.getTileOption(cellPosition.x, cellPosition.y), TileOption.buildable)) {
             this.selectedEntity = null
             return
@@ -299,12 +365,15 @@ export default class Game {
             return
         }
 
+        // if the ghost is in the same cell as the last time the event fired
         if (this.selectedEntity?.tower.position.equals(towerPosition)) {
             return
         }
 
+        // build the tower ghost at the position
         const tower = new towerType(cellPosition)
         this.addEntity(tower)
+        // check the validity of the position
         const isValid = this.#pathFinder.recalculateAll()
         this.deleteEntity(tower, true)
         this.#pathFinder.revertAll()
@@ -312,6 +381,8 @@ export default class Game {
     }
 
     /**
+     * listener for mouse click event,
+     * place or select a tower if applicable
      * @param {number} x
      * @param {number} y
      * @param {{ctrl: boolean, shift: boolean}} metaKeys
@@ -320,6 +391,8 @@ export default class Game {
         if (this.#isPaused) { return }
 
         const towerType = this.#selectedTowerType
+        // the player is not trying to build a tower
+        // select the tower at that position if there is one
         if (towerType === null) {
             const cellPosition = new Position(Math.floor(x), Math.floor(y), 0)
             const towerPosition = new Position(cellPosition.x + 0.5, cellPosition.y + 0.5, 0)
@@ -336,9 +409,11 @@ export default class Game {
             return
         }
 
+        // the player is trying to build a tower
         const cellPosition = new Position(Math.floor(x), Math.floor(y), 0)
         const towerPosition = new Position(cellPosition.x + 0.5, cellPosition.y + 0.5, 0)
 
+        // check the validity of the position
         if (! this.#map.positionIsInBoundaries(cellPosition) || ! TileOption.is(this.#map.getTileOption(cellPosition.x, cellPosition.y), TileOption.buildable)) {
             console.error("Tile is not buildable")
             return
@@ -347,34 +422,43 @@ export default class Game {
             console.error("Position is already taken", this.getEntities(AbstractBuilding))
             return
         }
-        if (this.#money < towerType.cost && ! globalThis.options.unlimitedMoney) {
+        // check that the player has enough money
+        if (this.#money <= towerType.cost && ! globalThis.options.unlimitedMoney) {
             console.error(`Not enough money for this tower, got ${this.#money}, required ${towerType.cost}`)
             return
         }
 
-
+        // create the tower
         const tower = new towerType(towerPosition)
         this.addEntity(tower)
+        // update the pathfinding, and delete the tower if it fails
         if (! this.#pathFinder.recalculateAll()) {
             this.deleteEntity(tower, true)
             this.#pathFinder.revertAll()
             return
         }
+        // update the game state
         this.money = this.money - towerType.cost;
         this.crystal = this.crystal + tower.crystalOnBuild
+        // launch the first wave if not done yet
         if (this.waveNumber === 0) {
             this.#launchNextWave()
         }
+        // if the shift key is pressed, keep the selected tower type
         if (! metaKeys.shift) {
             this.#selectedTowerType = null
             this.selectedEntity = null
         }
     }
 
+    /**
+     * launch the next wave
+     */
     #launchNextWave() {
         console.log("new wave")
         this.waveNumber = this.waveNumber + 1
 
+        // play the spawn and target vfx
         this.#map.spawns.forEach(pos => {
             this.addEntity(new Vfx(pos, frameTimingWithSpeedFactor, 5000, AnimationKeys.SPAWN_ARROW))
         })
@@ -391,6 +475,11 @@ export default class Game {
         console.log(this.map.waves)
     }
 
+    /**
+     * spawn the units for the current frame
+     * @param {number} frameDuration
+     * @param {number} frameTiming
+     */
     #spawnNextUnits(frameDuration, frameTiming) {
         this.#spawnCooldown = this.#spawnCooldown - frameDuration
         const callback = this.#waveDeathCallback.bind(this)
@@ -417,6 +506,11 @@ export default class Game {
         }
     }
 
+    /**
+     * callback when a unit dies
+     * @param {AbstractUnit} unit
+     * @param {boolean} giveReward true if the player killed the unit
+     */
     #waveDeathCallback(unit, giveReward) {
         console.log("death", unit, giveReward)
         if (giveReward) {
@@ -429,6 +523,7 @@ export default class Game {
             ))
         }
 
+        // if there are no more units to spawn and all units are dead, launch the next wave or show the victory screen
 	    if (this.#unitsToSpawn.every(spawnList => spawnList.length === 0) &&
             this.getEntities(AbstractUnit)
                 .filter(unit => unit.animationDetails.name === AnimationKeys.WALK)

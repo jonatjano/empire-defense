@@ -3,6 +3,10 @@ import MovementCapability, {MovementType} from "../MovementCapability.js";
 import AbstractUnit, {unitFactory} from "./AbstractUnit.js"
 import {AnimationKeys} from "./AbstractEntity.js";
 
+//
+// the list of all entity classes
+//
+
 /**
  * @param {(AbstractUnit) => boolean} customFilter
  * @this AbstractBuilding

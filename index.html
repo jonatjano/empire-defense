@@ -58,18 +58,28 @@
 				<select id="texturePackSelect"></select>
 				<input id="texturePackInput" type="file" webkitdirectory onchange="options.uploadTexturePack()"/>
 			</div>
+			<div id="languageOption">
+				<h3 data-translation="option.language">Language</h3>
+				<select id="languageSelect"></select>
+			</div>
+			<div id="otherOption">
+				<input id="showStatsCheckbox" type="checkbox"/>
+				<label for="showStatsCheckbox" data-translation="option.showStats"></label>
+			</div>
 			<button id="saveOptionButton" data-translation="generic.save">Save</button>
 		</div>
 		<div id="creditsMenu" class="menu hidden">
-			<h1 data-translation="generic.credits">Credits</h1>
-			<h2 data-translation="credits.programmation">Programmation</h2>
-			<h4>Jonathan Selle</h4>
-			<h2 data-translation="credits.arts">Arts</h2>
-			<h4>Tom Hequet</h4>
-			<h4>Jonathan Selle</h4>
-			<h2 data-translation="credits.goodgamestudio1">All reserved rights to GoodGame Studio</h2>
-			<h4 data-translation="credits.goodgamestudio2">Special thanks for creating the base game</h4>
-			<a href="https://github.com/jonatjano/empire-defense" target="_blank"><h4 data-translation="credits.github">Game code is available on GitHub</h4></a>
+			<div style="overflow: auto">
+				<h1 data-translation="generic.credits">Credits</h1>
+				<h2 data-translation="credits.programmation">Programmation</h2>
+				<h4>Jonathan Selle</h4>
+				<h2 data-translation="credits.arts">Arts</h2>
+				<h4>Tom Hequet</h4>
+				<h4>Jonathan Selle</h4>
+				<h2 data-translation="credits.goodgamestudio1">All reserved rights to GoodGame Studio</h2>
+				<h4 data-translation="credits.goodgamestudio2">Special thanks for creating the base game</h4>
+				<a href="https://github.com/jonatjano/empire-defense" target="_blank"><h4 data-translation="credits.github">Game code is available on GitHub</h4></a>
+			</div>
 			<button id="leaveCreditsButton" data-translation="generic.quit">Quit</button>
 		</div>
 	</div>

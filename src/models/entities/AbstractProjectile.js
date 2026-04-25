@@ -4,13 +4,14 @@ import Position from "../Position.js";
 import AbstractUnit from "./AbstractUnit.js";
 
 /**
+ * create a projectile class with the given parameters
  * @param {string} name
  * @param {number} speed
  * @param {number} damage
  * @param {number} range
  * @param {number} cooldown
  * @param {(target?: AbstractEntity) => void} onHitCb
- * @return {typeof AbstractProjectile}
+ * @return {class extends AbstractProjectile}
  */
 export function projectileFactory(name, speed, damage, range, cooldown, onHitCb) {
     const movement = new MovementCapability(10, 3600, 360, MovementType.Unobstructed)
@@ -50,6 +51,11 @@ export default class AbstractProjectile extends AbstractEntity {
     get target() { return this.#target }
     set target(value) { this.#target = value }
 
+	/**
+	 * Executes the actions for the current frame
+	 * @param {number} frameDuration time since last frame
+	 * @param {number} currentTime
+	 */
     act(frameDuration, currentTime) {
 	    switch (this.animationDetails.name) {
 		    case AnimationKeys.IDLE: {

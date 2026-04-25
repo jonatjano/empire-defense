@@ -6,12 +6,13 @@ import Position from "../Position.js";
 const rangeBoostLevels = [1, 1.33, 1.5]
 
 /**
- *
+ create a building class with the given parameters
  * @param {string} name the tower name
  * @param {string} projectileName the name of the projectile used by the tower
  * @param {() => AbstractEntity[]} targetingFunction
  * @param {(level?: number) => (target?: AbstractEntity) => void} onHitCb
  * @param {{cost: number, buildDuration: number, sellPrice: number, crystal: number, projectile: {speed: number, damage: number, range: number, cooldown: number}}[]} levels
+ * @return {class extends AbstractBuilding}
  */
 export function buildingFactory(name, projectileName, targetingFunction, onHitCb, levels) {
     /**
@@ -83,10 +84,15 @@ export default class AbstractBuilding extends AbstractEntity {
     get projectile() { return this.__proto__.constructor.projectile }
 
 	/**
-	 * @returns {number} value is not capped to 100
+	 * @returns {number} the value is not capped to 100
 	 */
 	get buildPercent() { return (globalThis.game.currentFrameTiming - this.#builtTime) / this.buildDuration * 100 }
 
+    /**
+     * Executes the actions for the current frame
+     * @param {number} frameDuration time since last frame
+     * @param {number} currentTime
+     */
     act(frameDuration, currentTime) {
         switch (this.animationDetails.name) {
 	        case AnimationKeys.SHOOT: {

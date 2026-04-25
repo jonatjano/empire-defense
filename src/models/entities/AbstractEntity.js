@@ -34,6 +34,9 @@ export const AnimationKeys = Object.freeze({
  * @param {boolean} giveReward
  */
 
+/**
+ * base class for all entities
+ */
 export default class AbstractEntity {
     /** @type {number} */
     #maxHp
@@ -121,7 +124,7 @@ export default class AbstractEntity {
     /**
      * @param {string} name must be a valid name found in the `animations` property
      * @param {number} startingFrame frame when the animation starts
-     * @return {Promise<boolean>} indicated if the animation was successfully set
+     * @return {Promise<boolean>} indicate that the animation was successfully set
      */
     setAnimation(name, startingFrame) {
         return this.texture.then(texture => {
