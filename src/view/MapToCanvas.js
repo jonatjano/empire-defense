@@ -278,11 +278,7 @@ export async function drawMap(canvas, ctx, game, frameTiming) {
                         ellipse.ellipse(
                             drawImageData.dx + (entityTexture.worldWidth - 0.5) * options.zoom,
                             drawImageData.dy + (entityTexture.worldHeight - 0.5) * options.zoom,
-<<<<<<< HEAD
-                            options.zoom * entity.range, options.zoom * entity.range,
-=======
-                            options.zoom * towerEntity.projectile.range, options.zoom * towerEntity.projectile.range,
->>>>>>> 18886a1926ca41ff598238324036a7756f118103
+                            options.zoom * towerEntity.range, options.zoom * towerEntity.range,
                             0, 0, 2 * Math.PI
                         )
 
