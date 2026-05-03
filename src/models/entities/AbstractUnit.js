@@ -32,6 +32,8 @@ export default class AbstractUnit extends AbstractEntity {
     get killReward() { return this.__proto__.constructor.killReward }
     static get killCrystalReward() { return 0 }
     get killCrystalReward() { return this.__proto__.constructor.killCrystalReward }
+	/** @type {number} */
+	slowDuration = 0
 
     constructor(position, deathCallback, maxHp) {
         super(position, deathCallback, maxHp);

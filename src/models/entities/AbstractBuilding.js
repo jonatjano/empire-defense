@@ -3,12 +3,14 @@ import AbstractEntity, {AnimationKeys} from "./AbstractEntity.js"
 import {projectileFactory} from "./AbstractProjectile.js"
 import Position from "../Position.js";
 
+const rangeBoostLevels = [1, 1.33, 1.5]
+
 /**
  create a building class with the given parameters
  * @param {string} name the tower name
  * @param {string} projectileName the name of the projectile used by the tower
  * @param {() => AbstractEntity[]} targetingFunction
- * @param {(target?: AbstractEntity) => void} onHitCb
+ * @param {(level?: number) => (target?: AbstractEntity) => void} onHitCb
  * @param {{cost: number, buildDuration: number, sellPrice: number, crystal: number, projectile: {speed: number, damage: number, range: number, cooldown: number}}[]} levels
  * @return {class extends AbstractBuilding}
  */
@@ -28,7 +30,7 @@ export function buildingFactory(name, projectileName, targetingFunction, onHitCb
         const levelName = currentLevel + 1
 
         const upgradesTo = innerFactory(name, projectileName, targetingFunction, levels, currentLevel + 1)
-        const projectile = projectileFactory(projectileName + levelName, levels[currentLevel].projectile.speed, levels[currentLevel].projectile.damage, levels[currentLevel].projectile.range, levels[currentLevel].projectile.cooldown, onHitCb)
+        const projectile = projectileFactory(projectileName + levelName, levels[currentLevel].projectile.speed, levels[currentLevel].projectile.damage, levels[currentLevel].projectile.range, levels[currentLevel].projectile.cooldown, onHitCb(currentLevel))
 
         return class extends AbstractBuilding {
             /** @return {MovementCapability} */
@@ -55,6 +57,10 @@ export default class AbstractBuilding extends AbstractEntity {
     #attackCooldown = 0
 	#builtTime = 0
     #targetingFunction
+    #rangeBoost = {
+        level: 0,
+        timestamp: 0
+    }
 
     /**
      * @param {Position} position
@@ -97,8 +103,7 @@ export default class AbstractBuilding extends AbstractEntity {
 	        // fallthrough
 	        case AnimationKeys.IDLE: {
 				if (this.#builtTime + this.buildDuration < globalThis.game.currentFrameTiming) {
-                    const speedFactor = this.slowDuration > 0 ? 2 : 1;
-					this.#attackCooldown = this.#attackCooldown - frameDuration * speedFactor
+					this.#attackCooldown = this.#attackCooldown - frameDuration
 
 					const targets = this.#targetingFunction.call(this)
 					if (targets.length !== 0) {
@@ -130,7 +135,6 @@ export default class AbstractBuilding extends AbstractEntity {
                 break
             }
         }
-        this.slowDuration -= frameDuration
     }
 
 	/**
@@ -143,6 +147,18 @@ export default class AbstractBuilding extends AbstractEntity {
 			globalThis.game.addEntity(missile)
 		}
 	}
+
+    set rangeBoost(value) { this.#rangeBoost = {
+        level: value,
+        timestamp: globalThis.game.currentFrameTiming
+    } }
+    get range() {
+        if (this.#rangeBoost.timestamp + 200 < globalThis.game.currentFrameTiming) {
+            this.#rangeBoost = {level: 0, timestamp: 0}
+        }
+        return this.projectile.range * rangeBoostLevels[this.#rangeBoost.level] + 0.5
+    }
+
 
     get texture() { return globalThis.options.texturePack.getTexture(`entities/buildings/${this.__proto__.constructor.name.toLowerCase()}`) }
 }

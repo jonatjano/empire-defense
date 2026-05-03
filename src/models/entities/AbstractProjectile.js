@@ -20,7 +20,7 @@ export function projectileFactory(name, speed, damage, range, cooldown, onHitCb)
         static get movements() { return this.#movements }
         static get name() { return name }
         static get damage() { return damage }
-        static get range() { return range + 0.5 }
+        static get range() { return range }
         static get cooldown() { return cooldown }
 		/** @return {(target?: AbstractEntity) => void} */
 		static get onHitCb() { return onHitCb }
